@@ -1,5 +1,5 @@
 <script lang="ts">
-  const helloooo = "OwO what's this?"
+  
 </script>
 
 <main class="container">
