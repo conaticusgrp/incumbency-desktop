@@ -1,0 +1,15 @@
+@import "./colorGuideline.scss";
+
+body{
+    margin:0; padding:0;
+    width:100vw;
+    background-color: $primary;
+    
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+}
+
+hr{
+    border: none;
+    height:1px;
+    background-color: $primaryl5;
+}
