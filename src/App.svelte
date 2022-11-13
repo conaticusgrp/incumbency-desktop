@@ -1,6 +1,7 @@
 <script lang="ts">
 
     import MainMenu from './components/views/MainMenu.svelte';
+    import SettingsPage from './components/views/SettingsPage.svelte';
     import { appState, AppState } from './stores/appState'
 
     let state: AppState;
@@ -17,6 +18,8 @@
 
     <MainMenu />
 
+    {:else if state == AppState.SETTINGS}
+      <SettingsPage />
     {:else}
 
     <p>Undefined app state</p>
