@@ -1,8 +1,13 @@
 <script lang="ts">
     
     import { menuState, MenuState } from "../../stores/menuState";
+    import { appState, AppState } from "../../stores/appState";
+
     import LoadGameMenu from "./LoadGameMenu.svelte";
     import NewGameMenu from "./NewGameMenu.svelte";
+    import Logo from "../../assets/logo.svg";
+  import app from "../../main"
+  import SettingsPage from "./SettingsPage.svelte"
 
     let state: MenuState;
     let mainMenu: HTMLElement;
@@ -50,8 +55,7 @@
 
     <div class="main_menu" bind:this={mainMenu}>
         
-        <!-- Will probably be changed to a logo image -->
-        <h1>Incumbency</h1>
+        <img src={Logo} alt="Logo" class="logo">
         
         <!--
             The buttons will probably be changed to components.
@@ -59,6 +63,7 @@
         <button on:click={() => menuState.set(MenuState.NEW_GAME)}>New Game</button>
         <button on:click={() => menuState.set(MenuState.LOAD_GAME)}>Load Game</button>
         <button class="disabled" on:click={() => menuState.set(MenuState.MULTIPLAYER)}>Multiplayer</button>
+        <button on:click={() => appState.set(AppState.SETTINGS)}>Settings</button>
         
     </div>
 
@@ -101,13 +106,13 @@
     /* Note: Grid could be used to make the layout for the menu page. */
 
     main {
-        position: relative;
+        /* position: relative; */
         width: 100%;
         height: 100%;
     }
     
     .main_menu {
-        position: relative;
+        /* position: relative; */
         width: 100%;
         height: 100%;
         pointer-events: all;
@@ -155,4 +160,12 @@
         background-color: rgba(0, 0, 0, 0.5);
     }
 
+    .logo {
+        margin: 0 auto;
+        display: block;
+        width: 100%;
+        max-width: 650px;
+        max-height: 500px;
+        margin-top: 4rem;
+    }
 </style>
