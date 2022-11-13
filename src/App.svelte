@@ -49,7 +49,7 @@
   }
 
   h1{
-    margin: 75pt 0px 24pt 0px;
+    margin: 60pt 0px 0pt 0px;
     font-size: 48pt;
     color: $secondary;
 
