@@ -6,8 +6,6 @@
     import LoadGameMenu from "./LoadGameMenu.svelte";
     import NewGameMenu from "./NewGameMenu.svelte";
     import Logo from "../../assets/logo.svg";
-  import app from "../../main"
-  import SettingsPage from "./SettingsPage.svelte"
 
     let state: MenuState;
     let mainMenu: HTMLElement;
@@ -34,8 +32,6 @@
     const showMultiplayer = (): void => {
         // Debug
         alert("Disabled feature");
-        return;
-        mainMenu.classList.add('shaded');
     }
 
     menuState.subscribe(value => {

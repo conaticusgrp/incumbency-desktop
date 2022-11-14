@@ -1,19 +1,34 @@
 <script lang="ts">
+  import { invoke } from "@tauri-apps/api/tauri";
+
+  let name = "";
+  let saveAlreadyExists = false;
+
+  const checkAlreadyExists = async () => {
+    saveAlreadyExists = await invoke("check_save_exists", { name });
+  }
+
+  const createGame = async () => {
+    if (name.length === 0) return;
+    await invoke("create_game", { name });
+  }
 </script>
 
 <main>
   <h1>New Game</h1>
 
-  <form action="" method="get" class="create_form">
-    <div class="save_name">
-      <label for="name">Enter save name: </label>
-      <input type="text" required />
-    </div>
+  {#if saveAlreadyExists}
+    <p style="color: red">Save with name '{name}' already exists.</p>
+  {/if}
 
-    <div class="">
-      <button on:click={() => null} type="submit">Create!</button>
-    </div>
-  </form>
+  <div class="save_name">
+    <label for="name">Enter save name: </label>
+    <input type="text" required bind:value={name} min="1" max="30" on:keyup={async () => await checkAlreadyExists()} />
+  </div>
+
+  <div class="">
+    <button disabled={saveAlreadyExists} on:click={createGame} type="submit">Create!</button>
+  </div>
 </main>
 
 <style>
