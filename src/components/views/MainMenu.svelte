@@ -134,7 +134,6 @@
     }
 
     .menu_content {
-        /* --menu-content- */
         position: absolute;
         top: 0;
         left: 0;
