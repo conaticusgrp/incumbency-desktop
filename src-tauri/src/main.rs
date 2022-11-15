@@ -34,5 +34,5 @@ fn main() {
   tauri::Builder::default()
   .invoke_handler(tauri::generate_handler![create_game, check_save_exists])
     .run(tauri::generate_context!())
-    .expect("error while running tauri application");
+    .expect("Error while running tauri application");
 }
