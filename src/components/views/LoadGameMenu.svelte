@@ -1,10 +1,14 @@
 <script lang="ts">
 
+  import { AppState, appState } from "../../stores/appState";
+
+
 </script>
 
 <main>
 
   <p>load game</p>
+  <button on:click={() => appState.set(AppState.MAIN_MENU)}>Back</button>
 
 </main>
 

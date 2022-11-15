@@ -3,10 +3,14 @@
   import MainMenu from './components/views/MainMenu.svelte';
   import NewGameMenu from './components/views/NewGameMenu.svelte';
   import LoadGameMenu from './components/views/LoadGameMenu.svelte';
+  import MultiplayerMenu from './components/views/MultiplayerMenu.svelte';
   import SettingsMenu from './components/views/SettingsMenu.svelte';
+  import Credits from './components/views/Credits.svelte';
+  import SingleplayerGame from './components/views/SingleplayerGame.svelte';
+  import MultiplayerGame from './components/views/MultiplayerGame.svelte';
   
   import { appState, AppState } from './stores/appState'
-
+  
   let state: AppState;
 
   appState.subscribe(value => {
@@ -31,7 +35,7 @@
 
   {:else if state == AppState.MULTIPLAYER_MENU}
 
-  <span>Not implemented</span>
+  <MultiplayerMenu />
   
   {:else if state == AppState.SETTINGS_MENU}
   
@@ -39,15 +43,15 @@
   
   {:else if state == AppState.CREDITS}
   
-  <span>Not implemented</span>
+  <Credits />
   
   {:else if state == AppState.SINGLEPLAYER}
   
-  <span>Not implemented</span>
+  <SingleplayerGame />
   
   {:else if state == AppState.MULTIPLAYER}
   
-  <span>Not implemented</span>
+  <MultiplayerGame />
   
   {:else}
 
