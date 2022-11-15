@@ -1,4 +1,5 @@
 <script lang="ts">
+
   import { invoke } from "@tauri-apps/api/tauri";
 
   let name = "";
@@ -12,6 +13,7 @@
     if (name.length === 0) return;
     await invoke("create_game", { name });
   }
+  
 </script>
 
 <main>

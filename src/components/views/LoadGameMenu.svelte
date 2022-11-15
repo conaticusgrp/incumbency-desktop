@@ -4,16 +4,16 @@
 
 <main>
 
-    <p>load game</p>
+  <p>load game</p>
 
 </main>
 
 <style>
 
-    main {
-        position: relative;
-        width: 100%;
-        height: 100%;
-    }
+  main {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
 
 </style>

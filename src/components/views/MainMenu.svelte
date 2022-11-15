@@ -1,166 +1,142 @@
 <script lang="ts">
-    
-    import { menuState, MenuState } from "../../stores/menuState";
-    import { appState, AppState } from "../../stores/appState";
 
-    import LoadGameMenu from "./LoadGameMenu.svelte";
-    import NewGameMenu from "./NewGameMenu.svelte";
-    import Logo from "../../assets/logo.svg";
+  import { appState, AppState } from "../../stores/appState";
 
-    let state: MenuState;
-    let mainMenu: HTMLElement;
+  import LoadGameMenu from "./LoadGameMenu.svelte";
+  import NewGameMenu from "./NewGameMenu.svelte";
+  import Logo from "../../assets/logo.svg";
 
-    const showMainMenu = (): void => {
-        // Remove the shading
-        console.log("main menu");
-    }
+  let state: AppState;
+  let mainMenu: HTMLElement;
 
-    const showNewGame = (): void => {
-        mainMenu.classList.add('shaded');
+  const showMainMenu = (): void => {
+    // Remove the shading
+    console.log("main menu");
+  }
+
+  const showNewGame = (): void => {
+    mainMenu.classList.add('shaded');
         
-        // Show new game menu
-        console.log("new game");
-    }
+    // Show new game menu
+    console.log("new game");
+  }
     
-    const showLoadGame = (): void => {
-        mainMenu.classList.add('shaded');
+  const showLoadGame = (): void => {
+    mainMenu.classList.add('shaded');
         
-        // Show load game menu
-        console.log("load game");
-    }
+    // Show load game menu
+    console.log("load game");
+  }
     
-    const showMultiplayer = (): void => {
-        // Debug
-        alert("Disabled feature");
-    }
+  const showMultiplayer = (): void => {
+    // Debug
+    alert("Disabled feature");
+  }
 
-    menuState.subscribe(value => {
-        state = value;
-        switch (value) {
-            case MenuState.MAIN:        showMainMenu();     break;
-            case MenuState.NEW_GAME:    showNewGame();      break;
-            case MenuState.LOAD_GAME:   showLoadGame();     break;
-            case MenuState.MULTIPLAYER: showMultiplayer();  break;
-            default: break;
-        }
-    });
+  appState.subscribe(value => {
+    state = value;
+    switch (value) {
+      case AppState.MAIN_MENU:        showMainMenu();     break;
+      case AppState.NEW_GAME_MENU:    showNewGame();      break;
+      case AppState.LOAD_GAME_MENU:   showLoadGame();     break;
+      default: break;
+    }
+  });
 
 </script>
 
 <main>
 
-    <div class="main_menu" bind:this={mainMenu}>
+  <div class="main_menu" bind:this={mainMenu}>
         
-        <img src={Logo} alt="Logo" class="logo">
+    <img src={Logo} alt="Logo" class="logo">
         
-        <!--
-            The buttons will probably be changed to components.
-        -->
-        <button on:click={() => menuState.set(MenuState.NEW_GAME)}>New Game</button>
-        <button on:click={() => menuState.set(MenuState.LOAD_GAME)}>Load Game</button>
-        <button class="disabled" on:click={() => menuState.set(MenuState.MULTIPLAYER)}>Multiplayer</button>
-        <button on:click={() => appState.set(AppState.SETTINGS)}>Settings</button>
+    <!--
+      The buttons will probably be changed to components.
+    -->
+    <button on:click={() => appState.set(AppState.NEW_GAME_MENU)}>New Game</button>
+    <button on:click={() => appState.set(AppState.LOAD_GAME_MENU)}>Load Game</button>
+    <button on:click={() => appState.set(AppState.MULTIPLAYER_MENU)} class="disabled">Multiplayer</button>
+    <button on:click={() => appState.set(AppState.SETTINGS_MENU)}>Settings</button>
         
-    </div>
+  </div>
 
-    {#if state == MenuState.NEW_GAME}
+  {#if state == AppState.NEW_GAME_MENU}
 
-    <div class="menu_content">
-        <NewGameMenu />
-    </div>
+  <div class="menu_content">
+    <NewGameMenu />
+  </div>
 
-    {:else if state == MenuState.LOAD_GAME}
+  {:else if state == AppState.LOAD_GAME_MENU}
 
-    <div class="menu_content">
-        <LoadGameMenu />
-    </div>
+  <div class="menu_content">
+    <LoadGameMenu />
+  </div>
     
-    {:else if state == MenuState.MULTIPLAYER}
+  {:else if state == AppState.MULTIPLAYER_MENU}
 
-    <div class="menu_content">
-        <p>Multiplayer mode not implemented.</p>
-    </div>
+  <div class="menu_content">
+    <p>Multiplayer mode not implemented.</p>
+  </div>
     
-    {:else if state != MenuState.MAIN}
+  {:else if state != AppState.MAIN_MENU}
 
-    <div class="menu_content">
-        <p>Error: No such menu state: {state}</p>
-    </div>
+  <div class="menu_content">
+    <p>Error: No such menu state: {state}</p>
+  </div>
 
-    {/if}
+  {/if}
 
 
 </main>
 
-<!-- A workaround, so Svelte doesn't delete .main_menu.shaded selector -->
-{#if false}
-<span class="main_menu shaded"></span>
-{/if}
-
 <style>
 
-    /* Note: Grid could be used to make the layout for the menu page. */
+  /* Note: Grid could be used to make the layout for the menu page. */
 
-    main {
-        /* position: relative; */
-        width: 100%;
-        height: 100%;
-    }
+  main {
+    /* position: relative; */
+    width: 100%;
+    height: 100%;
+  }
     
-    .main_menu {
-        /* position: relative; */
-        width: 100%;
-        height: 100%;
-        pointer-events: all;
-    }
+  .main_menu {
+    /* position: relative; */
+    width: 100%;
+    height: 100%;
+    pointer-events: all;
+  }
 
-    .main_menu:after {
-        content: '';
-        pointer-events: none;
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: transparent;
-    }
+  .menu_content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
     
-    .main_menu.shaded {
-        pointer-events: none;
-    }
-    
-    .main_menu.shaded:after {
-        background-color: rgba(0, 0, 0, 0.5);
-    }
+  .logo {
+    margin: 0 auto;
+    display: block;
+    width: 100%;
+    max-width: 650px;
+    max-height: 500px;
+    margin-top: 4rem;
+  }
 
-    .menu_content {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-    }
+  /* Note: The "disabled" class should probably be moved to app.css since it could be used in the other parts for the app. */
+  .disabled {
+    position: relative;
+  }
+  .disabled:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+  }
 
-    /* Note: The "disabled" class should probably be moved to app.css since it could be used in the other parts for the app. */
-    .disabled {
-        position: relative;
-    }
-    .disabled:after {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
-    }
 
-    .logo {
-        margin: 0 auto;
-        display: block;
-        width: 100%;
-        max-width: 650px;
-        max-height: 500px;
-        margin-top: 4rem;
-    }
 </style>
