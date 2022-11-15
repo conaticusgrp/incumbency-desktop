@@ -10,55 +10,73 @@
   import MultiplayerGame from './components/views/MultiplayerGame.svelte';
   
   import { appState, AppState } from './stores/appState'
-  
-  let state: AppState;
+
+  type AnyAppState = typeof MainMenu |
+                      typeof NewGameMenu |
+                      typeof LoadGameMenu |
+                      typeof MultiplayerMenu |
+                      typeof SettingsMenu |
+                      typeof Credits |
+                      typeof SingleplayerGame |
+                      typeof MultiplayerGame;
+
+  let currentComponent: AnyAppState | null = null;
 
   appState.subscribe(value => {
-    state = value;
+    switch (value) {
+      case AppState.MAIN_MENU:
+        currentComponent = MainMenu;
+        break;
+
+      case AppState.NEW_GAME_MENU:
+        currentComponent = NewGameMenu;
+        break;
+
+      case AppState.LOAD_GAME_MENU:
+        currentComponent = LoadGameMenu;
+        break;
+
+      case AppState.MULTIPLAYER_MENU:
+        currentComponent = MultiplayerMenu;
+        break;
+
+      case AppState.SETTINGS_MENU:
+        currentComponent = SettingsMenu;
+        break;
+
+      case AppState.CREDITS:
+        currentComponent = Credits;
+        break;
+
+      case AppState.SINGLEPLAYER:
+        currentComponent = SingleplayerGame;
+        break;
+
+      case AppState.MULTIPLAYER:
+        currentComponent = MultiplayerGame;
+        break;
+
+      default:
+        currentComponent = null;
+        console.error(`No such app state: ${value}`);
+        break;
+    };
   });
 
 </script>
 
 <main>
 
-  {#if state == AppState.MAIN_MENU}
+  {#if currentComponent != null}
 
-  <MainMenu />
-
-  {:else if state == AppState.NEW_GAME_MENU}
-
-  <NewGameMenu />
-
-  {:else if state == AppState.LOAD_GAME_MENU}
-
-  <LoadGameMenu />
-
-  {:else if state == AppState.MULTIPLAYER_MENU}
-
-  <MultiplayerMenu />
-  
-  {:else if state == AppState.SETTINGS_MENU}
-  
-  <SettingsMenu />
-  
-  {:else if state == AppState.CREDITS}
-  
-  <Credits />
-  
-  {:else if state == AppState.SINGLEPLAYER}
-  
-  <SingleplayerGame />
-  
-  {:else if state == AppState.MULTIPLAYER}
-  
-  <MultiplayerGame />
+  <svelte:component this={currentComponent} />
   
   {:else}
 
   <p>Undefined app state</p>
 
   {/if}
-  
+
 </main>
 
 <style>
