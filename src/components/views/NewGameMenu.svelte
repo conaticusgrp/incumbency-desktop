@@ -1,6 +1,7 @@
 <script lang="ts">
 
   import { invoke } from "@tauri-apps/api/tauri";
+  import { AppState, appState } from "../../stores/appState";
 
   let name = "";
   let saveAlreadyExists = false;
@@ -10,14 +11,15 @@
   }
 
   const createGame = async () => {
-    if (name.length === 0) return;
+    if (name.length === 0 || saveAlreadyExists) return;
     await invoke("create_game", { name });
   }
   
 </script>
 
 <main>
-  <h1>New Game</h1>
+
+  <h2>New Game</h2>
 
   {#if saveAlreadyExists}
     <p style="color: red">Save with name '{name}' already exists.</p>
@@ -28,12 +30,15 @@
     <input type="text" required bind:value={name} min="1" max="30" on:keyup={async () => await checkAlreadyExists()} />
   </div>
 
-  <div class="">
-    <button disabled={saveAlreadyExists} on:click={createGame} type="submit">Create!</button>
+  <div>
+    <button on:click={() => appState.set(AppState.MAIN_MENU)}>Back</button>
+    <button on:click={createGame} type="submit">Create!</button>
   </div>
+
 </main>
 
 <style>
+
   main {
     display: flex;
     flex-direction: column;
@@ -48,9 +53,4 @@
     height: 100%;
   }
 
-  .create_form {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
 </style>
