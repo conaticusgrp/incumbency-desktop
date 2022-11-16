@@ -4,10 +4,19 @@
   import { AppState, appState } from "../../stores/appState";
   
   let fullscreen = true;
+  let volume = 0.5;
+  
+  
+  // Adjust volume
+  $: if (volume >= 0 && volume <= 1) {
+    // Adjust volume
+    console.log(`Volume: ${volume}`);
+  }
 
   const toggleFullscreen = async () => {
-    appWindow.setFullscreen(! await appWindow.isFullscreen());
-    fullscreen = await appWindow.isFullscreen();
+    const newVal = ! await appWindow.isFullscreen();
+    appWindow.setFullscreen(newVal);
+    fullscreen = newVal;
   };
 
 </script>
@@ -18,6 +27,8 @@
   
   <label for="fullscreen">Fullscreen</label>
   <input bind:checked={fullscreen} on:change={toggleFullscreen} type="checkbox" name="Fullscreen" id="fullscreen">
+  <label for="fullscreen">Volume</label>
+  <input bind:value={volume} type="range" name="Volume" min="0" max="1" step="0.01">
 
   <button on:click={() => appState.set(AppState.MAIN_MENU)}>Back</button>
   <button on:click={() => appState.set(AppState.CREDITS)}>Credits</button>
