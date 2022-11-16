@@ -92,3 +92,9 @@ button:disabled {
     color: rgb(42, 42, 42);
     cursor: default;
 }
+
+.center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
