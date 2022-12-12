@@ -1,23 +1,23 @@
 <script lang="ts">
+  import { onMount } from "svelte"
   import App from "../../../App.svelte"
   import DesktopShortcut from "./DesktopShortcut.svelte"
 
-  console.log("Desktop loaded")
-  const desktopShortcuts = document.getElementsByTagName("desktopShortcut")
-  console.log(desktopShortcuts)
-  for (let i = 1; i < desktopShortcuts.length; i++) {
-    (desktopShortcuts[i] as HTMLElement).style.gridRow = `${i} / ${i + 1}`
-    console.log(desktopShortcuts[i])
-    console.log((desktopShortcuts[i] as HTMLElement).style.gridRow)
-  }
+  
+  onMount(() => {
+    const desktopShortcuts = document.getElementsByTagName("desktopShortcut")
+    for (let i = 1; i < desktopShortcuts.length; i++) {
+      ;(desktopShortcuts[i] as HTMLElement).style.gridRow = `${i} / ${i + 1}`
+    }
+  })
 </script>
 
 <main>
   <!-- <desktopShortcut></desktopShortcut> -->
   <DesktopShortcut
-  name="Email"
-  icon={"https://images.unsplash.com/photo-1670766552268-b8e06b420008?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=735&q=80"}
-  badgeCount={2}
+    name="Email"
+    icon={"https://images.unsplash.com/photo-1670766552268-b8e06b420008?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=735&q=80"}
+    badgeCount={2}
   />
   <DesktopShortcut
     name="Government Spending"
