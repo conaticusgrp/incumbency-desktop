@@ -17,7 +17,7 @@
       {#each saves as save}
         <!-- change this to open game view -->
         <div
-          on:mouseup={() => appState.set(AppState.MAIN_MENU)}
+          on:mouseup={() => appState.set(AppState.SINGLEPLAYER)}
           class="save_card"
         >
           {save}
