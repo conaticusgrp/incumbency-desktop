@@ -1,6 +1,6 @@
 use std::{sync::{Mutex, Arc}};
 use tauri::State;
-use crate::{generation::generate_game, entities::{business::Business, person::Person}, util::{percentage_based_output_int}};
+use crate::{generation::generate_game, entities::{business::Business, person::Person}};
 
 pub struct GameState {
   tax_rate: f32,

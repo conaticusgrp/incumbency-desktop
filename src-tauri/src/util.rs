@@ -1,7 +1,6 @@
 use std::{fs};
 use rand::Rng;
 use serde::Deserialize;
-use serde_json::Value;
 use std::collections::HashMap;
 
 const CONFIG_PATH: &str = "./game_config.toml";

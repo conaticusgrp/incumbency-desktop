@@ -1,4 +1,7 @@
 use std::ops::Range;
+use maplit::hashmap;
+use crate::util::percentage_based_output_float;
+use EducationLevel::*;
 
 pub struct Person {
     pub education_level: EducationLevel,
@@ -25,12 +28,18 @@ pub struct Person {
 //     AdvancedDegree        // 5.5%       $100,000-$300,000
 
 impl Person {
-    pub fn generate(&self) {
-
+    pub fn generate(&mut self) {
+        self.education_level = percentage_based_output_float(hashmap! {
+            NoFormalEducation => 10.2,
+            HighSchoolDiploma => 28.52,
+            College => 16.12,
+            AssociateDegree => 10.18,
+            Bachelors => 29.48,
+            AdvancedDegree => 5.5,
+        }, 2).unwrap();
     }
 }
-
-#[derive(Default, Clone)]
+#[derive(Default, Clone, PartialEq, Eq, Hash)]
 pub enum EducationLevel {
     #[default]
     NoFormalEducation,
