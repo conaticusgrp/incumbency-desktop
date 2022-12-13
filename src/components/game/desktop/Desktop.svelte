@@ -109,6 +109,7 @@
     width: 100%;
     height: 100%;
     z-index: 100;
+    isolation: isolate;
   }
 
   .notifications {
@@ -119,6 +120,7 @@
     width: 300px;
     height: 150px;
     background-color: #4A4A4A;
+    z-index: 200;
   }
 
 </style>

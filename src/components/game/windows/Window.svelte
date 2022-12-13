@@ -105,6 +105,7 @@
 
   .viewport {
     background-color: #121212;
+    isolation: isolate;
   }
 
   .close-button {
