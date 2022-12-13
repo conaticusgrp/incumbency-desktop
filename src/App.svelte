@@ -10,6 +10,7 @@
   import MultiplayerGame from './components/views/MultiplayerGame.svelte';
   
   import { appState, AppState } from './stores/appState'
+    import { onMount } from 'svelte';
 
   type AnyAppState = typeof MainMenu |
                       typeof NewGameMenu |
@@ -61,6 +62,11 @@
         console.error(`No such app state: ${value}`);
         break;
     };
+  });
+
+  // DEBUG
+  onMount(() => {
+    appState.set(AppState.SINGLEPLAYER);
   });
 
 </script>
