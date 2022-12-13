@@ -3,7 +3,9 @@
   import type { DesktopAppShortcut } from "../../../scripts/desktopApp";
   import DesktopShortcut from "./DesktopShortcut.svelte"
   import ToolBarItem from "./ToolBarItem.svelte";
+  import { NOTIFICATIONS_WINDOW_HEIGHT, NOTIFICATIONS_WINDOW_WIDTH } from "../../../scripts/desktopConstants";
   
+  // DEBUG
   import TestWindow from "../windows/TestWindow.svelte";
   
   let toolbarHeightPercent: number = 15;
@@ -11,7 +13,7 @@
   let apps: DesktopAppShortcut[] = [
     {
       name: "Email",
-      iconPath: "https://images.unsplash.com/photo-1670766552268-b8e06b420008?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=735&q=80",
+      iconPath: "https://seeklogo.com/images/M/mail-icon-logo-28FE0635D0-seeklogo.com.png",
       badgeCount: 2
     },
     {
@@ -58,7 +60,7 @@
       <TestWindow />
     </div>
 
-    <div class="notifications">
+    <div class="notifications" style="width: {NOTIFICATIONS_WINDOW_WIDTH}px; height: {NOTIFICATIONS_WINDOW_HEIGHT}px;">
       <!-- TODO: display notifications -->
     </div>
 
@@ -101,8 +103,6 @@
 
   /* HELP: div.windows' height is equal to the window's height, not to the viewport's height */
   .windows {
-    pointer-events: none;
-
     position: absolute;
     top: 0;
     left: 0;
@@ -110,15 +110,13 @@
     height: 100%;
     z-index: 100;
     isolation: isolate;
+    pointer-events: none;
   }
 
   .notifications {
     position: absolute;
     top: 0;
     right: 0;
-    /* DEBUG: magic numbers */
-    width: 300px;
-    height: 150px;
     background-color: #4A4A4A;
     z-index: 200;
   }
