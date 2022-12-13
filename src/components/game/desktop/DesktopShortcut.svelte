@@ -1,28 +1,42 @@
 <script lang="ts">
-  export let name = "?"
-  export let icon: string
-  export let badgeCount = 0
+
+  export let name = "?";
+  export let icon: string | undefined;
+  export let badgeCount = 0;
+  export let gridRow: string;
+  
 </script>
 
-<desktopShortcut>
+<main style="gridRow: {gridRow};">
+
   <div class="icon">
-    <!-- icon -->
-    <!-- <img src={icon} alt={name + " app icon"} /> -->
-    {#if badgeCount > 0}
-      <div id="badge">{badgeCount}</div>
+
+    {#if icon != undefined}
+      <img src={icon} alt={name + " app icon"} />
     {/if}
+
+    {#if badgeCount > 0}
+      <div class="badge">{badgeCount}</div>
+    {/if}
+
   </div>
+
   <div>{name}</div>
-</desktopShortcut>
+
+</main>
 
 <style>
-  desktopShortcut {
+
+  main {
+    /* DEBUG: magic number */
     width: 80px;
+
     display: flex;
     flex-direction: column;
     align-items: center;
     /* justify-content: center; */
   }
+
   .icon {
     width: 70px;
     height: 70px;
@@ -37,8 +51,9 @@
     object-fit: cover;
   }
 
-  #badge {
+  .badge {
     position: absolute;
+    /* DEBUG: magic numbers */
     width: 20px;
     height: 20px;
     top: calc(100% - 10px);
@@ -47,4 +62,5 @@
     border-radius: 50%;
     background: #c2403a;
   }
+
 </style>

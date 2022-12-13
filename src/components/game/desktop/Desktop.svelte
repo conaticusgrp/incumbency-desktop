@@ -1,51 +1,126 @@
 <script lang="ts">
-  import { onMount } from "svelte"
-  import App from "../../../App.svelte"
-  import DesktopShortcut from "./DesktopShortcut.svelte"
 
+  import type { DesktopAppShortcut } from "../../../scripts/desktopApp";
+  import DesktopShortcut from "./DesktopShortcut.svelte"
+  import ToolBarItem from "./ToolBarItem.svelte";
   
-  onMount(() => {
-    const desktopShortcuts = document.getElementsByTagName("desktopShortcut")
-    for (let i = 1; i < desktopShortcuts.length; i++) {
-      ;(desktopShortcuts[i] as HTMLElement).style.gridRow = `${i} / ${i + 1}`
+  import TestWindow from "../windows/TestWindow.svelte";
+  
+  let toolbarHeightPercent: number = 15;
+  let wallpaperPath: string | null = null;
+  let apps: DesktopAppShortcut[] = [
+    {
+      name: "Email",
+      iconPath: "https://images.unsplash.com/photo-1670766552268-b8e06b420008?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=735&q=80",
+      badgeCount: 2
+    },
+    {
+      name: "Government Spending",
+      iconPath: "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fi.pinimg.com%2Foriginals%2F7b%2F0c%2Fe0%2F7b0ce0e9e5938afc0b3fb4e0ea64e6c0.png&f=1&nofb=1&ipt=d2efa2bed562eb8efafbd699109100294472a51e60fb725ceda3adebcea3fdfb&ipo=images",
+      badgeCount: 1
+    },
+    {
+      name: "Stocks",
+      iconPath: "https://cdn.discordapp.com/attachments/821000000000000000/821000000000000000/unknown.png",
+      badgeCount: 0
+    },
+    {
+      name: "Contacts",
+      iconPath: "https://cdn.discordapp.com/attachments/821000000000000000/821000000000000000/unknown.png",
+      badgeCount: 0
+    },
+    {
+      name: "Add/Remove Apps",
+      iconPath: "https://cdn.discordapp.com/attachments/821000000000000000/821000000000000000/unknown.png",
+      badgeCount: 0
     }
-  })
+  ];
+
 </script>
 
-<main>
-  <!-- <desktopShortcut></desktopShortcut> -->
-  <DesktopShortcut
-    name="Email"
-    icon={"https://images.unsplash.com/photo-1670766552268-b8e06b420008?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=735&q=80"}
-    badgeCount={2}
-  />
-  <DesktopShortcut
-    name="Government Spending"
-    icon={"https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fi.pinimg.com%2Foriginals%2F7b%2F0c%2Fe0%2F7b0ce0e9e5938afc0b3fb4e0ea64e6c0.png&f=1&nofb=1&ipt=d2efa2bed562eb8efafbd699109100294472a51e60fb725ceda3adebcea3fdfb&ipo=images"}
-  />
-  <DesktopShortcut
-    name="Stocks"
-    icon="https://cdn.discordapp.com/attachments/821000000000000000/821000000000000000/unknown.png"
-    badgeCount={1}
-  />
-  <DesktopShortcut
-    name="Contacts"
-    icon="https://cdn.discordapp.com/attachments/821000000000000000/821000000000000000/unknown.png"
-  />
-  <DesktopShortcut
-    name="Add/Remove Apps"
-    icon="https://cdn.discordapp.com/attachments/821000000000000000/821000000000000000/unknown.png"
-  />
+<main style="background-image: {(wallpaperPath != null) ? `url(${wallpaperPath})` : "none"};">
+  
+  <div class="content" style="height: {100 - toolbarHeightPercent}%;">
+
+    {#each apps as shortcut, i}
+
+    <DesktopShortcut
+      name={shortcut.name}
+      icon={shortcut.iconPath}
+      badgeCount={shortcut.badgeCount}
+      gridRow={`${i} / ${i + 1}`}
+    />
+
+    {/each}
+
+    <div class="windows">
+      <!-- TODO: add opened windows -->
+      <TestWindow />
+    </div>
+
+    <div class="notifications">
+      <!-- TODO: display notifications -->
+    </div>
+
+  </div>
+
+  <div class="toolbar" style="height: {toolbarHeightPercent}%;">
+
+    <ToolBarItem name="logo" iconPath={undefined} />
+    <ToolBarItem name="Search" iconPath={undefined}/>
+
+  </div>
+
 </main>
 
 <style>
+
   main {
-    padding: 2rem;
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
-    grid-template-rows: 1fr 1fr 1fr 1fr 1fr 1fr 1fr;
+    position: relative;
     height: 100%;
     width: 100%;
-    background: #171717;
+    background-repeat: no-repeat;
+    background-position: center;
   }
+
+  .content {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(11, 1fr);
+    grid-template-rows: repeat(7, 1fr);
+    padding: 2rem;
+    background-color: #171717;
+  }
+
+  .toolbar {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    background-color: #A0A0A0;
+  }
+
+  /* HELP: div.windows' height is equal to the window's height, not to the viewport's height */
+  .windows {
+    pointer-events: none;
+
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 100;
+    isolation: isolate;
+  }
+
+  .notifications {
+    position: absolute;
+    top: 0;
+    right: 0;
+    /* DEBUG: magic numbers */
+    width: 300px;
+    height: 150px;
+    background-color: #4A4A4A;
+    z-index: 200;
+  }
+
 </style>
