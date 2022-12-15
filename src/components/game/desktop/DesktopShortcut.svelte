@@ -5,9 +5,13 @@
   export let badgeCount = 0;
   export let gridRow: string;
   
+  const open = (): void => {
+    console.log("open");
+  }
+
 </script>
 
-<main style="gridRow: {gridRow};">
+<main style="gridRow: {gridRow};" on:mouseup={open}>
 
   <div class="icon">
 
