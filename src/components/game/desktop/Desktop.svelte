@@ -18,22 +18,22 @@
     },
     {
       name: "Government Spending",
-      iconPath: "https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fi.pinimg.com%2Foriginals%2F7b%2F0c%2Fe0%2F7b0ce0e9e5938afc0b3fb4e0ea64e6c0.png&f=1&nofb=1&ipt=d2efa2bed562eb8efafbd699109100294472a51e60fb725ceda3adebcea3fdfb&ipo=images",
+      iconPath: "https://cdn-icons-png.flaticon.com/512/217/217853.png",
       badgeCount: 1
     },
     {
       name: "Stocks",
-      iconPath: "https://cdn.discordapp.com/attachments/821000000000000000/821000000000000000/unknown.png",
+      iconPath: "https://cdn-icons-png.flaticon.com/512/263/263142.png",
       badgeCount: 0
     },
     {
       name: "Contacts",
-      iconPath: "https://cdn.discordapp.com/attachments/821000000000000000/821000000000000000/unknown.png",
+      iconPath: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhqI4txTRkj4_pCfr3NlNdbCbLYgX-nqjMX8wHEfx_A6Q8luaudlecd84nMDGZ1a4nwA0&usqp=CAU",
       badgeCount: 0
     },
     {
       name: "Add/Remove Apps",
-      iconPath: "https://cdn.discordapp.com/attachments/821000000000000000/821000000000000000/unknown.png",
+      iconPath: "https://static.vecteezy.com/system/resources/previews/008/659/063/original/eps10-black-download-or-install-icon-in-simple-flat-trendy-modern-style-isolated-on-white-background-free-vector.jpg",
       badgeCount: 0
     }
   ];
