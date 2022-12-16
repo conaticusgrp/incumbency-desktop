@@ -9,8 +9,7 @@
   import SingleplayerGame from './components/views/SingleplayerGame.svelte';
   import MultiplayerGame from './components/views/MultiplayerGame.svelte';
   
-  import { appState, AppState } from './stores/appState'
-    import { onMount } from 'svelte';
+  import { appState } from './stores/appState'
 
   type AnyAppState = typeof MainMenu |
                       typeof NewGameMenu |
@@ -25,48 +24,43 @@
 
   appState.subscribe(value => {
     switch (value) {
-      case AppState.MAIN_MENU:
+      case 'MainMenu':
         currentComponent = MainMenu;
         break;
 
-      case AppState.NEW_GAME_MENU:
+      case 'NewGameMenu':
         currentComponent = NewGameMenu;
         break;
 
-      case AppState.LOAD_GAME_MENU:
+      case 'LoadGameMenu':
         currentComponent = LoadGameMenu;
         break;
 
-      case AppState.MULTIPLAYER_MENU:
+      case 'MultiplayerMenu':
         currentComponent = MultiplayerMenu;
         break;
 
-      case AppState.SETTINGS_MENU:
+      case 'SettingsMenu':
         currentComponent = SettingsMenu;
         break;
 
-      case AppState.CREDITS:
+      case 'Credits':
         currentComponent = Credits;
         break;
 
-      case AppState.SINGLEPLAYER:
+      case 'Singleplayer':
         currentComponent = SingleplayerGame;
         break;
 
-      case AppState.MULTIPLAYER:
+      case 'Multiplayer':
         currentComponent = MultiplayerGame;
         break;
 
       default:
         currentComponent = null;
-        console.error(`No such app state: ${value}`);
+        console.error(`Impossible condition - no such app state: ${value}`);
         break;
     };
-  });
-
-  // DEBUG
-  onMount(() => {
-    appState.set(AppState.SINGLEPLAYER);
   });
 
 </script>

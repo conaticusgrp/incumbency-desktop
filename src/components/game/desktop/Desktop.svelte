@@ -56,7 +56,7 @@
       notifications = [
         {
           header: "Test notification",
-          content: "This is the first notification to ever pop up!",
+          content: "This is the first notification to ever pop up! Isn't it exciting? You should be happy!",
           iconPath: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-tf1a7Cwsujdb5k5YKQUP18mR_7dDJd5Bj9CGQv3CaQ&s"
         }
       ];

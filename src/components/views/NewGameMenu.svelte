@@ -1,7 +1,7 @@
 <script lang="ts">
 
   import { invoke } from "@tauri-apps/api/tauri";
-  import { AppState, appState } from "../../stores/appState";
+  import { appState } from "../../stores/appState";
 
   let name = "";
   let saveAlreadyExists = false;
@@ -31,7 +31,7 @@
   </div>
 
   <div>
-    <button on:click={() => appState.set(AppState.MAIN_MENU)}>Back</button>
+    <button on:click={() => appState.set('MainMenu')}>Back</button>
     <button on:click={createGame} type="submit">Create!</button>
   </div>
 

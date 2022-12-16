@@ -1,6 +1,6 @@
 <script lang="ts">
   
-  import { NOTIFICATIONS_WINDOW_HEIGHT, NOTIFICATION_HEADER_HEIGHT } from "../../../scripts/desktopConstants";
+  import { NOTIFICATIONS_WINDOW_HEIGHT, NOTIFICATION_HEADER_HEIGHT, NOTIFICATION_PADDING } from "../../../scripts/desktopConstants";
 
   export let iconPath: string | undefined = undefined;
   export let header: string = "!";
@@ -8,10 +8,9 @@
 
 </script>
 
-<!-- NOT TESTED -->
 <main>
 
-  <div class="inner">
+  <div class="inner" style="padding: {NOTIFICATION_PADDING}px;">
 
     <div class="header">
 
@@ -21,11 +20,11 @@
         alt="icon"
       />
 
-      <h3>{header}</h3>
+      <h3 style="width: calc(100% - {NOTIFICATION_PADDING}px * 3);" title={header}>{header}</h3>
 
     </div>
 
-    <p>{content}</p>
+    <p style="width: calc(100% - {NOTIFICATION_PADDING}px * 3);">{content}</p>
   
   </div>
 
@@ -44,7 +43,6 @@
   .inner {
     width: 100%;
     height: 100%;
-    padding: 1rem;
     box-sizing: border-box;
   }
 
@@ -57,10 +55,13 @@
     margin-right: 1rem;
   }
 
-  /* PROBLEM: the content doesn't wrap */
+  h3 {
+    text-overflow: ellipsis;
+    text-align: left;
+  }
+
   p {
-    inline-size: 100%;
-    width: 100%;
+    text-align: left;
     overflow-wrap: break-word;
   }
 
