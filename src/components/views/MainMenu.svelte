@@ -1,6 +1,6 @@
 <script lang="ts">
 
-  import { appState, AppState } from "../../stores/appState";
+  import { appState } from "../../stores/appState";
   import Logo from "../../assets/logo.svg";
 
 </script>
@@ -12,17 +12,15 @@
   <!--
     The buttons will probably be changed to components.
   -->
-  <button on:click={() => appState.set(AppState.NEW_GAME_MENU)}>New Game</button>
-  <button on:click={() => appState.set(AppState.LOAD_GAME_MENU)}>Load Game</button>
+  <button on:click={() => appState.set('NewGameMenu')}>New Game</button>
+  <button on:click={() => appState.set('LoadGameMenu')}>Load Game</button>
   <button on:click={() => alert("Not Implemented")} class="disabled">Multiplayer</button>
-  <!-- <button on:click={() => appState.set(AppState.MULTIPLAYER_MENU)}>Multiplayer</button> -->
-  <button on:click={() => appState.set(AppState.SETTINGS_MENU)}>Settings</button>
+  <!-- <button on:click={() => appState.set('MultiplayerMenu')}>Multiplayer</button> -->
+  <button on:click={() => appState.set('SettingsMenu')}>Settings</button>
 
 </main>
 
 <style>
-
-  /* Note: Grid could be used to make the layout for the menu page. */
 
   main {
     /* position: relative; */

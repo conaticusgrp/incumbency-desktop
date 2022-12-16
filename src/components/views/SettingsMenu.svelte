@@ -1,7 +1,7 @@
 <script lang="ts">
 
   import { appWindow } from "@tauri-apps/api/window";
-  import { AppState, appState } from "../../stores/appState";
+  import { appState } from "../../stores/appState";
   
   let fullscreen = true;
   let volume = 0.5;
@@ -30,8 +30,8 @@
   <label for="fullscreen">Volume</label>
   <input bind:value={volume} type="range" name="Volume" min="0" max="1" step="0.01">
 
-  <button on:click={() => appState.set(AppState.MAIN_MENU)}>Back</button>
-  <button on:click={() => appState.set(AppState.CREDITS)}>Credits</button>
+  <button on:click={() => appState.set('MainMenu')}>Back</button>
+  <button on:click={() => appState.set('Credits')}>Credits</button>
 
 </main>
 

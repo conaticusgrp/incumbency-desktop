@@ -1,5 +1,7 @@
 <script lang="ts">
-  import { AppState, appState } from "../../stores/appState"
+
+  import { onMount } from "svelte"
+  import { appState } from "../../stores/appState"
   import { invoke } from "@tauri-apps/api/tauri"
 
   let saves: string[] = []
@@ -7,30 +9,38 @@
   const get_saves = async () => {
     saves = (await invoke("list_saves")) as string[]
   }
-  get_saves()
+
+  onMount(() => {
+    get_saves();
+  });
+
 </script>
 
 <main>
+
   <div class="center" style="height: 100%; flex-direction: column;">
+
     <h2>Load Game</h2>
     <ul class="horizontal_scroll">
       {#each saves as save}
         <!-- change this to open game view -->
         <div
-          on:mouseup={() => appState.set(AppState.SINGLEPLAYER)}
+          on:mouseup={() => appState.set('Singleplayer')}
           class="save_card"
         >
           {save}
         </div>
       {/each}
     </ul>
+
   </div>
-  <button class="button_back" on:click={() => appState.set(AppState.MAIN_MENU)}
-    >Back</button
-  >
+
+  <button class="button_back" on:click={() => appState.set('MainMenu')}>Back</button>
+
 </main>
 
 <style>
+
   ::-webkit-scrollbar {
     background: #1a1a1a30;
     border-radius: 2rem;
@@ -80,4 +90,5 @@
     left: 50%;
     transform: translate(-50%, 0);
   }
+  
 </style>
