@@ -1,90 +1,129 @@
 <script lang="ts">
+  import { Close, Remove, SquareOutline } from "svelte-ionicons"
 
-  import { MIN_WINDOW_HEIGHT, MIN_WINDOW_WIDTH, RESIZE_BAR_SIZE, WINDOW_HEADER_HEIGHT } from "../../../scripts/desktopConstants";
+  import {
+    MIN_WINDOW_HEIGHT,
+    MIN_WINDOW_WIDTH,
+    RESIZE_BAR_SIZE,
+    WINDOW_HEADER_HEIGHT,
+  } from "../../../scripts/desktopConstants"
 
-  export let title: string = "?";
-  export let iconPath: string | undefined = undefined;
-  export let pos: { x: number, y: number } = { x: 0, y: 0 };
-  export let size: { width: number, height: number } = { width: 600, height: 400 };
+  export let title: string = "?"
+  export let iconPath: string | undefined = undefined
+  export let pos: { x: number; y: number } = { x: 0, y: 0 }
+  export let size: { width: number; height: number } = {
+    width: 600,
+    height: 400,
+  }
 
-  let thisObj: HTMLElement;
-  let dragOffset: { dx: number, dy: number };
-  let resizeType: 'w' | 'h' | 'wh';
+  let thisObj: HTMLElement
+  let dragOffset: { dx: number; dy: number }
+  let resizeType: "w" | "h" | "wh"
 
   const handleClose = (): void => {
-    console.log("close");
+    console.log("close")
   }
 
   const handleMaximize = (): void => {
-    console.log("maximize");
+    console.log("maximize")
   }
 
   const handleMinimize = (): void => {
-    console.log("minimize");
+    console.log("minimize")
   }
 
   const handleDragStart = (e: MouseEvent): void => {
-    if (e.target instanceof HTMLImageElement ||
-        e.target instanceof HTMLButtonElement) return;
-    
-    document.addEventListener("mousemove", handleDrag);
-    document.addEventListener("mouseup", handleDragEnd);
+    if (
+      e.target instanceof HTMLImageElement ||
+      e.target instanceof HTMLButtonElement
+    )
+      return
 
-    dragOffset = { dx: e.clientX - thisObj.offsetLeft, dy: e.clientY - thisObj.offsetTop };
+    document.addEventListener("mousemove", handleDrag)
+    document.addEventListener("mouseup", handleDragEnd)
+
+    dragOffset = {
+      dx: e.clientX - thisObj.offsetLeft,
+      dy: e.clientY - thisObj.offsetTop,
+    }
   }
 
   const handleDrag = (e: MouseEvent): void => {
-    pos.x = Math.max(Math.min(e.clientX - dragOffset.dx, parent.innerWidth - size.width), 0);
-    pos.y = Math.max(Math.min(e.clientY - dragOffset.dy, parent.innerHeight - size.height), 0);
+    pos.x = Math.max(
+      Math.min(e.clientX - dragOffset.dx, parent.innerWidth - size.width),
+      0
+    )
+    pos.y = Math.max(
+      Math.min(e.clientY - dragOffset.dy, parent.innerHeight - size.height),
+      0
+    )
   }
 
   const handleDragEnd = (e: MouseEvent): void => {
-    handleDrag(e);
-    document.removeEventListener("mousemove", handleDrag);
-    document.removeEventListener("mouseup", handleDragEnd);
+    handleDrag(e)
+    document.removeEventListener("mousemove", handleDrag)
+    document.removeEventListener("mouseup", handleDragEnd)
   }
 
   const handleResizeStart = (e: MouseEvent): void => {
-    const classList = (e.target as HTMLElement).classList;
-    if (classList.contains('width-resize-bar')) {
-      resizeType = 'w';
-    } else if (classList.contains('height-resize-bar')) {
-      resizeType = 'h';
-    } else if (classList.contains('width-height-resize-bar')) {
-      resizeType = 'wh';
+    const classList = (e.target as HTMLElement).classList
+    if (classList.contains("width-resize-bar")) {
+      resizeType = "w"
+    } else if (classList.contains("height-resize-bar")) {
+      resizeType = "h"
+    } else if (classList.contains("width-height-resize-bar")) {
+      resizeType = "wh"
     } else {
-      return;
+      return
     }
 
-    document.addEventListener("mousemove", handleResize);
-    document.addEventListener("mouseup", handleResizeEnd);
+    document.addEventListener("mousemove", handleResize)
+    document.addEventListener("mouseup", handleResizeEnd)
   }
 
   const handleResize = (e: MouseEvent): void => {
     switch (resizeType) {
-      case 'w': {
-        size.width = Math.max(Math.min(e.clientX - pos.x, parent.innerWidth), MIN_WINDOW_WIDTH);
-      }; break;
-      
-      case 'h': {
-        size.height = Math.max(Math.min(e.clientY - pos.y, parent.innerHeight), MIN_WINDOW_HEIGHT);
-      }; break;
-      
-      case 'wh': {
-        size.width = Math.max(Math.min(e.clientX - pos.x, parent.innerWidth), MIN_WINDOW_WIDTH);
-        size.height = Math.max(Math.min(e.clientY - pos.y, parent.innerHeight), MIN_WINDOW_HEIGHT);
-      }; break;
+      case "w":
+        {
+          size.width = Math.max(
+            Math.min(e.clientX - pos.x, parent.innerWidth),
+            MIN_WINDOW_WIDTH
+          )
+        }
+        break
 
-      default: break;
+      case "h":
+        {
+          size.height = Math.max(
+            Math.min(e.clientY - pos.y, parent.innerHeight),
+            MIN_WINDOW_HEIGHT
+          )
+        }
+        break
+
+      case "wh":
+        {
+          size.width = Math.max(
+            Math.min(e.clientX - pos.x, parent.innerWidth),
+            MIN_WINDOW_WIDTH
+          )
+          size.height = Math.max(
+            Math.min(e.clientY - pos.y, parent.innerHeight),
+            MIN_WINDOW_HEIGHT
+          )
+        }
+        break
+
+      default:
+        break
     }
   }
 
   const handleResizeEnd = (e: MouseEvent): void => {
-    handleResize(e);
-    document.removeEventListener("mousemove", handleResize);
-    document.removeEventListener("mouseup", handleResizeEnd);
+    handleResize(e)
+    document.removeEventListener("mousemove", handleResize)
+    document.removeEventListener("mouseup", handleResizeEnd)
   }
-
 </script>
 
 <!-- PARENT COMPONENT -->
@@ -97,94 +136,74 @@
   "
   bind:this={thisObj}
 >
-  
   <div
     class="header"
     style="height: {WINDOW_HEADER_HEIGHT}px;"
     on:mousedown={handleDragStart}
   >
-
     <div>
-
       <img
         src={iconPath || ""}
         alt="icon"
-        title={title}
+        {title}
         style="width: {WINDOW_HEADER_HEIGHT}px; height: {WINDOW_HEADER_HEIGHT}px;"
       />
       <span>{title}</span>
-      
     </div>
-    <div>
-
+    <div id="window-buttons">
       <!-- Please fix the buttons, anyone -->
-      <button
-        class="close-button"
-        style="
-          width: {WINDOW_HEADER_HEIGHT}px;
-          height: {WINDOW_HEADER_HEIGHT}px;
-          border-radius: {WINDOW_HEADER_HEIGHT}px;
-        "
-        title="Close"
-        on:click={handleClose}
-      ></button>
+      <button class="close-button" title="Close" on:click={handleClose}>
+        <Close />
+      </button>
 
       <button
         class="maximize-button"
-        style="
-          width: {WINDOW_HEADER_HEIGHT}px;
-          height: {WINDOW_HEADER_HEIGHT}px;
-          border-radius: {WINDOW_HEADER_HEIGHT}px;
-        "
         title="Maximize"
         on:click={handleMaximize}
-      ></button>
+      >
+        <SquareOutline size="14" />
+      </button>
 
       <button
         class="minimize-button"
-        style="
-          width: {WINDOW_HEADER_HEIGHT}px;
-          height: {WINDOW_HEADER_HEIGHT}px;
-          border-radius: {WINDOW_HEADER_HEIGHT}px;
-        "
         title="Minimize"
         on:click={handleMinimize}
-      ></button>
-      
+      >
+        <Remove />
+      </button>
     </div>
   </div>
 
   <!-- Viewport -->
-  <div class="viewport" style="width: 100%; height: calc(100% - {WINDOW_HEADER_HEIGHT}px);">
-
+  <div
+    class="viewport"
+    style="width: 100%; height: calc(100% - {WINDOW_HEADER_HEIGHT}px);"
+  >
     <slot />
 
     <div
       class="width-resize-bar"
       style="width: {RESIZE_BAR_SIZE}px; height: calc(100% - {RESIZE_BAR_SIZE}px);"
       on:mousedown={handleResizeStart}
-      ></div>
+    />
     <div
       class="height-resize-bar"
       style="width: calc(100% - {RESIZE_BAR_SIZE}px); height: {RESIZE_BAR_SIZE}px;"
       on:mousedown={handleResizeStart}
-      ></div>
+    />
     <div
       class="width-height-resize-bar"
       style="width: {RESIZE_BAR_SIZE}px; height: {RESIZE_BAR_SIZE}px;"
       on:mousedown={handleResizeStart}
-      ></div>
-
+    />
   </div>
-  
 </main>
 
 <style>
-
   main {
     position: absolute;
     border: 1px solid grey;
-
+    border-top: none;
     pointer-events: all;
   }
 
@@ -219,21 +238,31 @@
     isolation: isolate;
   }
 
-  button {
+  #window-buttons button {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 20px;
+    width: 20px;
     padding: 0;
-    margin: 0 0.5rem 0 0.5rem;
+    margin: 0 0.25rem 0 0.25rem;
+    border-radius: 50%;
+    transition: all 0.2s ease-in-out;
   }
 
-  .close-button {
-    background-color: red;
+  #window-buttons button:hover,
+  #window-buttons button:focus {
+    outline: none;
+    border: none;
   }
 
-  .maximize-button {
-    background-color: yellow;
+  .close-button:hover {
+    background-color: rgb(204, 70, 70);
   }
 
-  .minimize-button {
-    background-color: green;
+  .maximize-button:hover,
+  .minimize-button:hover {
+    background-color: rgba(255, 255, 255, 0.151);
   }
 
   .width-resize-bar {
@@ -255,12 +284,11 @@
   }
 
   .width-height-resize-bar {
-    cursor:nwse-resize;
+    cursor: nwse-resize;
     position: absolute;
     right: 0;
     bottom: 0;
     z-index: 9999;
     /* background-color: white; */
   }
-
 </style>
