@@ -1,13 +1,13 @@
 <script lang="ts">
 
-  import { AppState, appState } from "../../stores/appState";
+  import { appState } from "../../stores/appState";
 
 </script>
 
 <main>
 
   <p>Not Implemented</p>
-  <button on:click={() => appState.set(AppState.SETTINGS_MENU)}>Back</button>
+  <button on:click={() => appState.set('SettingsMenu')}>Back</button>
 
 </main>
 
