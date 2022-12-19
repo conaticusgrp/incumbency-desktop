@@ -1,4 +1,4 @@
-use std::{fs};
+use std::{fs, ops::Add};
 use rand::Rng;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -15,23 +15,23 @@ pub fn load_config() -> Config {
     toml::from_str(config_contents.as_str()).unwrap()
 }
 
-pub fn set_demical_count(number: f32, decimal_count: u32) -> f32 {
+pub fn set_decimal_count(number: f32, decimal_count: u32) -> f32 {
     let power = 10i32.pow(decimal_count) as f32;
     (number * power).round() / power
 }
 
 fn generate_percentage_float(decimal_count: u32) -> f32 {
     let mut rng = rand::thread_rng();
-    set_demical_count(rng.gen::<f32>() * 100., decimal_count)
+    set_decimal_count(rng.gen::<f32>() * 100., decimal_count)
 }
 
-fn generate_percentage() -> i32 {
+pub fn generate_percentage() -> i32 {
     let mut rng = rand::thread_rng();
     rng.gen_range(0..100)
 }
 
-// Takes in an input of percentages and then an output is generated based on the chances provided
-pub fn percentage_based_output_int<ValueType>(chances: HashMap<ValueType, i32>) -> Result<ValueType, String> {
+/// Takes in an input of percentages and then an output is generated based on the chances provided
+pub fn percentage_based_output_int<ValueType>(chances: HashMap<ValueType, i32>) -> ValueType {
     let mut remaining_percentage = 100;
     let percentage = generate_percentage();
     let mut ret_value: Option<ValueType> = None;
@@ -44,16 +44,16 @@ pub fn percentage_based_output_int<ValueType>(chances: HashMap<ValueType, i32>) 
     }
 
     if remaining_percentage != 0 {
-        return Err("Percentage output could not be calculated because the chances do not add up to exactly 100%.".to_string());
+        panic!("Percentage output could not be calculated because the chances do not add up to exactly 100%.");
     }
 
     match ret_value {
-        Some(v) => Ok(v),
-        None => Err("Invalid input provided. Percentages must add up to exactly 100%.".to_string())
+        Some(v) => v,
+        None => panic!("Invalid input provided. Percentages must add up to exactly 100%."),
     }
 }
 
-pub fn percentage_based_output_float<ValueType>(chances: HashMap<ValueType, f32>, decimal_count: u32) -> Result<ValueType, String> {
+pub fn percentage_based_output_float<ValueType>(chances: HashMap<ValueType, f32>, decimal_count: u32) -> ValueType {
     let mut remaining_percentage = 100.;
     let percentage = generate_percentage_float(decimal_count);
     let mut ret_value: Option<ValueType> = None;
@@ -66,11 +66,17 @@ pub fn percentage_based_output_float<ValueType>(chances: HashMap<ValueType, f32>
     }
 
     if remaining_percentage != 0. {
-        return Err("Percentage output could not be calculated because the chances do not add up to exactly 100.".to_string());
+        panic!("Percentage output could not be calculated because the chances do not add up to exactly 100.");
     }
 
     match ret_value {
-        Some(v) => Ok(v),
-        None => Err("Invalid input provided. Percentages must add up to exactly 100%.".to_string())
+        Some(v) => v,
+        None => panic!("Invalid input provided. Percentages must add up to exactly 100%."),
     }
+}
+
+/// Random float range
+pub fn float_range(min: f32, max: f32, decimal_count: u32) -> f32 {
+    let mut rng = rand::thread_rng();
+    set_decimal_count(rng.gen::<f32>() * (max - min) + min, decimal_count)
 }
