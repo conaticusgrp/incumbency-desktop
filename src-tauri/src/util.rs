@@ -1,26 +1,12 @@
-use std::{fs, ops::Add};
 use rand::Rng;
-use serde::Deserialize;
 use std::collections::HashMap;
-
-const CONFIG_PATH: &str = "./game_config.toml";
-
-#[derive(Deserialize)]
-pub struct Config {
-    pub starting_population: String,
-} 
-
-pub fn load_config() -> Config {
-    let config_contents = fs::read_to_string(CONFIG_PATH).unwrap();
-    toml::from_str(config_contents.as_str()).unwrap()
-}
 
 pub fn set_decimal_count(number: f32, decimal_count: u32) -> f32 {
     let power = 10i32.pow(decimal_count) as f32;
     (number * power).round() / power
 }
 
-fn generate_percentage_float(decimal_count: u32) -> f32 {
+pub fn generate_percentage_float(decimal_count: u32) -> f32 {
     let mut rng = rand::thread_rng();
     set_decimal_count(rng.gen::<f32>() * 100., decimal_count)
 }
@@ -29,6 +15,8 @@ pub fn generate_percentage() -> i32 {
     let mut rng = rand::thread_rng();
     rng.gen_range(0..100)
 }
+
+// TODO: Use something other than a hashmap
 
 /// Takes in an input of percentages and then an output is generated based on the chances provided
 pub fn percentage_based_output_int<ValueType>(chances: HashMap<ValueType, i32>) -> ValueType {

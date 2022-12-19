@@ -1,13 +1,14 @@
 use std::{ops::Range, collections::HashMap};
 use maplit::hashmap;
 use rand::{Rng};
-use crate::util::{percentage_based_output_float, float_range, percentage_based_output_int, generate_percentage};
+use crate::{util::{percentage_based_output_float, float_range, percentage_based_output_int, generate_percentage, generate_percentage_float}, config::Config};
 use EducationLevel::*;
 
 use super::business::ProductType;
 
 const US_DEBT_REPAYMENT_THRESHOLD: f32 = 32_000.; // Minimum salary required to start paying debts
 
+#[derive(Default)]
 pub struct Person {
     pub education_level: EducationLevel,
     pub years_in_higher_education: i32, // Amount of years the individual spent in college or university (TODO: use this)
@@ -26,23 +27,47 @@ pub struct Person {
 }
 
 impl Person {
-    pub fn generate(&mut self, salary: f32) {
-        self.education_level = percentage_based_output_float::<EducationLevel>(hashmap! {
-            NoFormalEducation => 10.2,
-            HighSchoolDiploma => 28.52,
-            College => 16.12,
-            AssociateDegree => 10.18,
-            Bachelors => 29.48,
-            AdvancedDegree => 5.5,
-        }, 2);
+    pub fn generate(&mut self, config: &Config) {
+        self.job = Job::Unemployed;
+
+        self.education_level = self.generate_education_level(&config);
+
+        self.expected_salary_range = match self.education_level {
+            NoFormalEducation => 15000..30000,
+            HighSchoolDiploma => 30000..40000,
+            College => 50000..60000,
+            AssociateDegree => 40000..70000,
+            Bachelors => 60000..90000,
+            AdvancedDegree => 100000..300000,
+        };
+
+        let expected_salary = ((self.expected_salary_range.start + self.expected_salary_range.end) / 2) as f32;
 
         self.spending_behaviour = self.generate_spending_behaviour();
-        self.balance = self.generate_balance(salary);
+        self.balance = self.generate_balance(expected_salary);
         self.age = self.generate_age();
-        self.debts = Debt::generate(self, salary);
-        self.daily_food_spending = self.generate_daily_food_spending(salary, None);
+        self.debts = Debt::generate(self, expected_salary);
+        self.daily_food_spending = self.generate_daily_food_spending(expected_salary, None);
 
-        self.generate_wants(salary);
+        self.generate_wants(expected_salary);
+    }
+
+    fn generate_education_level(&self, config: &Config) -> EducationLevel {
+        let nc = config.no_education_chance;
+        let hsdc = config.high_school_diploma_chance;
+        let cc = config.college_chance;
+        let asc = config.associate_degree_chance;
+        let bc = config.bachelors_chance;
+        let addc = config.advanced_degree_chance;
+
+        percentage_based_output_float::<EducationLevel>(hashmap! {
+            NoFormalEducation => nc,
+            HighSchoolDiploma => hsdc,
+            College => cc,
+            AssociateDegree => asc,
+            Bachelors => bc,
+            AdvancedDegree => addc,
+        }, 2)
     }
 
     fn behaviour_one(&self, salary: f32) {
@@ -251,10 +276,10 @@ impl Debt {
 
         // TODO: make these values random
         owed -= match person.spending_behaviour {
-            SpendingBehaviour::One => Debt::get_prepaid_amount(3, 50..150),
-            SpendingBehaviour::Two => Debt::get_prepaid_amount(15, 100..300),
-            SpendingBehaviour::Three => Debt::get_prepaid_amount(30, 400..1200),
-            SpendingBehaviour::Four => Debt::get_prepaid_amount(72, 800..3500),
+            SpendingBehaviour::One => Debt::get_education_prepaid_amount(3, 50..150),
+            SpendingBehaviour::Two => Debt::get_education_prepaid_amount(15, 100..300),
+            SpendingBehaviour::Three => Debt::get_education_prepaid_amount(30, 400..1200),
+            SpendingBehaviour::Four => Debt::get_education_prepaid_amount(72, 800..3500),
         } as f32;
 
         if owed < 0. {
@@ -270,7 +295,8 @@ impl Debt {
         debts
     }
 
-    fn get_prepaid_amount(is_prepaid_chance_percentage: i32, prepaid_range: Range<i32>) -> f32 {
+    /// Get amount that the student has already paid off, excluding what they are required to pay
+    fn get_education_prepaid_amount(is_prepaid_chance_percentage: i32, prepaid_range: Range<i32>) -> f32 {
         let is_prepaid = percentage_based_output_int::<bool>(hashmap! {
             true => is_prepaid_chance_percentage,
             false => 100 - is_prepaid_chance_percentage,

@@ -1,1 +1,8 @@
 starting_population=1000
+
+no_education_chance=10.2
+high_school_diploma_chance=28.52
+college_chance=16.12
+associate_degree_chance=10.18
+bachelors_chance=29.48
+advanced_degree_chance=5.5

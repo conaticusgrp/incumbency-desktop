@@ -3,10 +3,10 @@ use tauri::State;
 use crate::{generation::generate_game, entities::{business::Business, person::Person}};
 
 pub struct GameState {
-  tax_rate: f32,
-  businesses: Vec<Business>,
-  people: Vec<Person>,
-  gdp: f32,
+  pub tax_rate: f32,
+  pub businesses: Vec<Business>,
+  pub people: Vec<Person>,
+  pub gdp: f32,
 }
 
 pub type GameStateSafe = Arc<Mutex<GameState>>;

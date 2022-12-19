@@ -7,6 +7,7 @@ mod entities;
 mod generation;
 mod new_game;
 mod util;
+mod config;
 
 use new_game::*;
 use std::sync::{Arc, Mutex};
