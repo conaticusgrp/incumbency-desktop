@@ -1,7 +1,7 @@
 use std::{ops::Range, collections::HashMap};
 use maplit::hashmap;
 use rand::{Rng};
-use crate::{util::{percentage_based_output_float, float_range, percentage_based_output_int, generate_percentage, generate_percentage_float}, config::Config};
+use crate::{util::{percentage_based_output_float, float_range, percentage_based_output_int, generate_percentage, generate_percentage_float}, config::Config, generation::generate_education_level};
 use EducationLevel::*;
 
 use super::business::ProductType;
@@ -30,7 +30,7 @@ impl Person {
     pub fn generate(&mut self, config: &Config) {
         self.job = Job::Unemployed;
 
-        self.education_level = self.generate_education_level(&config);
+        self.education_level = generate_education_level(&config);
 
         self.expected_salary_range = match self.education_level {
             NoFormalEducation => 15000..30000,
@@ -50,24 +50,6 @@ impl Person {
         self.daily_food_spending = self.generate_daily_food_spending(expected_salary, None);
 
         self.generate_wants(expected_salary);
-    }
-
-    fn generate_education_level(&self, config: &Config) -> EducationLevel {
-        let nc = config.no_education_chance;
-        let hsdc = config.high_school_diploma_chance;
-        let cc = config.college_chance;
-        let asc = config.associate_degree_chance;
-        let bc = config.bachelors_chance;
-        let addc = config.advanced_degree_chance;
-
-        percentage_based_output_float::<EducationLevel>(hashmap! {
-            NoFormalEducation => nc,
-            HighSchoolDiploma => hsdc,
-            College => cc,
-            AssociateDegree => asc,
-            Bachelors => bc,
-            AdvancedDegree => addc,
-        }, 2)
     }
 
     fn behaviour_one(&self, salary: f32) {
