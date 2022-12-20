@@ -1,7 +1,7 @@
-use std::{ops::Range, collections::HashMap};
+use std::{ops::Range, collections::HashMap, hash};
 use maplit::hashmap;
 use rand::{Rng};
-use crate::{util::{percentage_based_output_float, float_range, percentage_based_output_int, generate_percentage, generate_percentage_float}, config::Config, generation::generate_education_level};
+use crate::{util::{float_range, percentage_based_output_int, generate_percentage}, config::Config, generation::generate_education_level};
 use EducationLevel::*;
 
 use super::business::ProductType;
@@ -27,13 +27,13 @@ pub struct Person {
 }
 
 impl Person {
-    pub fn generate(&mut self, config: &Config) {
+    pub fn generate(&mut self, config: &Config, product_demand: &mut HashMap<ProductType, f32>) {
         self.job = Job::Unemployed;
 
         self.education_level = generate_education_level(&config);
 
         self.expected_salary_range = match self.education_level {
-            NoFormalEducation => 15000..30000,
+            NoFormalEducation => 15000..22000,
             HighSchoolDiploma => 30000..40000,
             College => 50000..60000,
             AssociateDegree => 40000..70000,
@@ -49,7 +49,7 @@ impl Person {
         self.debts = Debt::generate(self, expected_salary);
         self.daily_food_spending = self.generate_daily_food_spending(expected_salary, None);
 
-        self.generate_wants(expected_salary);
+        self.generate_wants(expected_salary, product_demand);
     }
 
     fn behaviour_one(&self, salary: f32) {
@@ -92,7 +92,14 @@ impl Person {
         }
 
         match self.education_level {
-            NoFormalEducation | HighSchoolDiploma => percentage_based_output_int::<SpendingBehaviour>(hashmap! {
+            NoFormalEducation => percentage_based_output_int::<SpendingBehaviour>(hashmap! {
+                SpendingBehaviour::One => 75,
+                SpendingBehaviour::Two => 20,
+                SpendingBehaviour::Three => 4,
+                SpendingBehaviour::Four => 1,
+            }),
+
+            HighSchoolDiploma => percentage_based_output_int::<SpendingBehaviour>(hashmap! {
                 SpendingBehaviour::One => 20,
                 SpendingBehaviour::Two => 70,
                 SpendingBehaviour::Three => 9,
@@ -118,14 +125,14 @@ impl Person {
     fn generate_age(&self) -> i32 {
         let mut rng = rand::thread_rng();
 
-        let age_category = percentage_based_output_float::<i32>(hashmap! {
-            1 => 23.5,
-            2 => 8.5,
-            3 => 12.3,
-            4 => 25.7,
-            5 => 13.1,
-            6 => 16.9,
-        }, 1);
+        let age_category = percentage_based_output_int::<i32>(hashmap! {
+            1 => 24,
+            2 => 9,
+            3 => 12,
+            4 => 25,
+            5 => 13,
+            6 => 17,
+        });
 
         match age_category {
             1 => rng.gen_range(0..=18),
@@ -138,23 +145,24 @@ impl Person {
         }
     }
 
-    fn generate_wants(&mut self, salary: f32) {
+    fn generate_wants(&mut self, salary: f32, product_demand: &mut HashMap<ProductType, f32>) {
         // TODO: generate based on more factors rather than just salary
         let mut rng = rand::thread_rng();
 
         // The percentage of balance that will be added to wants
-        let balance_percentage = match self.spending_behaviour {
-            SpendingBehaviour::One => rng.gen_range(5..15),
-            SpendingBehaviour::Two => rng.gen_range(1..5),
-            _ => 0,
+        let (balance_percentage, salary_percentage) = match self.spending_behaviour {
+            SpendingBehaviour::One => (float_range(0.4, 1., 2), rng.gen_range(1..5) as f32),
+            SpendingBehaviour::Two => (float_range(0.08, 0.3, 3), rng.gen_range(1..=3) as f32),
+            SpendingBehaviour::Three =>  (float_range(0.02, 0.25, 3), float_range(0.01, 0.05, 2)),
+            SpendingBehaviour::Four => (float_range(0.005, 0.058, 4), 0.),
         };
 
         let mut total_wants = self.balance * (balance_percentage as f32 / 100.);
-
-        let salary_percenatge = rng.gen_range(5..25) as f32;
-        total_wants += salary * (salary_percenatge / 100.);
+        
+        total_wants += (salary / 12.) * (salary_percentage as f32 / 100.);
 
         self.wants.insert(ProductType::LEISURE, total_wants);
+        *product_demand.get_mut(&ProductType::LEISURE).unwrap() += total_wants;
     }
 
     /// `chances` - The percentage chance of going over or under minimum food spending. \

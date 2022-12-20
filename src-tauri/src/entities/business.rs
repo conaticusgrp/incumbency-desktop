@@ -14,14 +14,15 @@ pub enum ProductType {
     // HOUSES
 }
 
+#[derive(Default)]
 pub struct Business {
     pub minimum_education_level: EducationLevel,
     pub expected_marketing_reach: i32, // Amount of population that the marketing will reach (roughly)
 }
 
 impl Business {
-    /// Generates a business based on demand,
-    pub fn generate(&mut self, config: &Config, product_type: ProductType, demanding_customers: i32, taken_market_percentage: &mut f32) {
+    /// Generates a business based on demand
+    pub fn generate(&mut self, config: &Config, product_type: ProductType, product_demand: f32, remaining_market_percentage: &mut f32) -> bool {
         self.minimum_education_level = generate_education_level(&config);
 
         let marketing_reach_percentage = match self.minimum_education_level {
@@ -33,9 +34,17 @@ impl Business {
             AdvancedDegree => self.random_marketing_percentage_multiplyer(0.8, 1.5),
         } as f32;
 
-        // check if percentage too high
+        if (*remaining_market_percentage - marketing_reach_percentage) < 0. {
+            return false;
+        }
 
-        self.expected_marketing_reach = (marketing_reach_percentage / 100.) as i32 * demanding_customers;
+        *remaining_market_percentage -= marketing_reach_percentage;
+
+        // TODO: make this better
+        let product_price = rand::thread_rng().gen_range(2..100) as f32;
+
+        // self.expected_marketing_reach = ((marketing_reach_percentage / 100.) as f32 * (product_demand / product_price)) as i32; - this is actually the required stock
+        return true;
     }
 
 
@@ -53,7 +62,7 @@ impl Business {
             2 => rng.gen_range(150..320) as f32, // Increase start and end by a random range of 150%-320%
             3 => rng.gen_range(500..1000) as f32,
             _ => 1.,
-        };
+        } / 100.;
 
         float_range(min * increase_multiplyer, max * increase_multiplyer, 2)
     }
