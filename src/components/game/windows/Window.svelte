@@ -1,4 +1,5 @@
 <script lang="ts">
+  
   import { Close, Remove, SquareOutline } from "svelte-ionicons"
 
   import {
@@ -8,6 +9,7 @@
     WINDOW_HEADER_HEIGHT,
   } from "../../../scripts/desktopConstants"
 
+  export let parentComponent: HTMLElement;
   export let title: string = "?"
   export let iconPath: string | undefined = undefined
   export let pos: { x: number; y: number } = { x: 0, y: 0 }
@@ -18,14 +20,15 @@
 
   let thisObj: HTMLElement
   let dragOffset: { dx: number; dy: number }
-  let resizeType: "w" | "h" | "wh"
+  let resizeType: { w?: 'r' | 'l', h?: 't' | 'b' };
 
   const handleClose = (): void => {
     console.log("close")
   }
 
   const handleMaximize = (): void => {
-    console.log("maximize")
+    pos = { x: 0, y: 0 }
+    size = { width: parentComponent.clientWidth, height: parentComponent.clientHeight };
   }
 
   const handleMinimize = (): void => {
@@ -50,11 +53,11 @@
 
   const handleDrag = (e: MouseEvent): void => {
     pos.x = Math.max(
-      Math.min(e.clientX - dragOffset.dx, parent.innerWidth - size.width),
+      Math.min(e.clientX - dragOffset.dx, parentComponent.clientWidth - size.width),
       0
     )
     pos.y = Math.max(
-      Math.min(e.clientY - dragOffset.dy, parent.innerHeight - size.height),
+      Math.min(e.clientY - dragOffset.dy, parentComponent.clientHeight - size.height),
       0
     )
   }
@@ -67,12 +70,22 @@
 
   const handleResizeStart = (e: MouseEvent): void => {
     const classList = (e.target as HTMLElement).classList
-    if (classList.contains("width-resize-bar")) {
-      resizeType = "w"
-    } else if (classList.contains("height-resize-bar")) {
-      resizeType = "h"
-    } else if (classList.contains("width-height-resize-bar")) {
-      resizeType = "wh"
+    if (classList.contains("width-resize-bar-right")) {
+      resizeType = { w: 'r' }
+    } else if (classList.contains("width-resize-bar-left")) {
+      resizeType = { w: 'l' }
+    } else if (classList.contains("height-resize-bar-bottom")) {
+      resizeType = { h: 'b' }
+    } else if (classList.contains("height-resize-bar-top")) {
+      resizeType = { h: 't' }
+    } else if (classList.contains("width-height-resize-bar-bottom-right")) {
+      resizeType = { w: 'r', h: 'b' }
+    } else if (classList.contains("width-height-resize-bar-top-left")) {
+      resizeType = { w: 'l', h: 't' }
+    } else if (classList.contains("width-height-resize-bar-top-right")) {
+      resizeType = { w: 'r', h: 't' }
+    } else if (classList.contains("width-height-resize-bar-bottom-left")) {
+      resizeType = { w: 'l', h: 'b'}
     } else {
       return
     }
@@ -82,41 +95,28 @@
   }
 
   const handleResize = (e: MouseEvent): void => {
-    switch (resizeType) {
-      case "w":
-        {
-          size.width = Math.max(
-            Math.min(e.clientX - pos.x, parent.innerWidth),
-            MIN_WINDOW_WIDTH
-          )
-        }
-        break
-
-      case "h":
-        {
-          size.height = Math.max(
-            Math.min(e.clientY - pos.y, parent.innerHeight),
-            MIN_WINDOW_HEIGHT
-          )
-        }
-        break
-
-      case "wh":
-        {
-          size.width = Math.max(
-            Math.min(e.clientX - pos.x, parent.innerWidth),
-            MIN_WINDOW_WIDTH
-          )
-          size.height = Math.max(
-            Math.min(e.clientY - pos.y, parent.innerHeight),
-            MIN_WINDOW_HEIGHT
-          )
-        }
-        break
-
-      default:
-        break
+    if (resizeType.w === 'r') {
+      size.width = Math.max(
+        Math.min(e.clientX - pos.x, parentComponent.clientWidth - pos.x),
+        MIN_WINDOW_WIDTH
+      )
+    } else if (resizeType.w === 'l') {
+      const newX = Math.max(Math.min(e.clientX, pos.x + size.width - MIN_WINDOW_WIDTH), 0);
+      size.width = size.width + (pos.x - newX);
+      pos.x = newX;
     }
+
+    if (resizeType.h === 'b') {
+      size.height = Math.max(
+        Math.min(e.clientY - pos.y, parentComponent.clientHeight - pos.y),
+        MIN_WINDOW_HEIGHT
+      )
+    } else if (resizeType.h === 't') {
+      const newY = Math.max(Math.min(e.clientY, pos.y + size.height - MIN_WINDOW_HEIGHT), 0);
+      size.height = size.height + (pos.y - newY);
+      pos.y = newY;
+    }
+    
   }
 
   const handleResizeEnd = (e: MouseEvent): void => {
@@ -124,6 +124,7 @@
     document.removeEventListener("mousemove", handleResize)
     document.removeEventListener("mouseup", handleResizeEnd)
   }
+
 </script>
 
 <!-- PARENT COMPONENT -->
@@ -136,6 +137,7 @@
   "
   bind:this={thisObj}
 >
+
   <div
     class="header"
     style="height: {WINDOW_HEADER_HEIGHT}px;"
@@ -150,8 +152,7 @@
       />
       <span>{title}</span>
     </div>
-    <div id="window-buttons">
-      <!-- Please fix the buttons, anyone -->
+    <div class="window-buttons">
       <button class="close-button" title="Close" on:click={handleClose}>
         <Close />
       </button>
@@ -179,27 +180,57 @@
     class="viewport"
     style="width: 100%; height: calc(100% - {WINDOW_HEADER_HEIGHT}px);"
   >
+
     <slot />
 
     <div
-      class="width-resize-bar"
+      class="width-resize-bar-left"
+      style="width: {RESIZE_BAR_SIZE}px; height: calc(100% - {RESIZE_BAR_SIZE}px * 2);"
+      on:mousedown={handleResizeStart}
+    />
+    <div
+      class="width-resize-bar-right"
       style="width: {RESIZE_BAR_SIZE}px; height: calc(100% - {RESIZE_BAR_SIZE}px);"
       on:mousedown={handleResizeStart}
     />
     <div
-      class="height-resize-bar"
-      style="width: calc(100% - {RESIZE_BAR_SIZE}px); height: {RESIZE_BAR_SIZE}px;"
+      class="height-resize-bar-top"
+      style="width: calc(100% - {RESIZE_BAR_SIZE}px * 2); height: {RESIZE_BAR_SIZE}px;"
       on:mousedown={handleResizeStart}
     />
     <div
-      class="width-height-resize-bar"
+      class="height-resize-bar-bottom"
+      style="width: calc(100% - {RESIZE_BAR_SIZE}px); height: {RESIZE_BAR_SIZE}px;"
+      on:mousedown={handleResizeStart}
+    />
+      
+    <div
+      class="width-height-resize-bar-top-left"
       style="width: {RESIZE_BAR_SIZE}px; height: {RESIZE_BAR_SIZE}px;"
       on:mousedown={handleResizeStart}
     />
+    <div
+      class="width-height-resize-bar-bottom-right"
+      style="width: {RESIZE_BAR_SIZE}px; height: {RESIZE_BAR_SIZE}px;"
+      on:mousedown={handleResizeStart}
+    />
+    <div
+      class="width-height-resize-bar-bottom-left"
+      style="width: {RESIZE_BAR_SIZE}px; height: {RESIZE_BAR_SIZE}px;"
+      on:mousedown={handleResizeStart}
+    />
+    <div
+      class="width-height-resize-bar-top-right"
+      style="width: {RESIZE_BAR_SIZE}px; height: {RESIZE_BAR_SIZE}px;"
+      on:mousedown={handleResizeStart}
+    />
+
   </div>
+
 </main>
 
 <style>
+
   main {
     position: absolute;
     border: 1px solid grey;
@@ -238,7 +269,7 @@
     isolation: isolate;
   }
 
-  #window-buttons button {
+  .window-buttons button {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -250,8 +281,8 @@
     transition: all 0.2s ease-in-out;
   }
 
-  #window-buttons button:hover,
-  #window-buttons button:focus {
+  .window-buttons button:hover,
+  .window-buttons button:focus {
     outline: none;
     border: none;
   }
@@ -265,7 +296,9 @@
     background-color: rgba(255, 255, 255, 0.151);
   }
 
-  .width-resize-bar {
+  /* Resize bars */
+
+  .width-resize-bar-right {
     cursor: ew-resize;
     position: absolute;
     right: 0;
@@ -274,7 +307,16 @@
     /* background-color: white; */
   }
 
-  .height-resize-bar {
+  .width-resize-bar-left {
+    cursor: ew-resize;
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 9999;
+    /* background-color: white; */
+  }
+
+  .height-resize-bar-bottom {
     cursor: ns-resize;
     position: absolute;
     left: 0;
@@ -283,7 +325,16 @@
     /* background-color: white; */
   }
 
-  .width-height-resize-bar {
+  .height-resize-bar-top {
+    cursor: ns-resize;
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 9999;
+    /* background-color: white; */
+  }
+
+  .width-height-resize-bar-bottom-right {
     cursor: nwse-resize;
     position: absolute;
     right: 0;
@@ -291,4 +342,32 @@
     z-index: 9999;
     /* background-color: white; */
   }
+
+  .width-height-resize-bar-top-left {
+    cursor: nwse-resize;
+    position: absolute;
+    left: 0;
+    top: 0;
+    z-index: 9999;
+    /* background-color: white; */
+  }
+
+  .width-height-resize-bar-top-right {
+    cursor: nesw-resize;
+    position: absolute;
+    right: 0;
+    top: 0;
+    z-index: 9999;
+    /* background-color: white; */
+  }
+
+  .width-height-resize-bar-bottom-left {
+    cursor: nesw-resize;
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    z-index: 9999;
+    /* background-color: white; */
+  }
+
 </style>
