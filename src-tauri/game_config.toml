@@ -1,4 +1,4 @@
-starting_population=1000
+starting_population=10000
 
 no_education_chance=10
 high_school_diploma_chance=28
