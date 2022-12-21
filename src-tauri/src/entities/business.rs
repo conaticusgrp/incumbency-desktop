@@ -40,14 +40,13 @@ impl Business {
 
         *remaining_market_percentage -= marketing_reach_percentage;
 
-        // TODO: make this better
+        // TODO: determine this price more accurately
         let product_price = rand::thread_rng().gen_range(2..100) as f32;
 
         let demand_per_person = product_demand / config.starting_population as f32;
-        let reach = config.starting_population * (marketing_reach_percentage / 100.) as i32;
-        // use this to calculate marketing cost
+        let reach = (config.starting_population as f32 * (marketing_reach_percentage / 100.)) as i32;
+        let minimum_stock = ((demand_per_person * reach as f32) / product_price) as i32;
 
-        // self.expected_marketing_reach = ((marketing_reach_percentage / 100.) as f32 * (product_demand / product_price)) as i32; - this is actually the required stock
         return false;
     }
 
