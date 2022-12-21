@@ -13,22 +13,31 @@
   export let title: string = "?"
   export let iconPath: string | undefined = undefined
   export let pos: { x: number; y: number } = { x: 0, y: 0 }
-  export let size: { width: number; height: number } = {
+  export let size: { width: number; height: number, maximized?: boolean } = {
     width: 600,
     height: 400,
+    maximized: false
   }
-
+  
   let thisObj: HTMLElement
   let dragOffset: { dx: number; dy: number }
   let resizeType: { w?: 'r' | 'l', h?: 't' | 'b' };
+  let boundsBeforeMaximizing: { x: number, y: number, width: number, height: number };
 
   const handleClose = (): void => {
     console.log("close")
   }
 
   const handleMaximize = (): void => {
-    pos = { x: 0, y: 0 }
-    size = { width: parentComponent.clientWidth, height: parentComponent.clientHeight };
+    if (size.maximized) {
+      pos = { x: boundsBeforeMaximizing.x, y: boundsBeforeMaximizing.y }
+      size = { width: boundsBeforeMaximizing.width, height: boundsBeforeMaximizing.height, maximized: false }
+    } else {
+      boundsBeforeMaximizing = { ...pos, ...size }
+      pos = { x: 0, y: 0 }
+      size = { width: parentComponent.clientWidth, height: parentComponent.clientHeight, maximized: true }
+    }
+    
   }
 
   const handleMinimize = (): void => {
