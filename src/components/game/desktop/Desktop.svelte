@@ -11,7 +11,6 @@
   import TestWindow from "../windows/TestWindow.svelte";
   import { onMount } from 'svelte'
   
-  let windowsContainer: HTMLElement;
   let toolbarHeightPercent: number = 15;
   let wallpaperPath: string | null = null;
   let apps: DesktopAppShortcut[] = [
@@ -81,9 +80,9 @@
 
     {/each}
 
-    <div class="windows" bind:this={windowsContainer}>
+    <div class="windows">
       <!-- TODO: add opened windows -->
-      <TestWindow parentComponent={windowsContainer} />
+      <TestWindow />
     </div>
 
     <div class="notifications" style="width: {NOTIFICATIONS_WINDOW_WIDTH}px; height: {NOTIFICATIONS_WINDOW_HEIGHT}px;">
@@ -123,7 +122,7 @@
 
   .content {
     position: relative;
-    width: calc(100% - 2rem * 2);
+    width: 100%;
     display: grid;
     grid-template-columns: repeat(11, 1fr);
     grid-template-rows: repeat(7, 1fr);
