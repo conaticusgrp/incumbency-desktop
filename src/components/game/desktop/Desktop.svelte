@@ -11,10 +11,14 @@
   import TestWindow from "../windows/TestWindow.svelte";
   import { onMount } from 'svelte'
   
-  let windowsContainer: HTMLElement;
+  let windowCollection: HTMLElement;
   let toolbarHeightPercent: number = 15;
   let wallpaperPath: string | null = null;
   let apps: DesktopAppShortcut[] = [
+    {
+      name: "Test App",
+      badgeCount: 0
+    },
     {
       name: "Email",
       iconPath: "https://seeklogo.com/images/M/mail-icon-logo-28FE0635D0-seeklogo.com.png",
@@ -51,6 +55,16 @@
     }, (notifications[0].displayTime || DEFAULT_NOTIFICATION_DISPLAY_TIME) * 1_000);
   }
 
+  const handleOpenApp = (e: CustomEvent): void => {
+    if (e.detail < 0 || e.detail >= windowCollection.children.length) return;
+
+    (windowCollection.children[e.detail] as HTMLElement).style.display = 'initial';
+  }
+
+  const updateUI = () => {
+    apps = apps;
+  }
+
   // DEBUG
   onMount(() => {
     setTimeout(() => {
@@ -77,13 +91,15 @@
       icon={shortcut.iconPath}
       badgeCount={shortcut.badgeCount}
       gridRow={`${i} / ${i + 1}`}
+      index={i}
+      on:openApp={handleOpenApp}
     />
 
     {/each}
 
-    <div class="windows" bind:this={windowsContainer}>
+    <div class="windows" bind:this={windowCollection}>
       <!-- TODO: add opened windows -->
-      <TestWindow parentComponent={windowsContainer} />
+      <TestWindow on:windowClose={updateUI} />
     </div>
 
     <div class="notifications" style="width: {NOTIFICATIONS_WINDOW_WIDTH}px; height: {NOTIFICATIONS_WINDOW_HEIGHT}px;">
@@ -106,6 +122,16 @@
 
     <ToolBarItem name="logo" iconPath={undefined} />
     <ToolBarItem name="Search" iconPath={undefined} />
+
+    {#each apps as shortcut, i}
+
+    {#if windowCollection != null && windowCollection.children.length > i && windowCollection.children[i].style.display != 'none'}
+
+    <img src={shortcut.iconPath} alt={shortcut.name} title={shortcut.name} />
+
+    {/if}
+
+    {/each}
 
   </div>
 

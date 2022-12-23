@@ -1,6 +1,7 @@
 <script lang="ts">
   
   import { Close, Remove, SquareOutline } from "svelte-ionicons"
+  import { createEventDispatcher, onMount } from "svelte";
 
   import {
     MIN_WINDOW_HEIGHT,
@@ -9,7 +10,6 @@
     WINDOW_HEADER_HEIGHT,
   } from "../../../scripts/desktopConstants"
 
-  export let parentComponent: HTMLElement;
   export let title: string = "?"
   export let iconPath: string | undefined = undefined
   export let pos: { x: number; y: number } = { x: 0, y: 0 }
@@ -23,9 +23,26 @@
   let dragOffset: { dx: number; dy: number }
   let resizeType: { w?: 'r' | 'l', h?: 't' | 'b' };
   let boundsBeforeMaximizing: { x: number, y: number, width: number, height: number };
+  
+  let observer: MutationObserver;
+  let opened = false;
+  let focused = false;
+  let dispatcher = createEventDispatcher();
+
+  const requestFocus = (): void => {
+    if (thisObj.parentElement == undefined) return;
+    if (focused) return;
+
+    const others = thisObj.parentElement.children;
+    for (let i = 0; i < others.length; i++) {
+      (others[i] as HTMLElement).dataset['focused'] = (others[i] == thisObj) as unknown as string;
+    }
+  }
 
   const handleClose = (): void => {
-    console.log("close")
+    thisObj.style.display = 'none';
+    thisObj.dataset['focused'] = 'false';
+    dispatcher('windowClose');
   }
 
   const handleMaximize = (): void => {
@@ -35,7 +52,7 @@
     } else {
       boundsBeforeMaximizing = { ...pos, ...size }
       pos = { x: 0, y: 0 }
-      size = { width: parentComponent.clientWidth, height: parentComponent.clientHeight, maximized: true }
+      size = { width: thisObj.parentElement?.clientWidth ?? 0, height: thisObj.parentElement?.clientHeight ?? 0, maximized: true }
     }
     
   }
@@ -62,11 +79,11 @@
 
   const handleDrag = (e: MouseEvent): void => {
     pos.x = Math.max(
-      Math.min(e.clientX - dragOffset.dx, parentComponent.clientWidth - size.width),
+      Math.min(e.clientX - dragOffset.dx, (thisObj.parentElement?.clientWidth ?? 0) - size.width),
       0
     )
     pos.y = Math.max(
-      Math.min(e.clientY - dragOffset.dy, parentComponent.clientHeight - size.height),
+      Math.min(e.clientY - dragOffset.dy, (thisObj.parentElement?.clientHeight ?? 0) - size.height),
       0
     )
   }
@@ -106,7 +123,7 @@
   const handleResize = (e: MouseEvent): void => {
     if (resizeType.w === 'r') {
       size.width = Math.max(
-        Math.min(e.clientX - pos.x, parentComponent.clientWidth - pos.x),
+        Math.min(e.clientX - pos.x, (thisObj.parentElement?.clientWidth ?? 0) - pos.x),
         MIN_WINDOW_WIDTH
       )
     } else if (resizeType.w === 'l') {
@@ -117,7 +134,7 @@
 
     if (resizeType.h === 'b') {
       size.height = Math.max(
-        Math.min(e.clientY - pos.y, parentComponent.clientHeight - pos.y),
+        Math.min(e.clientY - pos.y, (thisObj.parentElement?.clientHeight ?? 0) - pos.y),
         MIN_WINDOW_HEIGHT
       )
     } else if (resizeType.h === 't') {
@@ -134,6 +151,24 @@
     document.removeEventListener("mouseup", handleResizeEnd)
   }
 
+  onMount(() => {
+    observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === "attributes") {
+          if (mutation.attributeName === "style") {
+            opened = thisObj?.style.display != 'none';
+          } else if (mutation.attributeName === "data-focused") {
+            focused = thisObj?.dataset['focused'] as unknown as boolean;
+          }
+        }
+      });
+    });
+
+    observer.observe(thisObj, {
+      attributes: true
+    });
+  });
+
 </script>
 
 <!-- PARENT COMPONENT -->
@@ -143,7 +178,10 @@
     top: {pos.y}px;
     width: {size.width}px;
     height: {size.height}px;
+    display: none;
   "
+  data-focused={false}
+  on:mousedown={requestFocus}
   bind:this={thisObj}
 >
 
