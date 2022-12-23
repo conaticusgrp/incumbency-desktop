@@ -8,6 +8,7 @@
 </script>
 
 <Window
+  parentComponent={parentComponent}
   title="TestWindow"
   iconPath="https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/How_to_use_icon.svg/1200px-How_to_use_icon.svg.png"
   pos={{ x: 100, y: 50 }}
