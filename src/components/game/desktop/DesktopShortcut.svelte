@@ -1,12 +1,17 @@
 <script lang="ts">
+  
+  import { createEventDispatcher } from "svelte";
 
   export let name = "?";
   export let icon: string | undefined;
   export let badgeCount = 0;
   export let gridRow: string;
+  export let index: number;
   
+  let dispatcher = createEventDispatcher();
+
   const open = (): void => {
-    console.log("open");
+    dispatcher('openApp', index);
   }
 
 </script>
