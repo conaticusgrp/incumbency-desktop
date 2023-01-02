@@ -1,8 +1,8 @@
 starting_population=10000
 
-no_education_chance=10
-high_school_diploma_chance=28
-college_chance=16
-associate_degree_chance=10
-bachelors_chance=30
-advanced_degree_chance=6
+no_education={ chance=10, salary_range={min=15000, max=22000} }
+high_school_diploma={ chance=28, salary_range={min=28000, max=40000} }
+college={ chance=16, salary_range={min=50000, max=60000} }
+associate_degree={ chance=10, salary_range={min=40000, max=70000} }
+bachelors={ chance=30, salary_range={min=60000, max=90000} }
+advanced_degree={ chance=6, salary_range={min=100000, max=300000} }

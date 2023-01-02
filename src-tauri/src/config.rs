@@ -8,12 +8,24 @@ const CONFIG_PATH: &str = "./game_config.toml";
 pub struct Config {
     pub starting_population: i32,
 
-    pub no_education_chance: i32,
-    pub high_school_diploma_chance: i32,
-    pub college_chance: i32,
-    pub associate_degree_chance: i32,
-    pub bachelors_chance: i32,
-    pub advanced_degree_chance: i32,
+    pub no_education: EducationConfig,
+    pub high_school_diploma: EducationConfig,
+    pub college: EducationConfig,
+    pub associate_degree: EducationConfig,
+    pub bachelors: EducationConfig,
+    pub advanced_degree: EducationConfig,
+}
+
+#[derive(Deserialize)]
+pub struct EducationConfig {
+    pub chance: i32,
+    pub salary_range: ConfigRange,
+}
+
+#[derive(Deserialize)]
+pub struct ConfigRange {
+    pub min: i32,
+    pub max: i32,
 }
 
 pub fn load_config() -> Config {

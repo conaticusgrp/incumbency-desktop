@@ -1,14 +1,14 @@
-use std::{ops::Range, collections::HashMap, hash};
+use std::{ops::Range, collections::HashMap};
 use maplit::hashmap;
 use rand::{Rng};
-use crate::{util::{float_range, percentage_based_output_int, generate_percentage}, config::Config, generation::generate_education_level};
+use crate::{util::{float_range, percentage_based_output_int, generate_percentage}, config::Config, generation::{generate_education_level, get_expected_salary_range}};
 use EducationLevel::*;
 
 use super::business::ProductType;
 
 const US_DEBT_REPAYMENT_THRESHOLD: f32 = 32_000.; // Minimum salary required to start paying debts
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Person {
     pub education_level: EducationLevel,
     pub years_in_higher_education: i32, // Amount of years the individual spent in college or university (TODO: use this)
@@ -24,22 +24,13 @@ pub struct Person {
     pub food_spending_streak: i32, // The amount of months the person has undergone the current food spending
 
     pub wants: HashMap<ProductType, f32>,
+    pub saving_wants: HashMap<ProductType, f32>, // products that the individual is saving up for
 }
 
 impl Person {
     pub fn generate(&mut self, config: &Config, product_demand: &mut HashMap<ProductType, f32>) {
-        self.job = Job::Unemployed;
-
         self.education_level = generate_education_level(&config);
-
-        self.expected_salary_range = match self.education_level {
-            NoFormalEducation => 15000..22000,
-            HighSchoolDiploma => 30000..40000,
-            College => 50000..60000,
-            AssociateDegree => 40000..70000,
-            Bachelors => 60000..90000,
-            AdvancedDegree => 100000..300000,
-        };
+        self.expected_salary_range = get_expected_salary_range(&config, &self.education_level);
 
         let expected_salary = ((self.expected_salary_range.start + self.expected_salary_range.end) / 2) as f32;
 
@@ -141,7 +132,7 @@ impl Person {
             4 => rng.gen_range(35..=54),
             5 => rng.gen_range(55..=64),
             6 => rng.gen_range(65..=90),
-            _ => panic!("How did we get here.."),
+            _ => unreachable!(),
         }
     }
 
@@ -221,7 +212,7 @@ pub enum EducationLevel {
     AdvancedDegree
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, PartialEq)]
 pub enum Job {
     BusinessOwner(usize), // usize refers to index of the business in the game state
     Employee(usize),
