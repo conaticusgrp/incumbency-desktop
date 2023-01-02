@@ -24,7 +24,8 @@ pub struct Person {
     pub food_spending_streak: i32, // The amount of months the person has undergone the current food spending
 
     pub wants: HashMap<ProductType, f32>,
-    pub saving_wants: HashMap<ProductType, f32>, // products that the individual is saving up for
+    pub business_this_month: usize,  // The business the individual will buy from this month, until marketing is re-evaluated
+    pub purchase_days: HashMap<i32, i32>, // The days of the month that they will make a purchase - <day, quantity>
 }
 
 impl Person {
@@ -186,7 +187,7 @@ impl Person {
         if salary > 0. {
             // TODO: handle case where none are affordable
             for i in 1..4 {
-                if self.can_afford((i * 30) as f32) {
+                if self.can_afford((i * 30) as f32, None) {
                     return i;
                 }
             }
@@ -195,8 +196,15 @@ impl Person {
         0
     }
 
-    fn can_afford(&self, price: f32) -> bool {
-        let cut_balance = self.balance * 0.1;
+    pub fn can_afford(&self, price: f32, balance: Option<f32>) -> bool {
+        let cut_balance: f32;
+
+        if let Some(bal) = balance {
+            cut_balance = bal * 0.1; 
+        } else {
+            cut_balance = self.balance * 0.1;
+        }
+
         cut_balance - price > 0.
     }
 }

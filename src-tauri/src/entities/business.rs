@@ -18,7 +18,7 @@ pub enum ProductType {
 pub struct Business {
     pub minimum_education_level: EducationLevel,
     pub expected_marketing_reach: i32, // Amount of population that the marketing will reach (roughly)
-    pub product_price: f32,
+    pub product_price: i32,
     pub production_cost: f32,
     
     pub employee_salary: i32,
@@ -47,8 +47,36 @@ impl Business {
 
         let mut rng = rand::thread_rng();
 
-        // TODO: determine this price more accurately
-        self.product_price = rng.gen_range(2..100) as f32;
+        let reach = (marketing_reach_percentage * people.len() as f32) as i32;
+        // People who have not yet picked a business to buy from
+        let unassigned_people: Vec<&mut Person> = people.iter_mut().filter(|p| p.business_this_month == 0).collect(); // TODO: optimise this
+        let mut count = 0;
+
+        // TODO: determine this price more accurately?
+        self.product_price = rng.gen_range(2..100);
+
+        for person in unassigned_people {
+            if count == reach { break }
+
+            person.business_this_month = idx;
+            let wants = person.wants[&product_type];
+            let purchase_capacity = wants as i32 / self.product_price;
+            let mut hypothetical_balance = person.balance;
+
+            for _ in 0..purchase_capacity {
+                if !person.can_afford(self.product_price as f32, Some(hypothetical_balance)) {
+                    // TODO: handle inaffordability in welfare
+                    break;
+                }
+
+                let day = rng.gen_range(1..=30);
+                *person.purchase_days.entry(day).or_insert(1) += 1;
+
+                hypothetical_balance -= self.product_price as f32;
+            }
+
+            count += 1;
+        }
         
         let expected_income = product_demand * marketing_reach_percentage;
 
@@ -60,15 +88,19 @@ impl Business {
 
         // This can only be a maximum of 80%, leaving roughly 10% capacity for employees, the minimum is 50%
         let loss_percentage_before_employees = ((marketing_cost + self.production_cost) / expected_income) * 100.;
-        let mid_of_range = (expected_salary_range.start + expected_salary_range.end) / 2;
-        let lower_mid_of_range = expected_salary_range.start + ((expected_salary_range.end - mid_of_range) / 2);
+        let mid_of_range = (expected_salary_range.start + expected_salary_range.end) / 2; // middle of expected salary range
+        let lower_mid_of_range = expected_salary_range.start + ((expected_salary_range.end - mid_of_range) / 2); // lower middle of expected salary range
 
+        // Generate a more narrowed down range based on the randomly generated marketing cost and product cost
+        // The employee salary will be lower if the marketing and product cost is cheap, this is to compensate and keep the economy balanced
+        // The purpose of lowering the employee salary is that there is less work output from employees, so there is a higher staff turnover
         let employee_salary_range = match loss_percentage_before_employees {
             loss if loss >= 70. => mid_of_range..expected_salary_range.end,
             loss if loss >= 60. => lower_mid_of_range..mid_of_range,
             _ => expected_salary_range.start..lower_mid_of_range,
         };
 
+        // Generate salary based on range
         self.employee_salary = rng.gen_range(employee_salary_range);
         self.default_employee_profit_percentage = rng.gen_range(8..11);
 
@@ -81,9 +113,9 @@ impl Business {
             p.job == Job::Unemployed && p.education_level == minimum_education_level
         }).collect(); // TODO: optimise this
 
-        let mut count = 0;
+        count = 0;
         for person in unemployed_people {
-            if count == employee_count { continue }
+            if count == employee_count { break }
 
             person.job = Job::Employee(idx);
             count += 1;
