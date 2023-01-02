@@ -81,7 +81,7 @@ impl Business {
         let expected_income = product_demand * marketing_reach_percentage;
 
         // TODO: make this more varied & accurate
-        self.production_cost = self.product_price * float_range(0.4, 0.5, 3);
+        self.production_cost = self.product_price as f32 * float_range(0.4, 0.5, 3);
 
         let marketing_cost = product_demand * float_range(0.1, 0.3, 3);
         let expected_salary_range = get_expected_salary_range(&config, &self.minimum_education_level);
