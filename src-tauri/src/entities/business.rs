@@ -45,16 +45,12 @@ impl Business {
 
         *remaining_market_percentage -= marketing_reach_percentage;
 
-        let reach = (marketing_reach_percentage * people.len() as f32) as i32;
-        
         let mut rng = rand::thread_rng();
 
         // TODO: determine this price more accurately
         self.product_price = rng.gen_range(2..100) as f32;
         
-        let demand_per_person = product_demand / config.starting_population as f32;
         let expected_income = product_demand * marketing_reach_percentage;
-        let minimum_stock = (expected_income / self.product_price) as i32;
 
         // TODO: make this more varied & accurate
         self.production_cost = self.product_price * float_range(0.4, 0.5, 3);
