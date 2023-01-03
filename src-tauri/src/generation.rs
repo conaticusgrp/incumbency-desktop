@@ -1,7 +1,7 @@
 use std::{collections::{HashMap}, ops::Range};
 use maplit::hashmap;
 
-use crate::{new_game::GameStateSafe, config::{load_config, Config}, entities::{person::{Person, EducationLevel::{*, self}}, business::{Business, ProductType}}, util::percentage_based_output_int};
+use crate::{game::GameStateSafe, config::{load_config, Config}, entities::{person::{Person, EducationLevel::{*, self}}, business::{Business, ProductType}}, util::percentage_based_output_int};
 
 pub fn generate_education_level(config: &Config) -> EducationLevel {
     percentage_based_output_int::<EducationLevel>(hashmap! {

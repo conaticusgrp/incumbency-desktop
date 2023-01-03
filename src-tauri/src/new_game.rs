@@ -1,26 +1,6 @@
 use std::{sync::{Mutex, Arc}};
 use tauri::State;
-use crate::{generation::generate_game, entities::{business::Business, person::Person}};
-
-pub struct GameState {
-  pub tax_rate: f32,
-  pub businesses: Vec<Business>,
-  pub people: Vec<Person>,
-  pub gdp: f32,
-}
-
-pub type GameStateSafe = Arc<Mutex<GameState>>;
-
-impl Default for GameState {
-  fn default() -> Self {
-      Self {
-        tax_rate: 24.,
-        businesses: Vec::new(),
-        people: Vec::new(),
-        gdp: 0.
-      }
-  }
-}
+use crate::{generation::generate_game, entities::{business::Business, person::Person}, game::{start_game_loop, GameStateSafe}};
 
 const DATA_PATH: &str = "./data";
 const SAVES_PATH: &str = "./data/saves";
@@ -48,4 +28,5 @@ pub fn check_save_exists(name: String) -> bool {
 pub fn create_game(state: State<'_, GameStateSafe>, name: String) {
   std::fs::create_dir(format!("{}/{}", SAVES_PATH, name)).unwrap();
   generate_game(&state);
+  start_game_loop(&state);
 }

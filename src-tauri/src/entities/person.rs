@@ -1,7 +1,7 @@
-use std::{ops::Range, collections::HashMap};
+use std::{ops::Range, collections::HashMap, sync::MutexGuard};
 use maplit::hashmap;
 use rand::{Rng};
-use crate::{util::{float_range, percentage_based_output_int, generate_percentage}, config::Config, generation::{generate_education_level, get_expected_salary_range}};
+use crate::{util::{float_range, percentage_based_output_int, generate_percentage}, config::Config, generation::{generate_education_level, get_expected_salary_range}, game::{GameStateSafe, GameState}};
 use EducationLevel::*;
 
 use super::business::ProductType;
@@ -206,6 +206,18 @@ impl Person {
         }
 
         cut_balance - price > 0.
+    }
+
+    pub fn day_pass(&mut self, state: &mut MutexGuard<GameState>, day: i32) {
+        let quantity_opt = self.purchase_days.get(&day);
+        if let Some(quantity) = quantity_opt {
+            let business = &mut state.businesses.get(self.business_this_month).unwrap();
+            let item_cost = business.product_price;
+
+            for _ in 0..*quantity {
+                if self.can_afford(item_cost);
+            }
+        }
     }
 }
 
