@@ -187,7 +187,7 @@ impl Person {
         if salary > 0. {
             // TODO: handle case where none are affordable
             for i in 1..4 {
-                if self.can_afford((i * 30) as f32, None) {
+                if self.can_afford((i * 30) as f32) {
                     return i;
                 }
             }
@@ -196,7 +196,7 @@ impl Person {
         0
     }
 
-    pub fn can_afford(&self, price: f32, balance: Option<f32>) -> bool {
+    pub fn can_afford(&self, price: f32) -> bool {
         let cut_balance: f32;
 
         if let Some(bal) = balance {
