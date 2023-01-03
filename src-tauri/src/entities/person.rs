@@ -197,14 +197,7 @@ impl Person {
     }
 
     pub fn can_afford(&self, price: f32) -> bool {
-        let cut_balance: f32;
-
-        if let Some(bal) = balance {
-            cut_balance = bal * 0.1; 
-        } else {
-            cut_balance = self.balance * 0.1;
-        }
-
+        let cut_balance: f32 = self.balance * 0.1;
         cut_balance - price > 0.
     }
 }
