@@ -61,18 +61,10 @@ impl Business {
             person.business_this_month = idx;
             let wants = person.wants[&product_type];
             let purchase_capacity = wants as i32 / self.product_price;
-            let mut hypothetical_balance = person.balance;
 
             for _ in 0..purchase_capacity {
-                if !person.can_afford(self.product_price as f32, Some(hypothetical_balance)) {
-                    // TODO: handle inaffordability in welfare
-                    break;
-                }
-
                 let day = rng.gen_range(1..=30);
                 *person.purchase_days.entry(day).or_insert(1) += 1;
-
-                hypothetical_balance -= self.product_price as f32;
             }
 
             count += 1;
@@ -80,7 +72,7 @@ impl Business {
         
         let expected_income = product_demand * marketing_reach_percentage;
 
-        // TODO: make this more varied & accurate
+        // TODO: make this more varied & accurate, influence it by external factors
         self.production_cost = self.product_price as f32 * float_range(0.4, 0.5, 3);
 
         let marketing_cost = product_demand * float_range(0.1, 0.3, 3);
