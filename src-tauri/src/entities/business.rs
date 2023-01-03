@@ -16,10 +16,13 @@ pub enum ProductType {
 
 #[derive(Default)]
 pub struct Business {
+    pub balance: f32,
+
     pub minimum_education_level: EducationLevel,
     pub expected_marketing_reach: i32, // Amount of population that the marketing will reach (roughly)
     pub product_price: i32,
     pub production_cost: f32,
+    pub product_type: ProductType,
     
     pub employee_salary: i32,
     pub default_employee_profit_percentage: i32, // Default percentage of profit that is made from an employee salary, not taking into account the employee's welfare
@@ -28,6 +31,7 @@ pub struct Business {
 impl Business {
     /// Generates a business based on demand
     pub fn generate(&mut self, config: &Config, product_type: ProductType, product_demand: f32, remaining_market_percentage: &mut f32, people: &mut Vec<Person>, idx: usize) -> bool {
+        self.product_type = product_type;
         self.minimum_education_level = generate_education_level(&config);
 
         let marketing_reach_percentage = match self.minimum_education_level {

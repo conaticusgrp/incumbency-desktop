@@ -205,10 +205,19 @@ impl Person {
         let quantity_opt = self.purchase_days.get(&day);
         if let Some(quantity) = quantity_opt {
             let business = &mut state.businesses.get(self.business_this_month).unwrap();
-            let item_cost = business.product_price;
+            let item_cost = business.product_price as f32;
 
             for _ in 0..*quantity {
-                if self.can_afford(item_cost);
+                if self.can_afford(item_cost) {
+                    self.balance -= item_cost;
+                    *self.wants.get_mut(&business.product_type).unwrap() -= item_cost;
+                    business.balance += item_cost;
+                    dbg!(business.balance);
+
+                    // TODO - fulfill the welfare of purchasing the item
+                } else {
+                    // TODO: handle welfare on not affording an item
+                }
             }
         }
     }
