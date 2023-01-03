@@ -215,9 +215,9 @@ impl Person {
                     dbg!(business.balance);
 
                     // TODO - fulfill the welfare of purchasing the item
-                } else {
-                    // TODO: handle welfare on not affording an item
                 }
+
+                // TODO: handle welfare on not affording an item
             }
         }
     }
