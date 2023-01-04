@@ -200,27 +200,6 @@ impl Person {
         let cut_balance: f32 = self.balance * 0.1;
         cut_balance - price > 0.
     }
-
-    pub fn day_pass(&mut self, state: &mut MutexGuard<GameState>, day: i32) {
-        let quantity_opt = self.purchase_days.get(&day);
-        if let Some(quantity) = quantity_opt {
-            let business = &mut state.businesses.get(self.business_this_month).unwrap();
-            let item_cost = business.product_price as f32;
-
-            for _ in 0..*quantity {
-                if self.can_afford(item_cost) {
-                    self.balance -= item_cost;
-                    *self.wants.get_mut(&business.product_type).unwrap() -= item_cost;
-                    business.balance += item_cost;
-                    dbg!(business.balance);
-
-                    // TODO - fulfill the welfare of purchasing the item
-                }
-
-                // TODO: handle welfare on not affording an item
-            }
-        }
-    }
 }
 
 #[derive(Default, Clone, PartialEq, Eq, Hash)]

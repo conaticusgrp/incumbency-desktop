@@ -9,6 +9,35 @@ pub struct GameState {
   pub gdp: f32,
 }
 
+impl GameState {
+  fn day_pass(&mut self, day: i32) {
+    for i in 0..self.people.len() {
+      let purchase_days = self.people[i].purchase_days;
+      let business_this_month = self.people[i].business_this_month;
+
+
+      let quantity_opt = purchase_days.get(&day);
+      if let Some(quantity) = quantity_opt {
+          let business = &mut self.businesses.get(business_this_month).unwrap();
+          let item_cost = business.product_price as f32;
+
+          for _ in 0..*quantity {
+              if self.people[i].can_afford(item_cost) {
+                  self.balance -= item_cost;
+                  self.people[i].wants.get_mut(&business.product_type).unwrap() -= item_cost;
+                  business.balance += item_cost;
+                  dbg!(business.balance);
+
+                  // TODO - fulfill the welfare of purchasing the item
+              }
+
+              // TODO: handle welfare on not affording an item
+          }
+      }
+    }
+  }
+}
+
 pub type GameStateSafe = Arc<Mutex<GameState>>;
 
 impl Default for GameState {
@@ -33,9 +62,7 @@ pub async fn start_game_loop(state_mux: &GameStateSafe) {
         day += 1;
 
         // new day
-        for person in state.people.iter_mut() {
-            person.day_pass(&mut state, day);
-        }
+        state.day_pass(day);
         
         if day % 30 == 0 {
             // new month
