@@ -45,6 +45,7 @@ impl GameState {
 
         match self.people[i].job {
           // TODO: Handle business owner
+
           Job::Employee(bus_idx) => {
             self.people[bus_idx].balance += self.businesses[bus_idx].employee_salary as f32;
             self.businesses[bus_idx].balance -= self.businesses[bus_idx].employee_salary as f32;

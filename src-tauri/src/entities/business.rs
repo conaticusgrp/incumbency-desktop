@@ -26,6 +26,8 @@ pub struct Business {
     
     pub employee_salary: i32,
     pub default_employee_profit_percentage: i32, // Default percentage of profit that is made from an employee salary, not taking into account the employee's welfare
+
+    pub last_month_balance: f32, // Used to calculate the income for this month
 }
 
 impl Business {
@@ -101,8 +103,8 @@ impl Business {
         self.default_employee_profit_percentage = rng.gen_range(8..11);
 
         let employee_monthly_salary = self.employee_salary / 12;
-        let deducted_income = expected_income - (expected_income * (loss_percentage_before_employees / 100.));
-        let employee_count = deducted_income as i32 / (employee_monthly_salary + (employee_monthly_salary * (self.default_employee_profit_percentage / 100)));
+        let expected_profits = expected_income - (expected_income * (loss_percentage_before_employees / 100.));
+        let employee_count = expected_profits as i32 / (employee_monthly_salary + (employee_monthly_salary * (self.default_employee_profit_percentage / 100)));
 
         let minimum_education_level = self.minimum_education_level.clone();
         let unemployed_people: Vec<&mut Person> = people.iter_mut().filter(|p| {
@@ -118,6 +120,9 @@ impl Business {
 
             count += 1;
         }
+
+        self.balance = expected_profits * float_range(0., 3., 3); // A range of 0% - 300% of the expected profit is the business balance
+        self.last_month_balance = self.balance;
 
         false
     }
@@ -140,5 +145,10 @@ impl Business {
         };
 
         float_range(min * increase_multiplyer, max * increase_multiplyer, 2)
+    }
+
+    pub fn can_afford(&self, price: &f32) -> bool {
+        let cut_balance: f32 = self.balance - (self.balance * 0.25); // Maintain at least 30% of the balanace
+        cut_balance - price > 0.
     }
 }
