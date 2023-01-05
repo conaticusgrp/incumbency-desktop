@@ -114,6 +114,8 @@ impl Business {
             if count == employee_count { break }
 
             person.job = Job::Employee(idx);
+            person.salary = self.employee_salary;
+
             count += 1;
         }
 

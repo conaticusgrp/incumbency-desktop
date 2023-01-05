@@ -1,7 +1,6 @@
-use std::{time::Duration, sync::{Arc}};
-use crate::{entities::{business::Business, person::Person}, common::filesystem::create_save};
-use tauri::State;
-use tokio::sync::Mutex;
+use std::{time::Duration, sync::{Arc, Mutex}};
+use crate::{entities::{business::Business, person::{Person, Job}}, common::{filesystem::create_save, payloads::PayloadNewDay}};
+use tauri::{State, Manager};
 
 use super::generation::generate_game;
 
@@ -39,6 +38,21 @@ impl GameState {
       }
     }
   }
+
+  fn month_pass(&mut self, day: i32) {
+      for i in 0..self.people.len() {
+        self.people[i].balance += self.people[i].salary as f32;
+
+        match self.people[i].job {
+          // TODO: Handle business owner
+          Job::Employee(bus_idx) => {
+            self.people[bus_idx].balance += self.businesses[bus_idx].employee_salary as f32;
+            self.businesses[bus_idx].balance -= self.businesses[bus_idx].employee_salary as f32;
+          },
+          _ => (),
+        };
+      }
+  }
 }
 
 pub type GameStateSafe = Arc<Mutex<GameState>>;
@@ -70,11 +84,13 @@ pub async fn start_game_loop(state_mux: &GameStateSafe, app_handle: &tauri::AppH
     loop {
         interval.tick().await;
         day += 1;
+        app_handle.emit_all("new_day", PayloadNewDay { day }).unwrap();
 
-        let mut state = state_mux.lock().await;
+        let mut state = state_mux.lock().unwrap();
         state.day_pass(day);
         
         if day % 30 == 0 {
+          state.month_pass(day / 30);
             // handle new month
         }
     }

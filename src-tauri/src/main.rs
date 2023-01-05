@@ -9,8 +9,7 @@ mod common;
 
 use game::manager::{GameState, create_game};
 use common::filesystem::check_save_exists;
-use std::sync::{Arc};
-use tokio::sync::Mutex;
+use std::sync::{Arc, Mutex};
 
 #[tokio::main]
 async fn main() { 

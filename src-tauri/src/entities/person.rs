@@ -17,7 +17,9 @@ pub struct Person {
 
     pub age: i32,
     pub balance: f32,
+
     pub expected_salary_range: Range<i32>, // Range of the expected salary for the person based on their education level
+    pub salary: i32,
 
     pub spending_behaviour: SpendingBehaviour,
     pub daily_food_spending: i32,
