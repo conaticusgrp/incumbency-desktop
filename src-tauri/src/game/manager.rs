@@ -39,7 +39,7 @@ impl GameState {
     }
   }
 
-  fn month_pass(&mut self, day: i32) {
+  fn month_pass(&mut self, month: i32) {
       for i in 0..self.people.len() {
         self.people[i].balance += self.people[i].salary as f32;
 
@@ -71,7 +71,7 @@ impl Default for GameState {
 #[tauri::command]
 pub async fn create_game(state: State<'_, GameStateSafe>, app_handle: tauri::AppHandle, name: String) -> Result<(), ()> {
   create_save(name);
-  generate_game(&state).await;
+  generate_game(&state);
   start_game_loop(&state, &app_handle).await;
 
   Ok(())

@@ -27,7 +27,7 @@ pub fn get_expected_salary_range(config: &Config, education_level: &EducationLev
     }
 }
 
-pub async fn generate_game(state_mux: &GameStateSafe) {
+pub fn generate_game(state_mux: &GameStateSafe) {
     let mut state = state_mux.lock().unwrap();
     let config = load_config();
 
