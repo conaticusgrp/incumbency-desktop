@@ -1,6 +1,7 @@
 use std::{ops::Range, collections::HashMap};
 use maplit::hashmap;
 use rand::{Rng};
+use serde::Serialize;
 use crate::{common::util::{float_range, percentage_based_output_int, generate_percentage}, common::config::Config, game::generation::{generate_education_level, get_expected_salary_range}};
 use EducationLevel::*;
 
@@ -8,7 +9,7 @@ use super::business::ProductType;
 
 const US_DEBT_REPAYMENT_THRESHOLD: f32 = 32_000.; // Minimum salary required to start paying debts
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Serialize)]
 pub struct Person {
     pub education_level: EducationLevel,
     pub years_in_higher_education: i32, // Amount of years the individual spent in college or university (TODO: use this)
@@ -204,7 +205,7 @@ impl Person {
     }
 }
 
-#[derive(Default, Clone, PartialEq, Eq, Hash)]
+#[derive(Default, Clone, PartialEq, Eq, Hash, Serialize)]
 pub enum EducationLevel {
     #[default]
     NoFormalEducation,
@@ -215,7 +216,7 @@ pub enum EducationLevel {
     AdvancedDegree
 }
 
-#[derive(Default, Clone, PartialEq)]
+#[derive(Default, Clone, PartialEq, Serialize)]
 pub enum Job {
     BusinessOwner(usize), // usize refers to index of the business in the game state
     Employee(usize),
@@ -223,7 +224,7 @@ pub enum Job {
     Unemployed,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize)]
 pub struct Debt {
     pub owed: f32,
     pub minimum_monthly_payoff: f32, // Amount required to be paid per month
@@ -294,7 +295,7 @@ impl Debt {
     }
 }
 
-#[derive(Default, Clone, PartialEq, Eq, Hash)]
+#[derive(Default, Clone, PartialEq, Eq, Hash, Serialize)]
 pub enum SpendingBehaviour {
     #[default]
     One,

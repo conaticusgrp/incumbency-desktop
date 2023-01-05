@@ -1,9 +1,11 @@
 use std::{time::Duration, sync::{Arc, Mutex}};
-use crate::{entities::{business::Business, person::{Person, Job}}, common::{filesystem::create_save, payloads::PayloadNewDay}};
+use crate::{entities::{business::Business, person::{Person, Job}}, common::{filesystem::create_save, payloads::{PayloadNewDay, NewGame}}};
+use serde::Serialize;
 use tauri::{State, Manager};
 
 use super::generation::generate_game;
 
+#[derive(Clone, Serialize)]
 pub struct GameState {
   pub tax_rate: f32,
   pub businesses: Vec<Business>,
@@ -70,10 +72,13 @@ impl Default for GameState {
 }
 
 #[tauri::command]
-pub async fn create_game(state: State<'_, GameStateSafe>, app_handle: tauri::AppHandle, name: String) -> Result<(), ()> {
+pub async fn create_game(state_mux: State<'_, GameStateSafe>, app_handle: tauri::AppHandle, name: String) -> Result<(), ()> {
   create_save(name);
-  generate_game(&state);
-  start_game_loop(&state, &app_handle).await;
+  generate_game(&state_mux);
+  start_game_loop(&state_mux, &app_handle).await;
+
+  let state = state_mux.lock().unwrap();
+  app_handle.emit_all("game_created", NewGame { population: state.people.len() as i32 }).unwrap();
 
   Ok(())
 }

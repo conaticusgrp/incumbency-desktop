@@ -1,10 +1,11 @@
 use maplit::hashmap;
 use rand::Rng;
+use serde::Serialize;
 
 use crate::{common::config::Config, common::util::{percentage_based_output_int, float_range}, game::generation::{generate_education_level, get_expected_salary_range}};
 use super::person::{EducationLevel::{*, self}, Person, Job};
 
-#[derive(Default, Clone, PartialEq, Eq, Hash)]
+#[derive(Default, Clone, PartialEq, Eq, Hash, Serialize)]
 pub enum ProductType {
     #[default]
     LEISURE,
@@ -14,7 +15,7 @@ pub enum ProductType {
     // HOUSES
 }
 
-#[derive(Default)]
+#[derive(Default, Clone, Serialize)]
 pub struct Business {
     pub balance: f32,
 
