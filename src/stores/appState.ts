@@ -1,10 +1,17 @@
 import { writable, type Writable } from 'svelte/store';
 
-export enum AppState {
-    MENU,
-    SETTINGS,
-    SINGLEPLAYER,
-    MULTIPLAYER
-}
+type AppState = 'MainMenu' |
+                'NewGameMenu' |
+                'LoadGameMenu' |
+                'MultiplayerMenu' |
+                'SettingsMenu' |
+                'Credits' |
+                'Singleplayer' |
+                'Multiplayer';
 
-export const appState: Writable<AppState> = writable<AppState>(AppState.MENU);
+const appState: Writable<AppState> = writable<AppState>('Singleplayer');
+
+export {
+  type AppState,
+  appState
+}

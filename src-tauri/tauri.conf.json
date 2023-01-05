@@ -31,7 +31,7 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "com.tauri.dev",
+      "identifier": "org.conaticusgrp.incumbency",
       "longDescription": "",
       "macOS": {
         "entitlements": null,
