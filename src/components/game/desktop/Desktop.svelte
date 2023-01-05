@@ -181,6 +181,7 @@
     right: 0;
     /* background-color: #4A4A4A; */
     z-index: 200;
+    pointer-events: none;
   }
 
 </style>

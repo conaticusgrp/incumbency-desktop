@@ -10,7 +10,6 @@
     WINDOW_HEADER_HEIGHT,
   } from "../../../scripts/desktopConstants"
 
-  export let parentComponent: HTMLElement;
   export let title: string = "?"
   export let iconPath: string | undefined = undefined
   export let pos: { x: number; y: number } = { x: 0, y: 0 }
