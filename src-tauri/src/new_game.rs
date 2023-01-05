@@ -1,6 +1,5 @@
-use std::{sync::{Mutex, Arc}};
 use tauri::State;
-use crate::{generation::generate_game, entities::{business::Business, person::Person}, game::{start_game_loop, GameStateSafe}};
+use crate::{generation::generate_game, game::{start_game_loop, GameStateSafe}};
 
 const DATA_PATH: &str = "./data";
 const SAVES_PATH: &str = "./data/saves";
@@ -25,8 +24,11 @@ pub fn check_save_exists(name: String) -> bool {
 }
 
 #[tauri::command]
-pub fn create_game(state: State<'_, GameStateSafe>, name: String) {
+pub async fn create_game(state: State<'_, GameStateSafe>, name: String) -> Result<(), ()> {
   std::fs::create_dir(format!("{}/{}", SAVES_PATH, name)).unwrap();
-  generate_game(&state);
-  start_game_loop(&state);
+
+  generate_game(&state).await;
+  start_game_loop(&state).await;
+
+  Ok(())
 }

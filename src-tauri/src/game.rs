@@ -1,6 +1,6 @@
-use std::{time::Duration, sync::{Mutex, Arc}};
-
+use std::{time::Duration, sync::{Arc}};
 use crate::entities::{business::Business, person::Person};
+use tokio::sync::Mutex;
 
 pub struct GameState {
   pub tax_rate: f32,
@@ -52,8 +52,7 @@ impl Default for GameState {
 }
 
 pub async fn start_game_loop(state_mux: &GameStateSafe) {
-    let mut state = state_mux.lock().unwrap();
-
+    let mut state = state_mux.lock().await;
     let mut interval = tokio::time::interval(Duration::from_secs(1));
     let mut day = 1;
 

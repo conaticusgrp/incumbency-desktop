@@ -25,8 +25,8 @@ pub fn get_expected_salary_range(config: &Config, education_level: &EducationLev
     }
 }
 
-pub fn generate_game(state_mux: &GameStateSafe) {
-    let mut state = state_mux.lock().unwrap();
+pub async fn generate_game(state_mux: &GameStateSafe) {
+    let mut state = state_mux.lock().await;
     let config = load_config();
 
     let mut product_demand: HashMap<ProductType, f32> = HashMap::new();

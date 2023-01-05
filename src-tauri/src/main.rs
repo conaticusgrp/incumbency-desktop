@@ -12,7 +12,8 @@ mod game;
 
 use game::GameState;
 use new_game::*;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc};
+use tokio::sync::Mutex;
 
 #[tokio::main]
 async fn main() { 
