@@ -1,7 +1,7 @@
 use maplit::hashmap;
 use rand::Rng;
 
-use crate::{generation::{generate_education_level, get_expected_salary_range}, config::Config, util::{percentage_based_output_int, float_range}};
+use crate::{common::config::Config, common::util::{percentage_based_output_int, float_range}, game::generation::{generate_education_level, get_expected_salary_range}};
 use super::person::{EducationLevel::{*, self}, Person, Job};
 
 #[derive(Default, Clone, PartialEq, Eq, Hash)]

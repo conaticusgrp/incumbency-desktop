@@ -1,5 +1,4 @@
 use std::fs;
-
 use serde::Deserialize;
 
 const CONFIG_PATH: &str = "./game_config.toml";

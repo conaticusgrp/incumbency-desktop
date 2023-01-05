@@ -1,6 +1,9 @@
 use std::{time::Duration, sync::{Arc}};
-use crate::entities::{business::Business, person::Person};
+use crate::{entities::{business::Business, person::Person}, common::filesystem::create_save};
+use tauri::State;
 use tokio::sync::Mutex;
+
+use super::generation::generate_game;
 
 pub struct GameState {
   pub tax_rate: f32,
@@ -51,8 +54,16 @@ impl Default for GameState {
   }
 }
 
-pub async fn start_game_loop(state_mux: &GameStateSafe) {
-    let mut state = state_mux.lock().await;
+#[tauri::command]
+pub async fn create_game(state: State<'_, GameStateSafe>, app_handle: tauri::AppHandle, name: String) -> Result<(), ()> {
+  create_save(name);
+  generate_game(&state).await;
+  start_game_loop(&state, &app_handle).await;
+
+  Ok(())
+}
+
+pub async fn start_game_loop(state_mux: &GameStateSafe, app_handle: &tauri::AppHandle) {
     let mut interval = tokio::time::interval(Duration::from_secs(1));
     let mut day = 1;
 
@@ -60,11 +71,11 @@ pub async fn start_game_loop(state_mux: &GameStateSafe) {
         interval.tick().await;
         day += 1;
 
-        // new day
+        let mut state = state_mux.lock().await;
         state.day_pass(day);
         
         if day % 30 == 0 {
-            // new month
+            // handle new month
         }
     }
 }

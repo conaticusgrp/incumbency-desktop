@@ -4,14 +4,11 @@
 )]
 
 mod entities;
-mod generation;
-mod new_game;
-mod util;
-mod config;
 mod game;
+mod common;
 
-use game::GameState;
-use new_game::*;
+use game::manager::{GameState, create_game};
+use common::filesystem::check_save_exists;
 use std::sync::{Arc};
 use tokio::sync::Mutex;
 

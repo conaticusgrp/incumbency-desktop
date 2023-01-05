@@ -1,7 +1,7 @@
 use std::{ops::Range, collections::HashMap};
 use maplit::hashmap;
 use rand::{Rng};
-use crate::{util::{float_range, percentage_based_output_int, generate_percentage}, config::Config, generation::{generate_education_level, get_expected_salary_range}};
+use crate::{common::util::{float_range, percentage_based_output_int, generate_percentage}, common::config::Config, game::generation::{generate_education_level, get_expected_salary_range}};
 use EducationLevel::*;
 
 use super::business::ProductType;
