@@ -6,20 +6,17 @@
   import DesktopShortcut from "./DesktopShortcut.svelte"
   import ToolBarItem from "./ToolBarItem.svelte";
   import Notification from "./Notification.svelte";
+
+  import Email from "../windows/Email.svelte";
+  import GovernmentSpending from "../windows/GovernmentSpending.svelte";
   
   // DEBUG
-  import TestWindow from "../windows/TestWindow.svelte";
-  import { onMount, tick } from 'svelte'
+  import { onMount } from 'svelte'
   
   let windowContainer: HTMLElement;
   let toolbarHeightPercent: number = 15;
   let wallpaperPath: string | null = null;
   let apps: DesktopAppShortcut[] = [
-    {
-      name: "Test App",
-      iconPath: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/How_to_use_icon.svg/1200px-How_to_use_icon.svg.png",
-      badgeCount: 0
-    },
     {
       name: "Email",
       iconPath: "https://seeklogo.com/images/M/mail-icon-logo-28FE0635D0-seeklogo.com.png",
@@ -29,21 +26,6 @@
       name: "Government Spending",
       iconPath: "https://cdn-icons-png.flaticon.com/512/217/217853.png",
       badgeCount: 1
-    },
-    {
-      name: "Stocks",
-      iconPath: "https://cdn-icons-png.flaticon.com/512/263/263142.png",
-      badgeCount: 0
-    },
-    {
-      name: "Contacts",
-      iconPath: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhqI4txTRkj4_pCfr3NlNdbCbLYgX-nqjMX8wHEfx_A6Q8luaudlecd84nMDGZ1a4nwA0&usqp=CAU",
-      badgeCount: 0
-    },
-    {
-      name: "Add/Remove Apps",
-      iconPath: "https://static.vecteezy.com/system/resources/previews/008/659/063/original/eps10-black-download-or-install-icon-in-simple-flat-trendy-modern-style-isolated-on-white-background-free-vector.jpg",
-      badgeCount: 0
     }
   ];
   
@@ -121,7 +103,8 @@
 
     <div class="windows" bind:this={windowContainer}>
       <!-- TODO: add opened windows -->
-      <TestWindow iconPath={apps[0].iconPath} on:windowClose={updateUI} on:windowMinimize={updateUI} />
+      <Email iconPath={apps[0].iconPath} on:windowClose={updateUI} on:windowMinimizeStateChange={updateUI} />
+      <GovernmentSpending iconPath={apps[1].iconPath} on:windowClose={updateUI} on:windowMinimizeStateChange={updateUI} />
     </div>
 
     <div class="notifications" style="width: {NOTIFICATIONS_WINDOW_WIDTH}px; height: {NOTIFICATIONS_WINDOW_HEIGHT}px;">

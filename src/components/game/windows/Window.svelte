@@ -177,7 +177,7 @@
             focused = thisObj?.dataset['focused'] as unknown as boolean;
           } else if (mutation.attributeName === "data-minimized") {
             thisObj.style.display = (thisObj?.dataset['minimized'] !== 'true') ? 'initial' : 'none';
-            dispatcher('windowMinimize');
+            dispatcher('windowMinimizeStateChange');
           }
         }
       });

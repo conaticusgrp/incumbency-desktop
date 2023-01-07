@@ -10,14 +10,14 @@
 </script>
 
 <Window
-  title="TestWindow"
+  title="Government Spending"
   {iconPath}
   pos={{ x: 100, y: 50 }}
   size={{ width: 800, height: 600 }}
   on:windowClose={() => dispatcher('windowClose')}
-  on:windowMinimize={() => dispatcher('windowMinimize')}
+  on:windowMinimize={() => dispatcher('windowMinimizeStateChange')}
 >
-  <p>Test window</p>
+  <p>spending</p>
   <!-- Write the HTML for the window here -->
 </Window>
 
