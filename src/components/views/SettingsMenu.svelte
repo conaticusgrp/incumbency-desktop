@@ -3,7 +3,7 @@
   import { appWindow } from "@tauri-apps/api/window";
   import { appState } from "../../stores/appState";
   
-  let fullscreen = true;
+  let fullscreen = false; // TODO: Make this true by default when settings are implemented
   let volume = 0.5;
   
   
