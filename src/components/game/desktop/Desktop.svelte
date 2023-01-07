@@ -9,14 +9,15 @@
   
   // DEBUG
   import TestWindow from "../windows/TestWindow.svelte";
-  import { onMount } from 'svelte'
+  import { onMount, tick } from 'svelte'
   
-  let windowCollection: HTMLElement;
+  let windowContainer: HTMLElement;
   let toolbarHeightPercent: number = 15;
   let wallpaperPath: string | null = null;
   let apps: DesktopAppShortcut[] = [
     {
       name: "Test App",
+      iconPath: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/How_to_use_icon.svg/1200px-How_to_use_icon.svg.png",
       badgeCount: 0
     },
     {
@@ -48,6 +49,11 @@
   
   let notifications: NotificationData[] = [];
 
+  const getWindow = (index: number): HTMLElement => {
+    console.assert(windowContainer != undefined && index >= 0 && index < windowContainer.children.length);
+    return windowContainer.children[index] as HTMLElement;
+  }
+
   $: if (notifications.length > 0 && !KEEP_NOTIFICATIONS_DISPLAYED) {
     setTimeout(() => {
       notifications.splice(0, 1);
@@ -56,12 +62,28 @@
   }
 
   const handleOpenApp = (e: CustomEvent): void => {
-    if (e.detail < 0 || e.detail >= windowCollection.children.length) return;
+    if (e.detail < 0 || e.detail.index >= windowContainer.children.length) return;
 
-    (windowCollection.children[e.detail] as HTMLElement).style.display = 'initial';
+    if (getWindow(e.detail.index).dataset['minimized'] !== 'true') {
+      getWindow(e.detail.index).style.display = 'initial';
+      updateUI();
+    } else {
+      unminimizeApp(e.detail.index);
+    }
+  }
+
+  const unminimizeApp = (index: number) => {
+    getWindow(index).dataset['minimized'] = 'false';
+    updateUI();
   }
 
   const updateUI = () => {
+    // console.log("update");
+    // console.assert(apps.length <= windowContainer.children.length);
+    for (let i = 0; i < windowContainer.children.length; i++) {
+      apps[i].minimized = getWindow(i).dataset['minimized'] === 'true';
+    }
+
     apps = apps;
   }
 
@@ -97,9 +119,9 @@
 
     {/each}
 
-    <div class="windows" bind:this={windowCollection}>
+    <div class="windows" bind:this={windowContainer}>
       <!-- TODO: add opened windows -->
-      <TestWindow on:windowClose={updateUI} />
+      <TestWindow iconPath={apps[0].iconPath} on:windowClose={updateUI} on:windowMinimize={updateUI} />
     </div>
 
     <div class="notifications" style="width: {NOTIFICATIONS_WINDOW_WIDTH}px; height: {NOTIFICATIONS_WINDOW_HEIGHT}px;">
@@ -125,9 +147,23 @@
 
     {#each apps as shortcut, i}
 
-    {#if windowCollection != null && windowCollection.children.length > i && windowCollection.children[i].style.display != 'none'}
+    {#if windowContainer != null && windowContainer.children.length > i &&
+        ((windowContainer.children[i].style.display != 'none' && windowContainer.children[i].dataset['minimized'] == 'false') ||
+        (windowContainer.children[i].style.display == 'none' && windowContainer.children[i].dataset['minimized'] == 'true'))}
 
-    <img src={shortcut.iconPath} alt={shortcut.name} title={shortcut.name} />
+    <!-- !! to cast (boolean | undefined) to boolean -->
+    <!-- empty on:keydown to supress a warning -->
+    <span
+      data-minimized={!!apps[i].minimized}
+      style="background-image: url('{shortcut.iconPath}');"
+      title={shortcut.name}
+      on:click={() => unminimizeApp(i)}
+      on:keydown={() => {}}
+    >
+      {#if shortcut.iconPath == null}
+      {shortcut.iconPath} {shortcut.name}
+      {/if}
+    </span>
 
     {/if}
 
@@ -162,6 +198,26 @@
     display: flex;
     flex-direction: row;
     background-color: #A0A0A0;
+  }
+  
+  .toolbar span {
+    position: relative;
+    width: 50px;
+    height: 50px;
+    margin: 0.5rem;
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+  }
+
+  .toolbar span[data-minimized="true"]:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
   }
 
   .windows {
