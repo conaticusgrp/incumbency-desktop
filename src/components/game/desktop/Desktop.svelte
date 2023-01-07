@@ -32,7 +32,7 @@
   let notifications: NotificationData[] = [];
 
   const getWindow = (index: number): HTMLElement => {
-    console.assert(windowContainer != undefined && index >= 0 && index < windowContainer.children.length);
+    console.assert(windowContainer != undefined && index >= 0 && index < windowContainer.children.length, "Tried to get a window that doesn't exist");
     return windowContainer.children[index] as HTMLElement;
   }
 
