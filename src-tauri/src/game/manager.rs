@@ -58,10 +58,9 @@ impl GameState {
         };
       }
 
-      // for i in 0..self.businesses.len() {
-      //   let month_profits = self.businesses[i].balance - self.businesses[i].last_month_balance;
-
-      // }
+      for i in 0..self.businesses.len() {
+        let month_profits = self.businesses[i].balance - self.businesses[i].last_month_balance;
+      }
   }
 }
 
@@ -89,6 +88,12 @@ pub async fn create_game(state_mux: State<'_, GameStateSafe>, app_handle: tauri:
   app_handle.emit_all("game_created", NewGame { population: state.people.len() as i32 }).unwrap();
 
   Ok(())
+}
+
+#[tauri::command]
+pub fn set_tax(state_mux: State<'_, GameStateSafe>, tax_rate: f32) {
+  let mut state = state_mux.lock().unwrap();
+  state.tax_rate = tax_rate;
 }
 
 pub async fn start_game_loop(state_mux: &GameStateSafe, app_handle: &tauri::AppHandle) {

@@ -47,11 +47,13 @@ pub fn generate_game(state_mux: &GameStateSafe) {
         let mut business = Business::default();
         let idx = state.businesses.len();
 
-        let finished = business.generate(&config, ProductType::LEISURE, product_demand[&ProductType::LEISURE], &mut remaning_market_percentage, &mut state.people, idx);
+        let tax_rate = state.tax_rate.clone();
+
+        let sufficient_businesses = business.generate(&config, ProductType::LEISURE, product_demand[&ProductType::LEISURE], &mut remaning_market_percentage, &mut state.people, idx, tax_rate);
 
         state.businesses.push(business);
 
-        if finished {
+        if sufficient_businesses {
             break;
         }
     }
