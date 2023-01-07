@@ -1,11 +1,10 @@
 use std::{time::Duration, sync::{Arc, Mutex}};
 use crate::{entities::{business::Business, person::{Person, Job}}, common::{filesystem::create_save, payloads::{PayloadNewDay, NewGame}}};
-use serde::Serialize;
 use tauri::{State, Manager};
 
 use super::generation::generate_game;
 
-#[derive(Clone, Serialize)]
+#[derive(Clone)]
 pub struct GameState {
   pub tax_rate: f32,
   pub businesses: Vec<Business>,
@@ -30,7 +29,6 @@ impl GameState {
                   self.people[i].balance -= item_cost;
                   *self.people[i].wants.get_mut(&business.product_type).unwrap() -= item_cost;
                   business.balance += item_cost;
-                  dbg!(business.balance);
 
                   // TODO - fulfill the welfare of purchasing the item
               }
@@ -46,15 +44,24 @@ impl GameState {
         self.people[i].balance += self.people[i].salary as f32;
 
         match self.people[i].job {
-          // TODO: Handle business owner
-
-          Job::Employee(bus_idx) => {
-            self.people[bus_idx].balance += self.businesses[bus_idx].employee_salary as f32;
+          Job::BusinessOwner(bus_idx) => {
+            self.people[i].balance += self.businesses[bus_idx].employee_salary as f32;
             self.businesses[bus_idx].balance -= self.businesses[bus_idx].employee_salary as f32;
           },
+
+          Job::Employee(bus_idx) => {
+            self.people[i].balance += self.businesses[bus_idx].employee_salary as f32;
+            self.businesses[bus_idx].balance -= self.businesses[bus_idx].employee_salary as f32;
+          },
+
           _ => (),
         };
       }
+
+      // for i in 0..self.businesses.len() {
+      //   let month_profits = self.businesses[i].balance - self.businesses[i].last_month_balance;
+
+      // }
   }
 }
 
@@ -71,9 +78,10 @@ impl Default for GameState {
   }
 }
 
-#[tauri::command]
-pub async fn create_game(state_mux: State<'_, GameStateSafe>, app_handle: tauri::AppHandle, name: String) -> Result<(), ()> {
-  create_save(name);
+
+#[tauri::command] // TODO: Take in game name as argument and call "create_save(name)"
+pub async fn create_game(state_mux: State<'_, GameStateSafe>, app_handle: tauri::AppHandle) -> Result<(), ()> {
+  // create_save(name);
   generate_game(&state_mux);
   start_game_loop(&state_mux, &app_handle).await;
 

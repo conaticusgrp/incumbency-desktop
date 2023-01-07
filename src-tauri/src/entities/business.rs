@@ -1,11 +1,10 @@
 use maplit::hashmap;
 use rand::Rng;
-use serde::Serialize;
 
 use crate::{common::config::Config, common::util::{percentage_based_output_int, float_range}, game::generation::{generate_education_level, get_expected_salary_range}};
 use super::person::{EducationLevel::{*, self}, Person, Job};
 
-#[derive(Default, Clone, PartialEq, Eq, Hash, Serialize)]
+#[derive(Default, Clone, PartialEq, Eq, Hash)]
 pub enum ProductType {
     #[default]
     LEISURE,
@@ -15,7 +14,7 @@ pub enum ProductType {
     // HOUSES
 }
 
-#[derive(Default, Clone, Serialize)]
+#[derive(Default, Clone)]
 pub struct Business {
     pub balance: f32,
 
@@ -25,6 +24,7 @@ pub struct Business {
     pub production_cost: f32,
     pub product_type: ProductType,
     
+    pub owner_salary: i32,
     pub employee_salary: i32,
     pub default_employee_profit_percentage: i32, // Default percentage of profit that is made from an employee salary, not taking into account the employee's welfare
 
@@ -80,13 +80,14 @@ impl Business {
         let expected_income = product_demand * marketing_reach_percentage;
 
         // TODO: make this more varied & accurate, influence it by external factors
-        self.production_cost = self.product_price as f32 * float_range(0.4, 0.5, 3);
+        self.production_cost = self.product_price as f32 * float_range(0.3, 0.5, 3);
+        let marketing_cost = expected_income * float_range(0.1, 0.3, 3);
 
-        let marketing_cost = product_demand * float_range(0.1, 0.3, 3);
         let expected_salary_range = get_expected_salary_range(&config, &self.minimum_education_level);
 
-        // This can only be a maximum of 80%, leaving roughly 10% capacity for employees, the minimum is 50%
+        // This can only be a maximum of 80%, leaving roughly 10% capacity for employees, the minimum is 40%
         let loss_percentage_before_employees = ((marketing_cost + self.production_cost) / expected_income) * 100.;
+        dbg!(loss_percentage_before_employees);
         let mid_of_range = (expected_salary_range.start + expected_salary_range.end) / 2; // middle of expected salary range
         let lower_mid_of_range = expected_salary_range.start + ((expected_salary_range.end - mid_of_range) / 2); // lower middle of expected salary range
 
@@ -103,9 +104,13 @@ impl Business {
         self.employee_salary = rng.gen_range(employee_salary_range);
         self.default_employee_profit_percentage = rng.gen_range(8..11);
 
-        let employee_monthly_salary = self.employee_salary / 12;
+        let employee_monthly_salary = (self.employee_salary / 12) as f32;
         let expected_profits = expected_income - (expected_income * (loss_percentage_before_employees / 100.));
-        let employee_count = expected_profits as i32 / (employee_monthly_salary + (employee_monthly_salary * (self.default_employee_profit_percentage / 100)));
+
+        let employee_monthly_profit = employee_monthly_salary + (employee_monthly_salary * (self.default_employee_profit_percentage as f32 / 100.));
+        dbg!(expected_income);
+        dbg!(employee_monthly_profit);
+        let employee_count = (expected_profits / employee_monthly_profit) as i32;
 
         let minimum_education_level = self.minimum_education_level.clone();
         let unemployed_people: Vec<&mut Person> = people.iter_mut().filter(|p| {
@@ -121,6 +126,12 @@ impl Business {
 
             count += 1;
         }
+
+        let total_loss = (loss_percentage_before_employees * expected_income) + (employee_count * self.employee_salary) as f32;
+        let percentage_profit = (expected_income / total_loss) * 100.;
+        dbg!(total_loss);
+        dbg!(percentage_profit);
+        dbg!(percentage_profit);
 
         self.balance = expected_profits * float_range(0., 3., 3); // A range of 0% - 300% of the expected profit is the business balance
         self.last_month_balance = self.balance;
