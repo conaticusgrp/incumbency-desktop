@@ -39,9 +39,12 @@ impl GameState {
     }
   }
 
-  fn month_pass(&mut self, month: i32) {
+  fn month_pass(&mut self, month: i32, tax_rate: f32) {
       for i in 0..self.people.len() {
-        self.people[i].balance += self.people[i].salary as f32;
+        let mut income = self.people[i].salary as f32;
+        income -= income * tax_rate;
+
+        self.people[i].balance += income;
 
         match self.people[i].job {
           Job::BusinessOwner(bus_idx) => {
@@ -60,6 +63,7 @@ impl GameState {
 
       for i in 0..self.businesses.len() {
         let month_profits = self.businesses[i].balance - self.businesses[i].last_month_balance;
+        self.businesses[i].balance -= month_profits * tax_rate;
       }
   }
 }
@@ -106,10 +110,12 @@ pub async fn start_game_loop(state_mux: &GameStateSafe, app_handle: &tauri::AppH
         app_handle.emit_all("new_day", PayloadNewDay { day }).unwrap();
 
         let mut state = state_mux.lock().unwrap();
+        let tax_rate = state.tax_rate.clone();
+
         state.day_pass(day);
         
         if day % 30 == 0 {
-          state.month_pass(day / 30);
+          state.month_pass(day / 30, tax_rate);
             // handle new month
         }
     }

@@ -75,12 +75,7 @@ impl Business {
         // Generate salary based on range
         self.employee_salary = rng.gen_range(employee_salary_range);
 
-        let employee_monthly_salary = (self.employee_salary / 12) as f32;
         let expected_profits = expected_income - (expected_income * (loss_percentage_before_employees / 100.));
-
-        let employee_monthly_profit = employee_monthly_salary + (employee_monthly_salary * (self.default_employee_profit_percentage as f32 / 100.));
-        let employee_count = (expected_profits / employee_monthly_profit) as i32;
-
         self.balance = expected_profits * float_range(0., 3., 3); // A range of 0% - 300% of the expected profit is the business balance
         self.last_month_balance = self.balance;
 
