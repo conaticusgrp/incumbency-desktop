@@ -11,7 +11,7 @@
   let dispatcher = createEventDispatcher();
 
   const open = (): void => {
-    dispatcher('openApp', index);
+    dispatcher('openApp', { index });
   }
 
 </script>

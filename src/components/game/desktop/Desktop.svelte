@@ -6,19 +6,17 @@
   import DesktopShortcut from "./DesktopShortcut.svelte"
   import ToolBarItem from "./ToolBarItem.svelte";
   import Notification from "./Notification.svelte";
+
+  import Email from "../windows/Email.svelte";
+  import GovernmentSpending from "../windows/GovernmentSpending.svelte";
   
   // DEBUG
-  import TestWindow from "../windows/TestWindow.svelte";
   import { onMount } from 'svelte'
   
-  let windowCollection: HTMLElement;
+  let windowContainer: HTMLElement;
   let toolbarHeightPercent: number = 15;
   let wallpaperPath: string | null = null;
   let apps: DesktopAppShortcut[] = [
-    {
-      name: "Test App",
-      badgeCount: 0
-    },
     {
       name: "Email",
       iconPath: "https://seeklogo.com/images/M/mail-icon-logo-28FE0635D0-seeklogo.com.png",
@@ -28,25 +26,15 @@
       name: "Government Spending",
       iconPath: "https://cdn-icons-png.flaticon.com/512/217/217853.png",
       badgeCount: 1
-    },
-    {
-      name: "Stocks",
-      iconPath: "https://cdn-icons-png.flaticon.com/512/263/263142.png",
-      badgeCount: 0
-    },
-    {
-      name: "Contacts",
-      iconPath: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQhqI4txTRkj4_pCfr3NlNdbCbLYgX-nqjMX8wHEfx_A6Q8luaudlecd84nMDGZ1a4nwA0&usqp=CAU",
-      badgeCount: 0
-    },
-    {
-      name: "Add/Remove Apps",
-      iconPath: "https://static.vecteezy.com/system/resources/previews/008/659/063/original/eps10-black-download-or-install-icon-in-simple-flat-trendy-modern-style-isolated-on-white-background-free-vector.jpg",
-      badgeCount: 0
     }
   ];
   
   let notifications: NotificationData[] = [];
+
+  const getWindow = (index: number): HTMLElement => {
+    console.assert(windowContainer != undefined && index >= 0 && index < windowContainer.children.length, "Tried to get a window that doesn't exist");
+    return windowContainer.children[index] as HTMLElement;
+  }
 
   $: if (notifications.length > 0 && !KEEP_NOTIFICATIONS_DISPLAYED) {
     setTimeout(() => {
@@ -56,12 +44,28 @@
   }
 
   const handleOpenApp = (e: CustomEvent): void => {
-    if (e.detail < 0 || e.detail >= windowCollection.children.length) return;
+    if (e.detail < 0 || e.detail.index >= windowContainer.children.length) return;
 
-    (windowCollection.children[e.detail] as HTMLElement).style.display = 'initial';
+    if (getWindow(e.detail.index).dataset['minimized'] !== 'true') {
+      getWindow(e.detail.index).style.display = 'initial';
+      updateUI();
+    } else {
+      unminimizeApp(e.detail.index);
+    }
+  }
+
+  const unminimizeApp = (index: number) => {
+    getWindow(index).dataset['minimized'] = 'false';
+    updateUI();
   }
 
   const updateUI = () => {
+    // console.log("update");
+    // console.assert(apps.length <= windowContainer.children.length);
+    for (let i = 0; i < windowContainer.children.length; i++) {
+      apps[i].minimized = getWindow(i).dataset['minimized'] === 'true';
+    }
+
     apps = apps;
   }
 
@@ -97,9 +101,10 @@
 
     {/each}
 
-    <div class="windows" bind:this={windowCollection}>
+    <div class="windows" bind:this={windowContainer}>
       <!-- TODO: add opened windows -->
-      <TestWindow on:windowClose={updateUI} />
+      <Email iconPath={apps[0].iconPath} on:windowClose={updateUI} on:windowMinimizeStateChange={updateUI} />
+      <GovernmentSpending iconPath={apps[1].iconPath} on:windowClose={updateUI} on:windowMinimizeStateChange={updateUI} />
     </div>
 
     <div class="notifications" style="width: {NOTIFICATIONS_WINDOW_WIDTH}px; height: {NOTIFICATIONS_WINDOW_HEIGHT}px;">
@@ -125,9 +130,23 @@
 
     {#each apps as shortcut, i}
 
-    {#if windowCollection != null && windowCollection.children.length > i && windowCollection.children[i].style.display != 'none'}
+    {#if windowContainer != null && windowContainer.children.length > i &&
+        ((windowContainer.children[i].style.display != 'none' && windowContainer.children[i].dataset['minimized'] == 'false') ||
+        (windowContainer.children[i].style.display == 'none' && windowContainer.children[i].dataset['minimized'] == 'true'))}
 
-    <img src={shortcut.iconPath} alt={shortcut.name} title={shortcut.name} />
+    <!-- !! to cast (boolean | undefined) to boolean -->
+    <!-- empty on:keydown to supress a warning -->
+    <span
+      data-minimized={!!apps[i].minimized}
+      style="background-image: url('{shortcut.iconPath}');"
+      title={shortcut.name}
+      on:click={() => unminimizeApp(i)}
+      on:keydown={() => {}}
+    >
+      {#if shortcut.iconPath == null}
+      {shortcut.iconPath} {shortcut.name}
+      {/if}
+    </span>
 
     {/if}
 
@@ -162,6 +181,26 @@
     display: flex;
     flex-direction: row;
     background-color: #A0A0A0;
+  }
+  
+  .toolbar span {
+    position: relative;
+    width: 50px;
+    height: 50px;
+    margin: 0.5rem;
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+  }
+
+  .toolbar span[data-minimized="true"]:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
   }
 
   .windows {

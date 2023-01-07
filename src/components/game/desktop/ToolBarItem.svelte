@@ -23,9 +23,9 @@
 
   /* DEBUG */
   main {
-   width: 50px;
-   height: 50px;
-   margin: 0.5rem;
+    width: 50px;
+    height: 50px;
+    margin: 0.5rem;
   }
 
   button {

@@ -39,6 +39,17 @@
     }
   }
 
+  const maximize = (): void => {
+    boundsBeforeMaximizing = { ...pos, ...size }
+    pos = { x: 0, y: 0 }
+    size = { width: thisObj.parentElement?.clientWidth ?? 0, height: thisObj.parentElement?.clientHeight ?? 0, maximized: true }
+  }
+
+  const unmaximize = (): void => {
+    pos = { x: boundsBeforeMaximizing.x, y: boundsBeforeMaximizing.y }
+    size = { width: boundsBeforeMaximizing.width, height: boundsBeforeMaximizing.height, maximized: false }
+  }
+
   const handleClose = (): void => {
     thisObj.style.display = 'none';
     thisObj.dataset['focused'] = 'false';
@@ -47,18 +58,14 @@
 
   const handleMaximize = (): void => {
     if (size.maximized) {
-      pos = { x: boundsBeforeMaximizing.x, y: boundsBeforeMaximizing.y }
-      size = { width: boundsBeforeMaximizing.width, height: boundsBeforeMaximizing.height, maximized: false }
+      unmaximize();
     } else {
-      boundsBeforeMaximizing = { ...pos, ...size }
-      pos = { x: 0, y: 0 }
-      size = { width: thisObj.parentElement?.clientWidth ?? 0, height: thisObj.parentElement?.clientHeight ?? 0, maximized: true }
+      maximize();
     }
-    
   }
 
   const handleMinimize = (): void => {
-    console.log("minimize")
+    thisObj.dataset['minimized'] = 'true';
   }
 
   const handleDragStart = (e: MouseEvent): void => {
@@ -68,12 +75,21 @@
     )
       return
 
+    if (size.maximized) {
+      // cursorPos(max)/width(max) = cursorPos(min)/width(min)
+      const cursorWindowPercentageXMax = e.clientX / size.width;
+      unmaximize();
+      const cursorOffsetMin = cursorWindowPercentageXMax * size.width;
+      pos.x = e.clientX - cursorOffsetMin;
+      pos.y = 0;
+    }
+
     document.addEventListener("mousemove", handleDrag)
     document.addEventListener("mouseup", handleDragEnd)
 
     dragOffset = {
-      dx: e.clientX - thisObj.offsetLeft,
-      dy: e.clientY - thisObj.offsetTop,
+      dx: e.clientX - pos.x,
+      dy: e.clientY - pos.y,
     }
   }
 
@@ -159,10 +175,14 @@
             opened = thisObj?.style.display != 'none';
           } else if (mutation.attributeName === "data-focused") {
             focused = thisObj?.dataset['focused'] as unknown as boolean;
+          } else if (mutation.attributeName === "data-minimized") {
+            thisObj.style.display = (thisObj?.dataset['minimized'] !== 'true') ? 'initial' : 'none';
+            dispatcher('windowMinimizeStateChange');
           }
         }
       });
     });
+    thisObj.style.display = 'none';
 
     observer.observe(thisObj, {
       attributes: true
@@ -178,9 +198,9 @@
     top: {pos.y}px;
     width: {size.width}px;
     height: {size.height}px;
-    display: none;
   "
   data-focused={false}
+  data-minimized={false}
   on:mousedown={requestFocus}
   bind:this={thisObj}
 >
