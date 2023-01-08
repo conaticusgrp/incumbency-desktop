@@ -112,7 +112,7 @@ impl Business {
         (false, marketing_reach_percentage)
     }
 
-    fn assign_to_people(&self, reach: i32, people: &mut Vec<Person>, idx: usize) {
+    pub fn assign_to_people(&self, reach: i32, people: &mut Vec<Person>, idx: usize) {
         let mut rng = rand::thread_rng();
 
         // People who have not yet picked a business to buy from

@@ -63,16 +63,18 @@ impl GameState {
         };
       }
 
-      let mut reinvestment_budgets: Vec<(&mut Business, f32)> = Vec::new();
+      let mut reinvestment_budgets: Vec<(usize, f32)> = Vec::new();
       let mut total_reinvestment_budget = 0.;
 
-      for business in self.businesses.iter_mut() {
+      for i in 0..self.businesses.len() {
+        let business = &mut self.businesses[i];
+
         let month_profits = business.balance - business.last_month_balance;
         business.balance -= month_profits * tax_rate;
 
         if month_profits < 0. { continue }
         let reinvesment_budget = business.balance * as_decimal_percent!(business.marketing_cost_percentage);
-        reinvestment_budgets.push((business, reinvesment_budget));
+        reinvestment_budgets.push((i, reinvesment_budget));
         total_reinvestment_budget += reinvesment_budget;
 
         // add all businesses total
@@ -84,7 +86,8 @@ impl GameState {
       let mut cost_per_percent = 0.;
 
       for i in 0..reinvestment_budgets.len() {
-        let (_, budget) = &reinvestment_budgets[i];
+        let (bus_idx, budget) = &reinvestment_budgets[i];
+        let business = &mut self.businesses[*bus_idx];
 
         let maximum_percentage = (budget / total_reinvestment_budget) * 100.;
         
@@ -93,11 +96,12 @@ impl GameState {
         }
 
         let mut assigned_percent = budget / cost_per_percent;
-        reinvestment_budgets[i].0.balance -= assigned_percent * cost_per_percent; // remove from business balance
 
         if (remaining_market_percentage - assigned_percent) < 0. {
           assigned_percent = remaining_market_percentage;
         }
+
+        business.balance -= assigned_percent * cost_per_percent; // remove from business balance
 
         remaining_market_percentage -= assigned_percent;
       }
