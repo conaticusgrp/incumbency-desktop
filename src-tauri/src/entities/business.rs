@@ -1,7 +1,7 @@
 use maplit::hashmap;
 use rand::Rng;
 
-use crate::{common::config::Config, common::util::{percentage_based_output_int, float_range}, game::{generation::{generate_education_level, get_expected_salary_range}, manager::GameState}};
+use crate::{common::config::Config, common::util::{percentage_based_output_int, float_range}, game::{generation::{generate_education_level, get_expected_salary_range}, manager::GameState}, as_decimal_percent, as_whole_percent};
 use super::person::{EducationLevel::{*, self}, Person, Job};
 
 #[derive(Default, Clone, PartialEq, Eq, Hash)]
@@ -26,7 +26,7 @@ pub struct Business {
     pub product_type: ProductType,
     
     pub employee_salary: i32,
-    pub default_employee_profit_percentage: i32, // Default percentage of profit that is made from an employee salary, not taking into account the employee's welfare
+    pub default_income_per_employee: i32, // Default profit that is made from an employee salary, not taking into account the employee's welfare
 
     pub last_month_balance: f32, // Used to calculate the income for this month
 }
@@ -38,47 +38,56 @@ impl Business {
 
         self.product_type = product_type;
         self.minimum_education_level = generate_education_level(&config);
-        self.marketing_cost_percentage = rng.gen_range(10..30);
+        self.marketing_cost_percentage = rng.gen_range(5..12);
         self.product_price = rng.gen_range(2..100); // TODO: determine this price more accurately?
-        self.production_cost_per_product = self.product_price as f32 * float_range(0.3, 0.5, 3);
-        self.default_employee_profit_percentage = rng.gen_range(8..11);
+        self.production_cost_per_product = self.product_price as f32 * float_range(0.15, 0.25, 3);
 
         let (sufficient_businesses, marketing_reach_percentage) = self.generate_marketing_reach(remaining_market_percentage);
         if sufficient_businesses { return sufficient_businesses }
 
         let reach = (marketing_reach_percentage * people.len() as f32) as i32;
-        self.assign_to_people(reach, people, marketing_reach_percentage, idx);
+        self.assign_to_people(reach, people, idx);
 
-        let mut expected_income = product_demand * marketing_reach_percentage;
-        expected_income -= expected_income * tax_rate;
+        let expected_income = (product_demand * marketing_reach_percentage) as i32;
 
         // TODO: make this more varied & accurate, influence it by external factors
-        let total_production_cost = (expected_income / self.product_price as f32) * self.production_cost_per_product;
-        let total_marketing_cost = (self.marketing_cost_percentage as f32 / 100.) * expected_income;
+        let total_production_cost = (expected_income / self.product_price) as f32 * self.production_cost_per_product;
+        let total_marketing_cost = as_decimal_percent!(self.marketing_cost_percentage) * expected_income as f32;
+
         let expected_salary_range = get_expected_salary_range(&config, &self.minimum_education_level);
 
-        // This can only be a maximum of 80%, leaving roughly 10% capacity for employees, the minimum is 40%
-        let loss_percentage_before_employees = ((total_marketing_cost + total_production_cost) / expected_income) * 100.;
+        // This can only be a maximum of 67%, leaving roughly 30% capacity for employees, the minimum (with tax no lower than 20%) is 40%
+        let mut loss_percentage = as_whole_percent!(total_marketing_cost + total_production_cost; / expected_income) + (tax_rate * 100.) as i32;
         let mid_of_range = (expected_salary_range.start + expected_salary_range.end) / 2; // middle of expected salary range
         let lower_mid_of_range = expected_salary_range.start + ((expected_salary_range.end - mid_of_range) / 2); // lower middle of expected salary range
 
         // Generate a more narrowed down range based on the randomly generated marketing cost and product cost
         // The employee salary will be lower if the marketing and product cost is cheap, this is to compensate and keep the economy balanced
         // The purpose of lowering the employee salary is that there is less work output from employees, so there is a higher staff turnover
-        let employee_salary_range = match loss_percentage_before_employees {
-            loss if loss >= 70. => mid_of_range..expected_salary_range.end,
-            loss if loss >= 60. => lower_mid_of_range..mid_of_range,
+        let employee_salary_range = match loss_percentage {
+            loss if loss >= 60 => mid_of_range..expected_salary_range.end,
+            loss if loss >= 45 => lower_mid_of_range..mid_of_range,
             _ => expected_salary_range.start..lower_mid_of_range,
         };
 
         // Generate salary based on range
         self.employee_salary = rng.gen_range(employee_salary_range);
 
-        let expected_profits = expected_income - (expected_income * (loss_percentage_before_employees / 100.));
-        self.balance = expected_profits * float_range(0., 3., 3); // A range of 0% - 300% of the expected profit is the business balance
-        self.last_month_balance = self.balance;
 
-        dbg!((expected_profits / expected_income) * 100.);
+        let employee_monthly_salary = self.employee_salary / 12;
+        let employee_budget_allocation = (expected_income as f32 * float_range(0.15, 0.3, 3)) as i32;
+        let employee_count = employee_budget_allocation / employee_monthly_salary;
+
+        self.default_income_per_employee = as_whole_percent!(expected_income; / employee_count);
+        loss_percentage += as_whole_percent!(employee_count * employee_monthly_salary; / expected_income);
+
+        // TODO: balance the amount of people who get employment
+        self.assign_employees(people, employee_count, idx);
+
+        let expected_profits = (expected_income as f32 - (expected_income as f32 * as_decimal_percent!(loss_percentage))) as i32;
+
+        self.balance = expected_profits as f32 * float_range(0.15, 3., 3); // A range of 0% - 300% of the expected profit is the business balance
+        self.last_month_balance = self.balance;
 
         false
     }
@@ -101,7 +110,7 @@ impl Business {
         (false, marketing_reach_percentage)
     }
 
-    fn assign_to_people(&self, reach: i32, people: &mut Vec<Person>, marketing_reach_percentage: f32, idx: usize) {
+    fn assign_to_people(&self, reach: i32, people: &mut Vec<Person>, idx: usize) {
         let mut rng = rand::thread_rng();
 
         // People who have not yet picked a business to buy from

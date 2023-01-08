@@ -1,6 +1,20 @@
 use rand::Rng;
 use std::collections::HashMap;
 
+#[macro_export]
+macro_rules! as_whole_percent {
+    ($partial:expr; / $total:expr) => {
+        (($partial as f32 / $total as f32) * 100.) as i32
+    };
+}
+
+#[macro_export]
+macro_rules! as_decimal_percent {
+    ($x:expr) => {
+        ($x as f32) / 100.
+    };
+}
+
 pub fn set_decimal_count(number: f32, decimal_count: u32) -> f32 {
     let power = 10i32.pow(decimal_count) as f32;
     (number * power).round() / power

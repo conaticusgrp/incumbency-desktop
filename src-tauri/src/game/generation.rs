@@ -1,7 +1,7 @@
 use std::{collections::{HashMap}, ops::Range};
 use maplit::hashmap;
 
-use crate::{common::config::{load_config, Config}, entities::{person::{Person, EducationLevel::{*, self}}, business::{Business, ProductType}}, common::util::percentage_based_output_int};
+use crate::{common::config::{load_config, Config}, entities::{person::{Person, EducationLevel::{*, self}, Job}, business::{Business, ProductType}}, common::util::percentage_based_output_int};
 
 use super::manager::GameStateSafe;
 

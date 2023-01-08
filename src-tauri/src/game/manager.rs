@@ -7,6 +7,7 @@ use super::generation::generate_game;
 #[derive(Clone)]
 pub struct GameState {
   pub tax_rate: f32,
+  pub business_tax_rate: f32,
   pub businesses: Vec<Business>,
   pub people: Vec<Person>,
   pub gdp: f32,
@@ -81,6 +82,7 @@ impl Default for GameState {
   fn default() -> Self {
       Self {
         tax_rate: 0.24, // 24% default
+        business_tax_rate: 0.22, // 22% default - TODO: emit warning if the tax is raised above 30% - this is the maximum tax rate businesses will tolerate
         businesses: Vec::new(),
         people: Vec::new(),
         gdp: 0.
@@ -116,7 +118,7 @@ pub async fn start_game_loop(state_mux: &GameStateSafe, app_handle: &tauri::AppH
         day += 1;
         app_handle.emit_all("new_day", PayloadNewDay { day }).unwrap();
 
-        let mut state = &mut state_mux.lock().unwrap();
+        let state = &mut state_mux.lock().unwrap();
         let tax_rate = state.tax_rate.clone();
  
         if day % 30 == 0 {
