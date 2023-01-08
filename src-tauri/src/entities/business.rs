@@ -1,7 +1,7 @@
 use maplit::hashmap;
 use rand::Rng;
 
-use crate::{common::config::Config, common::util::{percentage_based_output_int, float_range}, game::generation::{generate_education_level, get_expected_salary_range}};
+use crate::{common::config::Config, common::util::{percentage_based_output_int, float_range}, game::{generation::{generate_education_level, get_expected_salary_range}, manager::GameState}};
 use super::person::{EducationLevel::{*, self}, Person, Job};
 
 #[derive(Default, Clone, PartialEq, Eq, Hash)]
@@ -21,11 +21,10 @@ pub struct Business {
     pub minimum_education_level: EducationLevel,
     pub expected_marketing_reach: i32, // Amount of population that the marketing will reach (roughly)
     pub product_price: i32,
-    pub production_cost: f32,
+    pub production_cost_per_product: f32,
     pub marketing_cost_percentage: i32,
     pub product_type: ProductType,
     
-    pub owner_salary: i32,
     pub employee_salary: i32,
     pub default_employee_profit_percentage: i32, // Default percentage of profit that is made from an employee salary, not taking into account the employee's welfare
 
@@ -41,7 +40,7 @@ impl Business {
         self.minimum_education_level = generate_education_level(&config);
         self.marketing_cost_percentage = rng.gen_range(10..30);
         self.product_price = rng.gen_range(2..100); // TODO: determine this price more accurately?
-        self.production_cost = self.product_price as f32 * float_range(0.3, 0.5, 3);
+        self.production_cost_per_product = self.product_price as f32 * float_range(0.3, 0.5, 3);
         self.default_employee_profit_percentage = rng.gen_range(8..11);
 
         let (sufficient_businesses, marketing_reach_percentage) = self.generate_marketing_reach(remaining_market_percentage);
@@ -54,7 +53,7 @@ impl Business {
         expected_income -= expected_income * tax_rate;
 
         // TODO: make this more varied & accurate, influence it by external factors
-        let total_production_cost = (expected_income / self.product_price as f32) * self.production_cost;
+        let total_production_cost = (expected_income / self.product_price as f32) * self.production_cost_per_product;
         let total_marketing_cost = (self.marketing_cost_percentage as f32 / 100.) * expected_income;
         let expected_salary_range = get_expected_salary_range(&config, &self.minimum_education_level);
 
@@ -78,6 +77,8 @@ impl Business {
         let expected_profits = expected_income - (expected_income * (loss_percentage_before_employees / 100.));
         self.balance = expected_profits * float_range(0., 3., 3); // A range of 0% - 300% of the expected profit is the business balance
         self.last_month_balance = self.balance;
+
+        dbg!((expected_profits / expected_income) * 100.);
 
         false
     }
@@ -106,7 +107,6 @@ impl Business {
         // People who have not yet picked a business to buy from
         let unassigned_people: Vec<&mut Person> = people.iter_mut().filter(|p| p.business_this_month == 0).collect(); // TODO: optimise this
         let mut count = 0;
-
 
         for person in unassigned_people {
             if count == reach { break }
@@ -163,5 +163,9 @@ impl Business {
     pub fn can_afford(&self, price: &f32) -> bool {
         let cut_balance: f32 = self.balance - (self.balance * 0.25); // Maintain at least 30% of the balanace
         cut_balance - price > 0.
+    }
+
+    pub fn day_pass(&self, state: &mut GameState) {
+        
     }
 }

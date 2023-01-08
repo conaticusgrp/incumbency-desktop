@@ -1,7 +1,7 @@
 use std::{ops::Range, collections::HashMap};
 use maplit::hashmap;
 use rand::{Rng};
-use crate::{common::util::{float_range, percentage_based_output_int, generate_percentage}, common::config::Config, game::generation::{generate_education_level, get_expected_salary_range}};
+use crate::{common::util::{float_range, percentage_based_output_int, generate_percentage}, common::config::Config, game::{generation::{generate_education_level, get_expected_salary_range}, manager::GameState}};
 use EducationLevel::*;
 
 use super::business::ProductType;
@@ -119,24 +119,14 @@ impl Person {
     fn generate_age(&self) -> i32 {
         let mut rng = rand::thread_rng();
 
-        let age_category = percentage_based_output_int::<i32>(hashmap! {
-            1 => 24,
-            2 => 9,
-            3 => 12,
-            4 => 25,
-            5 => 13,
-            6 => 17,
-        });
-
-        match age_category {
-            1 => rng.gen_range(0..=18),
-            2 => rng.gen_range(19..=25),
-            3 => rng.gen_range(26..=34),
-            4 => rng.gen_range(35..=54),
-            5 => rng.gen_range(55..=64),
-            6 => rng.gen_range(65..=90),
-            _ => unreachable!(),
-        }
+        percentage_based_output_int::<i32>(hashmap! {
+            (rng.gen_range(0..=18)) => 24,
+            (rng.gen_range(19..=25)) => 9,
+            (rng.gen_range(26..=34)) => 12,
+            (rng.gen_range(35..=54)) => 25,
+            (rng.gen_range(55..=64)) => 13,
+            (rng.gen_range(65..=90)) => 17,
+        })
     }
 
     fn generate_wants(&mut self, salary: f32, product_demand: &mut HashMap<ProductType, f32>) {
@@ -202,6 +192,10 @@ impl Person {
         let cut_balance: f32 = self.balance - (self.balance * 0.1);
         cut_balance - price > 0.
     }
+
+    pub fn day_pass(&self, state: &mut GameState) {
+        
+    }
 }
 
 #[derive(Default, Clone, PartialEq, Eq, Hash)]
@@ -254,7 +248,7 @@ impl Debt {
         let required_to_pay = salary >= US_DEBT_REPAYMENT_THRESHOLD;
         let education_finished_age = 18 + person.years_in_higher_education; // Age at which the individual finishes education
 
-        if required_to_pay && person.age > education_finished_age {
+        if required_to_pay && person.age >= education_finished_age {
            owed -= (person.age - education_finished_age) as f32 * salary_percentage * salary;
         }
 
