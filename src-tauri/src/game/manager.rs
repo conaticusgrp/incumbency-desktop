@@ -1,5 +1,5 @@
-use std::{time::Duration, sync::{Arc, Mutex}};
-use crate::{entities::{business::Business, person::{Person, Job}}, common::{filesystem::create_save, payloads::{PayloadNewDay, NewGame}}};
+use std::{time::Duration, sync::{Arc, Mutex}, borrow::{Borrow, BorrowMut}};
+use crate::{entities::{business::Business, person::{Person, Job}}, common::{filesystem::create_save, payloads::{PayloadNewDay, NewGame}}, as_decimal_percent, percentage_of};
 use tauri::{State, Manager};
 
 use super::generation::generate_game;
@@ -40,9 +40,7 @@ impl GameState {
   }
 
   fn month_pass(&mut self, month: i32, tax_rate: f32) {
-      for i in 0..self.people.len() {
-        let person = &mut self.people[i];
-
+      for person in self.people.iter_mut() {
         let mut income = person.salary as f32;
         income -= income * tax_rate;
 
@@ -65,13 +63,43 @@ impl GameState {
         };
       }
 
-      for i in 0..self.businesses.len() {
-        let business = &mut self.businesses[i];
+      let mut reinvestment_budgets: Vec<(&mut Business, f32)> = Vec::new();
+      let mut total_reinvestment_budget = 0.;
+
+      for business in self.businesses.iter_mut() {
         let month_profits = business.balance - business.last_month_balance;
-        business.balance -= month_profits * (tax_rate);
+        business.balance -= month_profits * tax_rate;
 
         if month_profits < 0. { continue }
-        let reinvesment_budget = business.balance - (business.balance * 0.3); // keep 30% as backup
+        let reinvesment_budget = business.balance * as_decimal_percent!(business.marketing_cost_percentage);
+        reinvestment_budgets.push((business, reinvesment_budget));
+        total_reinvestment_budget += reinvesment_budget;
+
+        // add all businesses total
+        // each business is assigned a market percentage (based on a calculated mean)
+        // buy as much as the business can afford
+      }
+
+      let mut remaining_market_percentage: f32 = 100.;
+      let mut cost_per_percent = 0.;
+
+      for i in 0..reinvestment_budgets.len() {
+        let (_, budget) = &reinvestment_budgets[i];
+
+        let maximum_percentage = (budget / total_reinvestment_budget) * 100.;
+        
+        if i == 0 {
+          cost_per_percent = budget / maximum_percentage;
+        }
+
+        let mut assigned_percent = budget / cost_per_percent;
+        reinvestment_budgets[i].0.balance -= assigned_percent * cost_per_percent; // remove from business balance
+
+        if (remaining_market_percentage - assigned_percent) < 0. {
+          assigned_percent = remaining_market_percentage;
+        }
+
+        remaining_market_percentage -= assigned_percent;
       }
   }
 }
@@ -110,7 +138,7 @@ pub fn set_tax(state_mux: State<'_, GameStateSafe>, tax_rate: f32) {
 }
 
 pub async fn start_game_loop(state_mux: &GameStateSafe, app_handle: &tauri::AppHandle) {
-    let mut interval = tokio::time::interval(Duration::from_secs(1));
+    let mut interval = tokio::time::interval(Duration::from_millis(10)); // TODO: put me back to seconds
     let mut day = 1;
 
     loop {
@@ -123,9 +151,8 @@ pub async fn start_game_loop(state_mux: &GameStateSafe, app_handle: &tauri::AppH
 
         state.day_pass(day);
  
-        if day % 30 == 0 {
-          state.month_pass(day / 30, tax_rate);
-            // handle new month
+        if day % 31 == 0 {
+          state.month_pass(day / 31, tax_rate);
         }
     }
 }

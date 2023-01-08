@@ -2,7 +2,7 @@ use rand::Rng;
 use std::collections::HashMap;
 
 #[macro_export]
-macro_rules! as_whole_percent {
+macro_rules! percentage_of {
     ($partial:expr; / $total:expr) => {
         (($partial as f32 / $total as f32) * 100.) as i32
     };

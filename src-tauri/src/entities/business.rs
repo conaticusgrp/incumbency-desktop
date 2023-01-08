@@ -1,7 +1,7 @@
 use maplit::hashmap;
 use rand::Rng;
 
-use crate::{common::config::Config, common::util::{percentage_based_output_int, float_range}, game::{generation::{generate_education_level, get_expected_salary_range}, manager::GameState}, as_decimal_percent, as_whole_percent};
+use crate::{common::config::Config, common::util::{percentage_based_output_int, float_range}, game::{generation::{generate_education_level, get_expected_salary_range}, manager::GameState}, as_decimal_percent, percentage_of};
 use super::person::{EducationLevel::{*, self}, Person, Job};
 
 #[derive(Default, Clone, PartialEq, Eq, Hash)]
@@ -57,7 +57,7 @@ impl Business {
         let expected_salary_range = get_expected_salary_range(&config, &self.minimum_education_level);
 
         // This can only be a maximum of 67%, leaving roughly 30% capacity for employees, the minimum (with tax no lower than 20%) is 40%
-        let mut loss_percentage = as_whole_percent!(total_marketing_cost + total_production_cost; / expected_income) + (tax_rate * 100.) as i32;
+        let mut loss_percentage = percentage_of!(total_marketing_cost + total_production_cost; / expected_income) + (tax_rate * 100.) as i32;
         let mid_of_range = (expected_salary_range.start + expected_salary_range.end) / 2; // middle of expected salary range
         let lower_mid_of_range = expected_salary_range.start + ((expected_salary_range.end - mid_of_range) / 2); // lower middle of expected salary range
 
@@ -78,8 +78,8 @@ impl Business {
         let employee_budget_allocation = (expected_income as f32 * float_range(0.15, 0.3, 3)) as i32;
         let employee_count = employee_budget_allocation / employee_monthly_salary;
 
-        self.default_income_per_employee = as_whole_percent!(expected_income; / employee_count);
-        loss_percentage += as_whole_percent!(employee_count * employee_monthly_salary; / expected_income);
+        self.default_income_per_employee = percentage_of!(expected_income; / employee_count);
+        loss_percentage += percentage_of!(employee_count * employee_monthly_salary; / expected_income);
 
         // TODO: balance the amount of people who get employment
         self.assign_employees(people, employee_count, idx);
@@ -87,6 +87,8 @@ impl Business {
         let expected_profits = (expected_income as f32 - (expected_income as f32 * as_decimal_percent!(loss_percentage))) as i32;
 
         self.balance = expected_profits as f32 * float_range(0.15, 3., 3); // A range of 0% - 300% of the expected profit is the business balance
+        self.balance -= expected_income as f32 - total_production_cost - total_marketing_cost;
+
         self.last_month_balance = self.balance;
 
         false
