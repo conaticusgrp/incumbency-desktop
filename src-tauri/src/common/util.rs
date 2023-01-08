@@ -60,7 +60,7 @@ pub fn percentage_based_output_float<ValueType>(chances: HashMap<ValueType, f32>
     let mut ret_value: Option<ValueType> = None;
 
     let mut sorted_chances: Vec<_> = chances.into_iter().collect();
-    sorted_chances.sort_by(|a, b| a.1.cmp(&b.1));
+    sorted_chances.sort_by(|a, b| a.1.total_cmp(&b.1));
 
     for (value, chance) in sorted_chances {
         let rounded_chance = chance.round() as i32;
