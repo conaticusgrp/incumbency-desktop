@@ -120,6 +120,8 @@ pub async fn start_game_loop(state_mux: &GameStateSafe, app_handle: &tauri::AppH
 
         let state = &mut state_mux.lock().unwrap();
         let tax_rate = state.tax_rate.clone();
+
+        state.day_pass(day);
  
         if day % 30 == 0 {
           state.month_pass(day / 30, tax_rate);

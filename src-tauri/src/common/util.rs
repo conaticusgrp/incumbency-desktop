@@ -53,6 +53,34 @@ pub fn percentage_based_output_int<ValueType>(chances: HashMap<ValueType, i32>) 
     }
 }
 
+/// This isn't really a float percentage, it just rounds the float values to the nearest int value
+pub fn percentage_based_output_float<ValueType>(chances: HashMap<ValueType, f32>) -> ValueType {
+    let mut remaining_percentage = 100;
+    let percentage = generate_percentage();
+    let mut ret_value: Option<ValueType> = None;
+
+    let mut sorted_chances: Vec<_> = chances.into_iter().collect();
+    sorted_chances.sort_by(|a, b| a.1.cmp(&b.1));
+
+    for (value, chance) in sorted_chances {
+        let rounded_chance = chance.round() as i32;
+        remaining_percentage -= rounded_chance;
+
+        if ret_value.is_none() && percentage >= remaining_percentage {
+            ret_value = Some(value);
+        }
+    }
+
+    if remaining_percentage != 0 {
+        panic!("Percentage output could not be calculated because the chances do not add up to exactly 100%.");
+    }
+
+    match ret_value {
+        Some(v) => v,
+        None => panic!("Invalid input provided. Percentages must add up to exactly 100%."),
+    }
+}
+
 /// Random float range
 pub fn float_range(min: f32, max: f32, decimal_count: u32) -> f32 {
     let mut rng = rand::thread_rng();
