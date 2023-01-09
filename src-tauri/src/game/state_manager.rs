@@ -1,6 +1,6 @@
 use std::sync::{Mutex, Arc};
 
-use crate::{entities::{business::{Business, ProductType}, person::{Person, Job}}, as_decimal_percent};
+use crate::{entities::{business::{Business, ProductType}, person::person::{Person, Job}}, as_decimal_percent};
 
 #[derive(Clone)]
 pub struct GameState {
@@ -9,6 +9,7 @@ pub struct GameState {
   pub businesses: Vec<Business>,
   pub people: Vec<Person>,
   pub gdp: f32,
+  pub government_balance: f32,
 }
 
 impl GameState {
@@ -39,10 +40,11 @@ impl GameState {
 
   pub fn month_pass(&mut self, _month: i32, tax_rate: f32) {
       for person in self.people.iter_mut() {
-        let mut income = person.salary as f32;
-        income -= income * tax_rate;
-
+        // TODO: pay wants on a monthly basis
+        let income = person.salary as f32;
         person.balance += income;
+
+        person.pay_tax(&mut self.government_balance, income * tax_rate);
 
         match person.job {
           Job::BusinessOwner(bus_idx) => {
@@ -82,9 +84,10 @@ impl GameState {
         let business = &mut self.businesses[i];
 
         let month_profits = business.balance - business.last_month_balance;
-        business.balance -= month_profits * tax_rate;
+        business.pay_tax(&mut self.government_balance, month_profits * tax_rate);
 
         if month_profits < 0. { continue }
+
         let reinvesment_budget = business.balance * as_decimal_percent!(business.marketing_cost_percentage);
         reinvestment_budgets.push((i, reinvesment_budget));
         total_reinvestment_budget += reinvesment_budget;
@@ -138,7 +141,8 @@ impl Default for GameState {
         business_tax_rate: 0.22, // 22% default - TODO: emit warning if the tax is raised above 30% - this is the maximum tax rate businesses will tolerate
         businesses: Vec::new(),
         people: Vec::new(),
-        gdp: 0.
+        gdp: 0.,
+        government_balance: 0.,
       }
   }
 }

@@ -2,7 +2,8 @@ use maplit::hashmap;
 use rand::Rng;
 
 use crate::{common::config::Config, common::util::{percentage_based_output_int, float_range}, game::{generation::{generate_education_level, get_expected_salary_range}}, as_decimal_percent, percentage_of};
-use super::person::{EducationLevel::{*, self}, Person, Job};
+
+use super::person::person::{EducationLevel::{*, self}, Person, Job};
 
 #[derive(Default, Clone, PartialEq, Eq, Hash)]
 pub enum ProductType {
@@ -204,5 +205,10 @@ impl Business {
         }
 
         owner.business_pay(self, owner_expected_income);
+    }
+
+    pub fn pay_tax(&mut self, government_balance: &mut f32, amount: f32) {
+        self.balance -= amount;
+        *government_balance += amount;
     }
 }
