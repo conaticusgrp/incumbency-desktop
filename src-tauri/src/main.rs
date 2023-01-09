@@ -7,7 +7,7 @@ mod entities;
 mod game;
 mod common;
 
-use game::manager::{GameState, create_game, set_tax};
+use game::{manager::{create_game, set_tax}, state_manager::GameState};
 use common::filesystem::check_save_exists;
 use std::sync::{Arc, Mutex};
 

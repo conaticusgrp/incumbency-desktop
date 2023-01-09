@@ -1,7 +1,7 @@
 use std::{ops::Range, collections::HashMap};
 use maplit::hashmap;
 use rand::{Rng};
-use crate::{common::util::{float_range, percentage_based_output_int, generate_percentage}, common::config::Config, game::{generation::{generate_education_level, get_expected_salary_range}, manager::GameState}};
+use crate::{common::util::{float_range, percentage_based_output_int, generate_percentage}, common::config::Config, game::{generation::{generate_education_level, get_expected_salary_range}}};
 use EducationLevel::*;
 
 use super::business::ProductType;
@@ -191,10 +191,6 @@ impl Person {
     pub fn can_afford(&self, price: f32) -> bool {
         let cut_balance: f32 = self.balance - (self.balance * 0.1);
         cut_balance - price > 0.
-    }
-
-    pub fn day_pass(&self, state: &mut GameState) {
-        
     }
 }
 

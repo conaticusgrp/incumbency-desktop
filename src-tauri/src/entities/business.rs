@@ -1,7 +1,7 @@
 use maplit::hashmap;
 use rand::Rng;
 
-use crate::{common::config::Config, common::util::{percentage_based_output_int, float_range}, game::{generation::{generate_education_level, get_expected_salary_range}, manager::GameState}, as_decimal_percent, percentage_of};
+use crate::{common::config::Config, common::util::{percentage_based_output_int, float_range}, game::{generation::{generate_education_level, get_expected_salary_range}}, as_decimal_percent, percentage_of};
 use super::person::{EducationLevel::{*, self}, Person, Job};
 
 #[derive(Default, Clone, PartialEq, Eq, Hash)]
@@ -55,7 +55,7 @@ impl Business {
         // This can only be a maximum of 67%, leaving roughly 30% capacity for employees, the minimum (with tax no lower than 20%) is 40%
         let mut loss_percentage = percentage_of!(total_marketing_cost + total_production_cost; / expected_income) + (tax_rate * 100.) as i32;
 
-        self.employee_salary = self.generate_employee_salary(config, loss_percentage, total_marketing_cost, total_production_cost, expected_income, tax_rate);
+        self.employee_salary = self.generate_employee_salary(config, loss_percentage);
         let employee_count = self.generate_employee_count(expected_income);
 
         self.default_income_per_employee = percentage_of!(expected_income; / employee_count);
@@ -80,7 +80,7 @@ impl Business {
         budget_allocation / (self.employee_salary / 12)
     }
 
-    fn generate_employee_salary(&self, config: &Config, loss_percentage: i32, marketing_cost: f32, production_cost: f32, expected_income: i32, tax_rate: f32) -> i32 {
+    fn generate_employee_salary(&self, config: &Config, loss_percentage: i32) -> i32 {
         let expected_salary_range = get_expected_salary_range(&config, &self.minimum_education_level);
 
         let mid_of_range = (expected_salary_range.start + expected_salary_range.end) / 2; // middle of expected salary range
@@ -182,12 +182,8 @@ impl Business {
         float_range(min * increase_multiplyer, max * increase_multiplyer, 2)
     }
 
-    pub fn can_afford(&self, price: &f32) -> bool {
-        let cut_balance: f32 = self.balance - (self.balance * 0.25); // Maintain at least 30% of the balanace
-        cut_balance - price > 0.
-    }
-
-    pub fn day_pass(&self, state: &mut GameState) {
-        
+    /// This function assigns the business to a new market with a new market percentage. This runs monthly.
+    pub fn get_new_market(&mut self, market_percentage: f32, cost_per_percent: f32) {
+        self.balance -= market_percentage * cost_per_percent;
     }
 }
