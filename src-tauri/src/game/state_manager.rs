@@ -37,7 +37,7 @@ impl GameState {
     }
   }
 
-  pub fn month_pass(&mut self, month: i32, tax_rate: f32) {
+  pub fn month_pass(&mut self, _month: i32, tax_rate: f32) {
       for person in self.people.iter_mut() {
         let mut income = person.salary as f32;
         income -= income * tax_rate;
@@ -47,8 +47,7 @@ impl GameState {
         match person.job {
           Job::BusinessOwner(bus_idx) => {
             let business = &mut self.businesses[bus_idx];
-            person.balance += business.employee_salary as f32;
-            business.balance -= business.employee_salary as f32;
+            business.pay_owner(person);
           },
 
           Job::Employee(bus_idx) => {

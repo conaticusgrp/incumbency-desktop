@@ -1,7 +1,7 @@
 use std::{collections::{HashMap}, ops::Range};
 use maplit::hashmap;
 
-use crate::{common::config::{load_config, Config}, entities::{person::{Person, EducationLevel::{*, self}}, business::{Business, ProductType}}, common::util::percentage_based_output_int};
+use crate::{common::config::{load_config, Config}, entities::{person::{Person, EducationLevel::{*, self}, Job}, business::{Business, ProductType}}, common::util::percentage_based_output_int};
 
 use super::state_manager::GameStateSafe;
 
@@ -50,6 +50,10 @@ pub fn generate_game(state_mux: &GameStateSafe) {
         let tax_rate = state.tax_rate.clone();
 
         let sufficient_businesses = business.generate(&config, ProductType::LEISURE, product_demand[&ProductType::LEISURE], &mut remaning_market_percentage, &mut state.people, idx, tax_rate);
+
+        let mut owner = Person::default();
+        owner.job = Job::BusinessOwner(idx);
+        owner.generate(&config, &mut product_demand);
 
         state.businesses.push(business);
 

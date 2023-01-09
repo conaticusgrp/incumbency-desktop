@@ -189,4 +189,13 @@ impl Business {
         self.balance -= self.get_production_cost(expected_income);
         self.balance -= market_percentage * cost_per_percent;
     }
+
+    /// This is run on a monthly basis
+    pub fn pay_owner(&self, owner: &mut Person) {
+    }
+
+    pub fn can_afford(&self, price: &f32) -> bool {
+        let cut_balance: f32 = self.balance - (self.balance * 0.25); // Maintain at least 25% of the balance
+        cut_balance - price > 0.
+    }
 }
