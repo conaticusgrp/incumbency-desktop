@@ -51,13 +51,38 @@ impl Business {
         let expected_income = (product_demand * marketing_reach_percentage) as i32;
 
         // TODO: make this more varied & accurate, influence it by external factors
-        let total_production_cost = (expected_income / self.product_price) as f32 * self.production_cost_per_product;
-        let total_marketing_cost = as_decimal_percent!(self.marketing_cost_percentage) * expected_income as f32;
-
-        let expected_salary_range = get_expected_salary_range(&config, &self.minimum_education_level);
-
+        let (total_marketing_cost, total_production_cost) = self.get_marketing_and_production_costs(expected_income);
         // This can only be a maximum of 67%, leaving roughly 30% capacity for employees, the minimum (with tax no lower than 20%) is 40%
         let mut loss_percentage = percentage_of!(total_marketing_cost + total_production_cost; / expected_income) + (tax_rate * 100.) as i32;
+
+        self.employee_salary = self.generate_employee_salary(config, loss_percentage, total_marketing_cost, total_production_cost, expected_income, tax_rate);
+        let employee_count = self.generate_employee_count(expected_income);
+
+        self.default_income_per_employee = percentage_of!(expected_income; / employee_count);
+        loss_percentage += percentage_of!(employee_count * (self.employee_salary / 12); / expected_income);
+
+        // TODO: balance the amount of people who get employment
+        self.assign_employees(people, employee_count, idx);
+        self.set_starting_balance(expected_income, loss_percentage);
+
+        false
+    }
+
+    fn set_starting_balance(&mut self, expected_income: i32, loss_percentage: i32) {
+        let expected_profits = (expected_income as f32 - (expected_income as f32 * as_decimal_percent!(loss_percentage))) as i32;
+        self.balance = expected_profits as f32 * float_range(0.15, 3., 3); // A range of 0% - 300% of the expected profit is the business balance
+        self.balance -= expected_income as f32 * as_decimal_percent!(loss_percentage);
+        self.last_month_balance = self.balance;
+    }
+
+    fn generate_employee_count(&self, expected_income: i32) -> i32 {
+        let budget_allocation = (expected_income as f32 * float_range(0.15, 0.3, 3)) as i32;
+        budget_allocation / (self.employee_salary / 12)
+    }
+
+    fn generate_employee_salary(&self, config: &Config, loss_percentage: i32, marketing_cost: f32, production_cost: f32, expected_income: i32, tax_rate: f32) -> i32 {
+        let expected_salary_range = get_expected_salary_range(&config, &self.minimum_education_level);
+
         let mid_of_range = (expected_salary_range.start + expected_salary_range.end) / 2; // middle of expected salary range
         let lower_mid_of_range = expected_salary_range.start + ((expected_salary_range.end - mid_of_range) / 2); // lower middle of expected salary range
 
@@ -70,28 +95,14 @@ impl Business {
             _ => expected_salary_range.start..lower_mid_of_range,
         };
 
-        // Generate salary based on range
-        self.employee_salary = rng.gen_range(employee_salary_range);
+        rand::thread_rng().gen_range(employee_salary_range)
+    }
 
+    pub fn get_marketing_and_production_costs(&self, expected_income: i32) -> (f32, f32) {
+        let total_production_cost = (expected_income / self.product_price) as f32 * self.production_cost_per_product;
+        let total_marketing_cost = as_decimal_percent!(self.marketing_cost_percentage) * expected_income as f32;
 
-        let employee_monthly_salary = self.employee_salary / 12;
-        let employee_budget_allocation = (expected_income as f32 * float_range(0.15, 0.3, 3)) as i32;
-        let employee_count = employee_budget_allocation / employee_monthly_salary;
-
-        self.default_income_per_employee = percentage_of!(expected_income; / employee_count);
-        loss_percentage += percentage_of!(employee_count * employee_monthly_salary; / expected_income);
-
-        // TODO: balance the amount of people who get employment
-        self.assign_employees(people, employee_count, idx);
-
-        let expected_profits = (expected_income as f32 - (expected_income as f32 * as_decimal_percent!(loss_percentage))) as i32;
-
-        self.balance = expected_profits as f32 * float_range(0.15, 3., 3); // A range of 0% - 300% of the expected profit is the business balance
-        self.balance -= expected_income as f32 - total_production_cost - total_marketing_cost;
-
-        self.last_month_balance = self.balance;
-
-        false
+        (total_marketing_cost, total_production_cost)
     }
 
     fn generate_marketing_reach(&self, remaining_market_percentage: &mut f32) -> (bool, f32) {
