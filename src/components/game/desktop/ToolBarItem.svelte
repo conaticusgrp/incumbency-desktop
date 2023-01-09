@@ -11,6 +11,7 @@
 
 <main>
 
+
   <button
     style="background-image: {(iconPath != undefined) ? `url(${iconPath})` : "none"};"
     title={name}
@@ -23,8 +24,8 @@
 
   /* DEBUG */
   main {
-    width: 50px;
-    height: 50px;
+    height: 45px;
+    width: 45px;
     margin: 0.5rem;
   }
 

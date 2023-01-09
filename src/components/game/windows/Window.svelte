@@ -19,8 +19,9 @@
     maximized: false
   }
   
-  let thisObj: HTMLElement
-  let dragOffset: { dx: number; dy: number }
+  let thisObj: HTMLElement;
+  // let toolbar = document.getElementById("toolbar");
+  let dragOffset: { dx: number; dy: number };
   let resizeType: { w?: 'r' | 'l', h?: 't' | 'b' };
   let boundsBeforeMaximizing: { x: number, y: number, width: number, height: number };
   

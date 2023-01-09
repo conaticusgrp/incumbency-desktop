@@ -14,7 +14,8 @@
   import { onMount } from 'svelte'
   
   let windowContainer: HTMLElement;
-  let toolbarHeightPercent: number = 15;
+  let toolbarHeightPercent: number = 7;
+  let desktopPaddingRem = 2;
   let wallpaperPath: string | null = null;
   let apps: DesktopAppShortcut[] = [
     {
@@ -81,12 +82,11 @@
       ];
     }, 2000);
   });
-
 </script>
 
 <main style="background-image: {(wallpaperPath != null) ? `url(${wallpaperPath})` : "none"};">
   
-  <div class="content" style="height: {100 - toolbarHeightPercent}%;">
+  <div class="content" style="padding: {desktopPaddingRem}rem; height: calc({100 - toolbarHeightPercent}% - {desktopPaddingRem * 2}rem);">
 
     {#each apps as shortcut, i}
 
@@ -160,26 +160,27 @@
 
   main {
     position: relative;
-    height: 100%;
     width: 100%;
+    height: 100%;
     background-repeat: no-repeat;
     background-position: center;
   }
 
   .content {
     position: relative;
-    width: calc(100% - 2rem * 2);
     display: grid;
-    grid-template-columns: repeat(11, 1fr);
+    grid-template-columns: repeat(16, 1fr);
     grid-template-rows: repeat(7, 1fr);
-    padding: 2rem;
     background-color: #171717;
   }
 
   .toolbar {
+    position: absolute;
+    bottom: 0;
     width: 100%;
     display: flex;
     flex-direction: row;
+    align-items: center;
     background-color: #A0A0A0;
   }
   
