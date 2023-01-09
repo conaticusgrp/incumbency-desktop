@@ -46,21 +46,21 @@ impl Person {
         self.generate_wants(expected_salary, product_demand);
     }
 
-    fn behaviour_one(&self, salary: f32) {
+    // fn behaviour_one(&self, salary: f32) {
 
-    }
+    // }
 
-    fn behaviour_two(&self, salary: f32) {
+    // fn behaviour_two(&self, salary: f32) {
 
-    }
+    // }
 
-    fn behaviour_three(&self, salary: f32) {
+    // fn behaviour_three(&self, salary: f32) {
 
-    }
+    // }
 
-    fn behaviour_four(&self, salary: f32) {
+    // fn behaviour_four(&self, salary: f32) {
 
-    }
+    // }
 
     fn generate_balance(&self, salary: f32) -> f32 {
         if salary > 0. {

@@ -1,6 +1,6 @@
 use std::sync::{Mutex, Arc};
 
-use crate::{entities::{business::Business, person::{Person, Job}}, as_decimal_percent};
+use crate::{entities::{business::{Business, ProductType}, person::{Person, Job}}, as_decimal_percent};
 
 #[derive(Clone)]
 pub struct GameState {
@@ -85,7 +85,6 @@ impl GameState {
 
       for i in 0..reinvestment_budgets.len() {
         let (bus_idx, budget) = &reinvestment_budgets[i];
-        let business = &mut self.businesses[*bus_idx];
 
         let maximum_percentage = (budget / total_reinvestment_budget) * 100.;
         
@@ -99,10 +98,24 @@ impl GameState {
           assigned_percent = remaining_market_percentage;
         }
 
-        business.get_new_market(assigned_percent, cost_per_percent);
+        let demand = self.get_demand(&self.businesses[*bus_idx].product_type);
+        let business = &mut self.businesses[*bus_idx];
+
+        business.get_new_market(assigned_percent, cost_per_percent, &mut self.people, demand, *bus_idx);
+        business.last_month_balance = business.balance;
 
         remaining_market_percentage -= assigned_percent;
       }
+  }
+
+  fn get_demand(&self, product_type: &ProductType) -> f32 {
+    let mut total: f32 = 0.;
+
+    for person in self.people.iter() {
+        total += person.wants[&product_type];
+    }
+
+    total
   }
 }
 
