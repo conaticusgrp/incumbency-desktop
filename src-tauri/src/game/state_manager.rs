@@ -57,6 +57,22 @@ impl GameState {
 
           _ => (),
         };
+
+        for i in 0..person.debts.len() {
+          // TODO: Add functionality based on spending behaviour
+          let debt = &mut person.debts[i];
+          if !debt.required_to_pay { continue }
+
+          if debt.owed < debt.minimum_monthly_payoff {
+            person.balance -= debt.owed;
+            person.debts.remove(i);
+
+            continue;
+          }
+
+          // Add functionality to welfare if they can't afford debts
+          person.balance -= debt.minimum_monthly_payoff;
+        }
       }
 
       let mut reinvestment_budgets: Vec<(usize, f32)> = Vec::new();
@@ -72,10 +88,6 @@ impl GameState {
         let reinvesment_budget = business.balance * as_decimal_percent!(business.marketing_cost_percentage);
         reinvestment_budgets.push((i, reinvesment_budget));
         total_reinvestment_budget += reinvesment_budget;
-
-        // add all businesses total
-        // each business is assigned a market percentage (based on a calculated mean)
-        // buy as much as the business can afford
       }
 
       let mut remaining_market_percentage: f32 = 100.;
