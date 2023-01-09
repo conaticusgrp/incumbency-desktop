@@ -4,7 +4,7 @@ use rand::{Rng};
 use crate::{common::util::{float_range, percentage_based_output_int, generate_percentage}, common::config::Config, game::{generation::{generate_education_level, get_expected_salary_range}}};
 use EducationLevel::*;
 
-use super::business::ProductType;
+use super::business::{ProductType, Business};
 
 const US_DEBT_REPAYMENT_THRESHOLD: f32 = 32_000.; // Minimum salary required to start paying debts
 
@@ -191,6 +191,11 @@ impl Person {
     pub fn can_afford(&self, price: f32) -> bool {
         let cut_balance: f32 = self.balance - (self.balance * 0.1);
         cut_balance - price > 0.
+    }
+
+    pub fn business_pay(&mut self, payee: &mut Business, amount: f32) {
+        self.balance += amount;
+        payee.balance -= amount;
     }
 }
 

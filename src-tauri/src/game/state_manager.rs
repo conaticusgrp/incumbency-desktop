@@ -52,8 +52,7 @@ impl GameState {
 
           Job::Employee(bus_idx) => {
             let business = &mut self.businesses[bus_idx];
-            person.balance += business.employee_salary as f32;
-            business.balance -= business.employee_salary as f32;
+            person.business_pay(business, business.employee_salary as f32);
           },
 
           _ => (),

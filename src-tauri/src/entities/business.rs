@@ -28,6 +28,7 @@ pub struct Business {
     pub employee_salary: i32,
     pub default_income_per_employee: i32, // Default profit that is made from an employee salary, not taking into account the employee's welfare
 
+    pub expected_income: i32, // Expected income for the current month
     pub last_month_balance: f32, // Used to calculate the income for this month
 }
 
@@ -47,36 +48,38 @@ impl Business {
 
         self.assign_to_people(marketing_reach_percentage, people, idx);
 
-        let expected_income = (product_demand * marketing_reach_percentage) as i32;
+        self.expected_income = (product_demand * marketing_reach_percentage) as i32;
 
         // TODO: make this more varied & accurate, influence it by external factors
-        let production_cost = self.get_production_cost(expected_income);
-        let marketing_cost = as_decimal_percent!(self.marketing_cost_percentage) * expected_income as f32;
+        let production_cost = self.get_production_cost();
+        let marketing_cost = as_decimal_percent!(self.marketing_cost_percentage) * self.expected_income as f32;
         // This can only be a maximum of 67%, leaving roughly 30% capacity for employees, the minimum (with tax no lower than 20%) is 40%
-        let mut loss_percentage = percentage_of!(marketing_cost + production_cost; / expected_income) + (tax_rate * 100.) as i32;
+        let mut loss_percentage = percentage_of!(marketing_cost + production_cost; / self.expected_income) + (tax_rate * 100.) as i32;
 
         self.employee_salary = self.generate_employee_salary(config, loss_percentage);
-        let employee_count = self.generate_employee_count(expected_income);
+        let employee_count = self.generate_employee_count();
 
-        self.default_income_per_employee = percentage_of!(expected_income; / employee_count);
-        loss_percentage += percentage_of!(employee_count * (self.employee_salary / 12); / expected_income);
+        self.default_income_per_employee = percentage_of!(self.expected_income; / employee_count);
+        loss_percentage += percentage_of!(employee_count * (self.employee_salary / 12); / self.expected_income);
 
         // TODO: balance the amount of people who get employment
         self.assign_employees(people, employee_count, idx);
-        self.set_starting_balance(expected_income, loss_percentage);
+        self.set_starting_balance(loss_percentage);
 
         false
     }
 
-    fn set_starting_balance(&mut self, expected_income: i32, loss_percentage: i32) {
-        let expected_profits = (expected_income as f32 - (expected_income as f32 * as_decimal_percent!(loss_percentage))) as i32;
+    fn set_starting_balance(&mut self, loss_percentage: i32) {
+        let expected_income_fl = self.expected_income as f32;
+        let expected_profits = (expected_income_fl - (self.expected_income as f32 * as_decimal_percent!(loss_percentage))) as i32;
+
         self.balance = expected_profits as f32 * float_range(0.15, 3., 3); // A range of 0% - 300% of the expected profit is the business balance
-        self.balance -= expected_income as f32 * as_decimal_percent!(loss_percentage);
+        self.balance -= expected_income_fl * as_decimal_percent!(loss_percentage);
         self.last_month_balance = self.balance;
     }
 
-    fn generate_employee_count(&self, expected_income: i32) -> i32 {
-        let budget_allocation = (expected_income as f32 * float_range(0.15, 0.3, 3)) as i32;
+    fn generate_employee_count(&self) -> i32 {
+        let budget_allocation = (self.expected_income as f32 * float_range(0.15, 0.3, 3)) as i32;
         budget_allocation / (self.employee_salary / 12)
     }
 
@@ -98,8 +101,8 @@ impl Business {
         rand::thread_rng().gen_range(employee_salary_range)
     }
 
-    pub fn get_production_cost(&self, expected_income: i32) -> f32 {
-        (expected_income / self.product_price) as f32 * self.production_cost_per_product
+    pub fn get_production_cost(&self) -> f32 {
+        (self.expected_income / self.product_price) as f32 * self.production_cost_per_product
     }
 
     fn generate_marketing_reach(&self, remaining_market_percentage: &mut f32) -> (bool, f32) {
@@ -184,18 +187,22 @@ impl Business {
     pub fn get_new_market(&mut self, market_percentage: f32, cost_per_percent: f32, people: &mut Vec<Person>, demand: f32, idx: usize) {
         self.assign_to_people(market_percentage, people, idx);
 
-        let expected_income = (demand * market_percentage) as i32;
-        
-        self.balance -= self.get_production_cost(expected_income);
+        self.expected_income = (demand * market_percentage) as i32;
+        self.balance -= self.get_production_cost();
         self.balance -= market_percentage * cost_per_percent;
     }
 
     /// This is run on a monthly basis
-    pub fn pay_owner(&self, owner: &mut Person) {
-    }
+    pub fn pay_owner(&mut self, owner: &mut Person) {
+        let month_profits = self.balance - self.last_month_balance; // The profit percentage earned in the current month
 
-    pub fn can_afford(&self, price: &f32) -> bool {
-        let cut_balance: f32 = self.balance - (self.balance * 0.25); // Maintain at least 25% of the balance
-        cut_balance - price > 0.
+        // TODO: Vary this on spending behaviour
+        let owner_expected_income = month_profits / 2.;
+        if owner_expected_income < (self.employee_salary as f32 / 12.) {
+            owner.business_pay(self, self.employee_salary as f32);
+            return;
+        }
+
+        owner.business_pay(self, owner_expected_income);
     }
 }
