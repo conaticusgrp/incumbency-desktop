@@ -69,6 +69,7 @@ impl Person {
             return salary * float_range(0.535, 2.14, 3);
         }
 
+
         // TODO: make this depend on spending behaviour
         float_range(50., 1200., 3)
     }
