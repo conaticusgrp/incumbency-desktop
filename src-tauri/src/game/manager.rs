@@ -7,19 +7,19 @@ use super::{generation::generate_game, state_manager::GameStateSafe};
 #[tauri::command] // TODO: Take in game name as argument and call "create_save(name)"
 pub async fn create_game(state_mux: State<'_, GameStateSafe>, app_handle: tauri::AppHandle) -> Result<(), ()> {
   // create_save(name);
-  generate_game(&state_mux);
-  start_game_loop(&state_mux, &app_handle).await;
+    generate_game(&state_mux);
+    start_game_loop(&state_mux, &app_handle).await;
 
-  let state = state_mux.lock().unwrap();
-  app_handle.emit_all("game_created", NewGame { population: state.people.len() as i32 }).unwrap();
+    let state = state_mux.lock().unwrap();
+    app_handle.emit_all("game_created", NewGame { population: state.people.len() as i32 }).unwrap();
 
-  Ok(())
+    Ok(())
 }
 
 #[tauri::command]
 pub fn set_tax(state_mux: State<'_, GameStateSafe>, tax_rate: f32) {
-  let mut state = state_mux.lock().unwrap();
-  state.tax_rate = tax_rate / 100.;
+    let mut state = state_mux.lock().unwrap();
+    state.tax_rate = tax_rate / 100.;
 }
 
 pub async fn start_game_loop(state_mux: &GameStateSafe, app_handle: &tauri::AppHandle) {
