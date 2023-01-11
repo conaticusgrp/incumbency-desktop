@@ -15,23 +15,23 @@ pub struct GameState {
 // Spend 4M35S fixing cons tabs - Kventis
 impl GameState {
     pub fn day_pass(&mut self, day: i32) {
-        for i in 0..self.people.len() {
-            let person = &mut self.people[i];
-            let business_this_month = person.business_this_month;
+        for per in self.people.iter_mut() {
+            let business_this_month = per.business_this_month;
 
-            let quantity_opt = person.purchase_days.get(&day);
+            let quantity_opt = per.purchase_days.get(&day);
+
             if let Some(quantity) = quantity_opt {
                 let business = self.businesses.get_mut(business_this_month).unwrap();
                 let item_cost = (business.product_price * quantity) as f32;
 
                 for _ in 0..*quantity {
-                    if person.can_afford(item_cost) {
-                        person.balance -= item_cost;
-                        *person.wants.get_mut(&business.product_type).unwrap() -= item_cost;
+                    if per.can_afford(item_cost) {
+                        per.balance -= item_cost;
+                        *per.wants.get_mut(&business.product_type).unwrap() -= item_cost;
                         business.balance += item_cost;
-                  // TODO - fulfill the welfare of purchasing the item
-                        }
-              // TODO: handle welfare on not affording an item
+                        // TODO - fulfill the welfare of purchasing the item
+                    }
+                    // TODO: handle welfare on not affording an item
                 }
             }
         }
@@ -47,21 +47,21 @@ impl GameState {
             person.pay_tax(&mut self.government_balance, income * tax_rate);
 
             match person.job {
-            Job::BusinessOwner(bus_idx) => {
-                let business = &mut self.businesses[bus_idx];
-                business.pay_owner(person);
-            },
+                Job::BusinessOwner(bus_idx) => {
+                    let business = &mut self.businesses[bus_idx];
+                    business.pay_owner(person);
+                },
 
-            Job::Employee(bus_idx) => {
-                let business = &mut self.businesses[bus_idx];
-                person.business_pay(business, business.employee_salary as f32);
-            },
+                Job::Employee(bus_idx) => {
+                    let business = &mut self.businesses[bus_idx];
+                    person.business_pay(business, business.employee_salary as f32);
+                },
 
-            _ => (),
+                _ => (),
             };
 
             for i in 0..person.debts.len() {
-            // TODO: Add functionality based on spending behaviour
+                // TODO: Add functionality based on spending behaviour
                 let debt = &mut person.debts[i];
                 if !debt.required_to_pay { continue }
 
@@ -71,7 +71,7 @@ impl GameState {
                     continue;
                 }
 
-          // Add functionality to welfare if they can't afford debts
+                 // Add functionality to welfare if they can't afford debts
                  person.balance -= debt.minimum_monthly_payoff;
             }
         }
@@ -101,13 +101,13 @@ impl GameState {
             let maximum_percentage = (budget / total_reinvestment_budget) * 100.;
         
             if i == 0 {
-            cost_per_percent = budget / maximum_percentage;
+                cost_per_percent = budget / maximum_percentage;
             }
 
             let mut assigned_percent = budget / cost_per_percent;
 
             if (remaining_market_percentage - assigned_percent) < 0. {
-            assigned_percent = remaining_market_percentage;
+                assigned_percent = remaining_market_percentage;
             }
             let demand = self.get_demand(&self.businesses[*bus_idx].product_type);
             let business = &mut self.businesses[*bus_idx];
