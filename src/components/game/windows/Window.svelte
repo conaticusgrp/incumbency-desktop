@@ -20,7 +20,6 @@
   }
   
   let thisObj: HTMLElement;
-  // let toolbar = document.getElementById("toolbar");
   let dragOffset: { dx: number; dy: number };
   let resizeType: { w?: 'r' | 'l', h?: 't' | 'b' };
   let boundsBeforeMaximizing: { x: number, y: number, width: number, height: number };
@@ -32,11 +31,12 @@
 
   const requestFocus = (): void => {
     if (thisObj.parentElement == undefined) return;
-    if (focused) return;
+    // NOTE: The next line breaks the focus system. Do not add it to the code
+    // if (focused) return;
 
     const others = thisObj.parentElement.children;
     for (let i = 0; i < others.length; i++) {
-      (others[i] as HTMLElement).dataset['focused'] = (others[i] == thisObj) as unknown as string;
+      (others[i] as HTMLElement).dataset['focused'] = String(others[i] == thisObj);
     }
   }
 
@@ -199,6 +199,7 @@
     top: {pos.y}px;
     width: {size.width}px;
     height: {size.height}px;
+    z-index: {focused ? 10_000 : 9999};
   "
   data-focused={false}
   data-minimized={false}
