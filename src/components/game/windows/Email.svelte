@@ -12,6 +12,8 @@
 
   let dispatcher = createEventDispatcher();
 
+  let selectedEmailIndex: number | null = null;
+
   // DEBUG
   let emails = [
     {
@@ -30,6 +32,11 @@
       sender: "system"
     },
   ];
+
+  const selectEmail = (i: number): void => {
+    if (i < 0 || i >= emails.length) return;
+    selectedEmailIndex = i;
+  }
 
 </script>
 
@@ -51,14 +58,17 @@
       "
     >
 
-      {#each emails as email}
+      {#each emails as email, i}
 
+      <!-- on:keydown to supress a warning -->
       <div
         class="email-list-entry"
         style="
           margin: {EMAIL_MARGIN}em;
           height: {EMAIL_HEIGHT}px;
         "
+        on:click={() => selectEmail(i)}
+        on:keydown={() => {}}
       >
           <h3>{email.title}</h3>
           <p>{email.content}</p>
@@ -72,6 +82,14 @@
       class="email-content"
       style="width: calc(100% - {EMAIL_LIST_WIDTH}%);"
     >
+
+      {#if selectedEmailIndex != null && selectedEmailIndex >= 0 && selectedEmailIndex < emails.length}
+
+      <h2>{emails[selectedEmailIndex].title}</h2>
+      <section>{emails[selectedEmailIndex].content}</section>
+      <p>{emails[selectedEmailIndex].sender ?? ''}</p>
+
+      {/if}
 
     </div>
     
@@ -100,7 +118,21 @@
     background-color: gainsboro;
   }
 
-  .email-content{
+  .email-content {
+    margin: 2em;
+    box-sizing: border-box;
+    text-align: left;
   }
+
+  .email-content > h2 {
+    margin-bottom: 1em;
+  }
+
+  .email-content > p {
+    font-weight: bold;
+    margin-top: 1em;
+    text-align: right;
+  }
+
   
 </style>
