@@ -8,7 +8,7 @@
   import Notification from "./Notification.svelte";
 
   import Email from "../windows/Email.svelte";
-  import GovernmentSpending from "../windows/GovernmentSpending.svelte";
+  import BudgetPanel from "../windows/BudgetPanel.svelte";
   
   // DEBUG
   import { onMount } from 'svelte'
@@ -104,7 +104,7 @@
     <div class="windows" bind:this={windowContainer}>
       <!-- TODO: add opened windows -->
       <Email iconPath={apps[0].iconPath} on:windowClose={updateUI} on:windowMinimizeStateChange={updateUI} />
-      <GovernmentSpending iconPath={apps[1].iconPath} on:windowClose={updateUI} on:windowMinimizeStateChange={updateUI} />
+      <BudgetPanel iconPath={apps[1].iconPath} on:windowClose={updateUI} on:windowMinimizeStateChange={updateUI} />
     </div>
 
     <div class="notifications" style="width: {NOTIFICATIONS_WINDOW_WIDTH}px; height: {NOTIFICATIONS_WINDOW_HEIGHT}px;">
