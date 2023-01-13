@@ -1,6 +1,6 @@
 use std::sync::{Mutex, Arc};
 
-use crate::{entities::{business::{Business, ProductType}, person::person::{Person, Job}}, as_decimal_percent};
+use crate::{entities::{business::{Business, ProductType}, person::person::{Person, Job}}, as_decimal_percent, common::util::Date};
 
 #[derive(Clone)]
 pub struct GameState {
@@ -10,6 +10,7 @@ pub struct GameState {
   pub people: Vec<Person>,
   pub gdp: f32,
   pub government_balance: f32,
+  pub date: Date,
 }
 
 // Spend 4M35S fixing cons tabs - Kventis
@@ -140,6 +141,7 @@ impl Default for GameState {
             people: Vec::new(),
             gdp: 0.,
             government_balance: 0.,
+            date: Date::default(),
         }
     }
 }

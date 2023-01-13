@@ -1,5 +1,5 @@
 use rand::Rng;
-use std::collections::HashMap;
+use std::{collections::HashMap};
 
 #[macro_export]
 macro_rules! percentage_of {
@@ -85,4 +85,77 @@ pub fn percentage_based_output_float<ValueType>(chances: HashMap<ValueType, f32>
 pub fn float_range(min: f32, max: f32, decimal_count: u32) -> f32 {
     let mut rng = rand::thread_rng();
     set_decimal_count(rng.gen::<f32>() * (max - min) + min, decimal_count)
+}
+
+#[derive(Clone)]
+pub struct Date {
+    pub day: i32,
+    pub month: i32,
+    pub year: i32,
+}
+
+impl Default for Date {
+    fn default() -> Self {
+        Self {
+            day: 1,
+            month: 1,
+            year: 1,
+        }
+    }
+}
+
+impl Date {
+    pub fn new_day(&mut self) {
+        self.day += 1;
+        if self.day == 31 {
+            self.new_month();
+            self.day = 1;
+        }
+    }
+
+    pub fn new_month(&mut self) {
+        self.month += 1;
+        if self.month == 13 {
+            self.year += 1;
+            self.month = 1;
+        }
+    }
+
+    pub fn is_new_month(&self) -> bool {
+        self.day == 1 && self.month == 1 && self.year > 1
+    }
+
+    pub fn get_date_string(&self) -> String {
+        format!("{}/{}/{}", zerofy(self.day, 2), zerofy(self.month, 2), zerofy(self.year, 4))
+    }
+}
+
+/// Adds a zero for every missing number of digits. \
+/// For example, if the `expected_digits` is 3 and the number is 12, the string would evaluate to "012"
+pub fn zerofy(val: i32, expected_digits: i32) -> String {
+    let mut result = String::new();
+    let missing_digits = expected_digits - length(val as u32);
+
+    for _ in 0..missing_digits {
+        result += "0";
+    }
+
+    result.push_str(val.to_string().as_str());
+    result
+}
+
+pub fn length(n: u32) -> i32 {
+    let mut power = 10;
+    let mut count = 1;
+
+    while n >= power {
+        count += 1;
+        if let Some(new_power) = power.checked_mul(10) {
+            power = new_power;
+        } else {
+            break;
+        }
+    }
+
+    count
 }

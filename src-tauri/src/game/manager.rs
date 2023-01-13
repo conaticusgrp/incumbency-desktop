@@ -26,20 +26,23 @@ pub fn set_tax(state_mux: State<'_, GameStateSafe>, tax_rate: f32) {
 
 pub async fn start_game_loop(state_mux: &GameStateSafe, app_handle: &tauri::AppHandle) {
     let mut interval = tokio::time::interval(Duration::from_millis(10)); // TODO: put me back to seconds
-    let mut day = 1;
 
     loop {
         interval.tick().await;
-        day += 1;
-        app_handle.emit_all("new_day", PayloadNewDay { day }).unwrap();
 
         let state = &mut state_mux.lock().unwrap();
+        state.date.new_day();
+
+        let day = state.date.day.clone();
+        let month = state.date.month.clone();
 
         state.day_pass(day);
+
+        app_handle.emit_all("new_day", PayloadNewDay { day }).unwrap();
  
-        if day % 31 == 0 {
+        if state.date.is_new_month() {
             let tax_rate = state.tax_rate; // Dont need to .clone on basic types like f32
-            state.month_pass(day / 31, tax_rate);
+            state.month_pass(month, tax_rate);
         }
     }
 }
