@@ -23,7 +23,7 @@ pub struct Person {
     pub daily_food_spending: i32,
     pub food_spending_streak: i32, // The amount of months the person has undergone the current food spending
 
-    pub wants: HashMap<ProductType, f32>,
+    pub demand: HashMap<ProductType, f32>,
     pub business_this_month: usize,  // The business the individual will buy from this month, until marketing is re-evaluated
     pub purchase_days: HashMap<i32, i32>, // The days of the month that they will make a purchase - <day, quantity>
 }
@@ -41,7 +41,7 @@ impl Person {
         self.debts = Debt::generate(self, expected_salary);
         self.daily_food_spending = self.generate_daily_food_spending(expected_salary, None);
 
-        self.generate_wants(expected_salary, product_demand);
+        self.generate_demand(expected_salary, product_demand);
     }
 
     // fn behaviour_one(&self, salary: f32) {
@@ -128,11 +128,11 @@ impl Person {
         })
     }
 
-    fn generate_wants(&mut self, salary: f32, product_demand: &mut HashMap<ProductType, f32>) {
+    fn generate_demand(&mut self, salary: f32, product_demand: &mut HashMap<ProductType, f32>) {
         // TODO: generate based on more factors rather than just salary
         let mut rng = rand::thread_rng();
 
-        // The percentage of balance that will be added to wants
+        // The percentage of balance that will be added to demand
         let (balance_percentage, salary_percentage) = match self.spending_behaviour {
             SpendingBehaviour::One => (float_range(0.4, 1., 2), rng.gen_range(1..5) as f32),
             SpendingBehaviour::Two => (float_range(0.08, 0.3, 3), rng.gen_range(1..=3) as f32),
@@ -140,12 +140,12 @@ impl Person {
             SpendingBehaviour::Four => (float_range(0.005, 0.058, 4), 0.),
         };
 
-        let mut total_wants = self.balance * (balance_percentage as f32 / 100.);
+        let mut total_demand = self.balance * (balance_percentage as f32 / 100.);
         
-        total_wants += (salary / 12.) * (salary_percentage as f32 / 100.);
+        total_demand += (salary / 12.) * (salary_percentage as f32 / 100.);
 
-        self.wants.insert(ProductType::LEISURE, total_wants);
-        *product_demand.get_mut(&ProductType::LEISURE).unwrap() += total_wants;
+        self.demand.insert(ProductType::LEISURE, total_demand);
+        *product_demand.get_mut(&ProductType::LEISURE).unwrap() += total_demand;
     }
 
     /// `chances` - The percentage chance of going over or under minimum food spending. \

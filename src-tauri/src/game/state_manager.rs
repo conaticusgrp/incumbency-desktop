@@ -27,7 +27,7 @@ impl GameState {
                 for _ in 0..*quantity {
                     if per.can_afford(item_cost) {
                         per.balance -= item_cost;
-                        *per.wants.get_mut(&business.product_type).unwrap() -= item_cost;
+                        *per.demand.get_mut(&business.product_type).unwrap() -= item_cost;
                         business.balance += item_cost;
                         // TODO - fulfill the welfare of purchasing the item
                     }
@@ -40,7 +40,6 @@ impl GameState {
     pub fn month_pass(&mut self, _month: i32, tax_rate: f32) {
 
         for person in self.people.iter_mut() {
-            // TODO: pay wants on a monthly basis
             let income = person.salary as f32;
             person.balance += income;
 
@@ -123,7 +122,7 @@ impl GameState {
         let mut total: f32 = 0.;
 
         for person in self.people.iter() {
-            total += person.wants[&product_type];
+            total += person.demand[&product_type];
         }
 
         total

@@ -136,8 +136,8 @@ impl Business {
             if count == reach { break }
 
             person.business_this_month = idx;
-            let wants = person.wants[&self.product_type];
-            let purchase_capacity = wants as i32 / self.product_price;
+            let person_demand = person.demand[&self.product_type];
+            let purchase_capacity = person_demand as i32 / self.product_price;
 
             for _ in 0..purchase_capacity {
                 let day = rng.gen_range(1..=30);
