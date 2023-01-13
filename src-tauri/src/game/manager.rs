@@ -12,7 +12,7 @@ pub async fn create_game(state_mux: State<'_, GameStateSafe>, app_handle: tauri:
         let state = state_mux.lock().unwrap();
         app_handle.emit_all("game_created", NewGame { population: state.people.len() as i32 }).unwrap();
     } // need these or state will never unlock;
-    start_game_loop(&state_mux, &app_handle);
+    start_game_loop(&state_mux, &app_handle).await;
 
 
     Ok(())
