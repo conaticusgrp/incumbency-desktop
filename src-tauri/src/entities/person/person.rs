@@ -1,19 +1,40 @@
 use std::{ops::Range, collections::HashMap};
 use maplit::hashmap;
 use rand::{Rng};
-use crate::{common::util::{float_range, percentage_based_output_int, generate_percentage}, common::config::Config, game::{generation::{generate_education_level, get_expected_salary_range}}, entities::business::{ProductType, Business}};
+use crate::{common::util::{float_range, percentage_based_output_int, generate_percentage, Date}, common::config::Config, game::{generation::{generate_education_level, get_expected_salary_range}}, entities::business::{ProductType, Business}, percentage_of};
 use EducationLevel::*;
 
 use super::debt::Debt;
 
 #[derive(Default, Clone)]
+pub struct Birthday {
+    day: i32, // 1-30
+    month: i32, // 1-12
+}
+
+impl Birthday {
+    /// Generates a random birthday date
+    pub fn generate() -> Self {
+        let mut rng = rand::thread_rng();
+
+        Self {
+            day: rng.gen_range(1..=30),
+            month: rng.gen_range(1..=12),
+        }
+    }
+}
+
+#[derive(Default, Clone)]
 pub struct Person {
+    pub idx: usize, // Index in the state array
+
     pub education_level: EducationLevel,
     pub years_in_higher_education: i32, // Amount of years the individual spent in college or university (TODO: use this)
     pub job: Job,
     pub debts: Vec<Debt>,
 
     pub age: i32,
+    pub birthday: Birthday,
     pub balance: f32,
 
     pub expected_salary_range: Range<i32>, // Range of the expected salary for the person based on their education level
@@ -26,10 +47,19 @@ pub struct Person {
     pub demand: HashMap<ProductType, f32>,
     pub business_this_month: usize,  // The business the individual will buy from this month, until marketing is re-evaluated
     pub purchase_days: HashMap<i32, i32>, // The days of the month that they will make a purchase - <day, quantity>
+
+    pub health_percentage: i32, // The percentage of their health that they have remaining
+    pub hospitalisation_percentage: i32, // The percentage of their health that will require them to be hospitalised
+    pub hospitalisation_count: i32, // The amount of times the individual has been hospitalised
+    pub days_until_death: Option<i32>, // If the person is predicted to die, use this as a counter
+    pub days_left_in_hospital: Option<i32>, // Days left that the person is in hospitalisation
 }
 
 impl Person {
-    pub fn generate(&mut self, config: &Config, product_demand: &mut HashMap<ProductType, f32>) {
+    pub fn generate(&mut self, config: &Config, product_demand: &mut HashMap<ProductType, f32>, idx: usize) {
+        self.idx = idx;
+        self.generate_health();
+        
         self.education_level = generate_education_level(&config);
         self.expected_salary_range = get_expected_salary_range(&config, &self.education_level);
 
@@ -38,6 +68,7 @@ impl Person {
         self.spending_behaviour = self.generate_spending_behaviour();
         self.balance = self.generate_balance(expected_salary);
         self.age = self.generate_age();
+        self.birthday = Birthday::generate();
         self.debts = Debt::generate(self, expected_salary);
         self.daily_food_spending = self.generate_daily_food_spending(expected_salary, None);
 
@@ -200,6 +231,12 @@ impl Person {
     pub fn pay_tax(&mut self, government_balance: &mut f32, amount: f32) {
         self.balance -= amount;
         *government_balance += amount;
+    }
+
+    pub fn check_birthday(&mut self, date: &Date) {
+        if date.day == self.birthday.day && date.month == self.birthday.month {
+            self.grow_up();
+        }
     }
 }
 

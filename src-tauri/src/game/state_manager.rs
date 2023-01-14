@@ -9,14 +9,69 @@ pub struct GameState {
   pub businesses: Vec<Business>,
   pub people: Vec<Person>,
   pub gdp: f32,
-  pub government_balance: f32,
   pub date: Date,
+
+  pub government_balance: f32,
+  pub healthcare_investment: f32,
+
+  pub hospital_total_capacity: i32,
+  pub hospital_current_capacity: i32,
+  pub cost_per_hospital_capacity: i32, // This is the cost per person capacity in a hospital for the government, each month
+  pub month_unhospitalised_count: i32, // Number of patient that could not go to hospital because of the full capacity
 }
 
-// Spend 4M35S fixing cons tabs - Kventis
+const GOVERNMENT_START_BALANCE: f32 = 12000000.; // TODO: changeme
+
+pub type GameStateSafe = Arc<Mutex<GameState>>;
+
+impl Default for GameState {
+    fn default() -> Self {
+        Self {
+            tax_rate: 0.24, // 24% default
+            business_tax_rate: 0.22, // 22% default - TODO: emit warning if the tax is raised above 30% - this is the maximum tax rate businesses will tolerate
+            businesses: Vec::new(),
+            people: Vec::new(),
+            gdp: 0.,
+            date: Date::default(),
+
+            government_balance: GOVERNMENT_START_BALANCE,
+            healthcare_investment: GOVERNMENT_START_BALANCE * 0.07, // For now, 7% of the government budget should be spent on hospitals
+            
+            hospital_total_capacity: 0,
+            hospital_current_capacity: 0,
+            cost_per_hospital_capacity: 0,
+            month_unhospitalised_count: 0,
+        }
+    }
+}
+
 impl GameState {
     pub fn day_pass(&mut self, day: i32) {
+        let mut death_queue: Vec<usize> = Vec::new(); // Queue of people who are going to die :) - we need this because rust memory
+
+        let date = self.date.clone();
+
         for per in self.people.iter_mut() {
+            per.check_birthday(&date);
+
+            if let Some(ref mut days) = per.days_until_death {
+                *days -= 1;
+                if *days <= 0 {
+                    death_queue.push(per.idx);
+                    continue;
+                }
+            }
+
+            if let Some(ref mut days) = per.days_left_in_hospital {
+                *days -= 1;
+                if *days <= 0 {
+                    per.days_left_in_hospital = None;
+                    self.hospital_current_capacity += 1;
+                }
+            }
+
+            per.replenish_health();
+
             let business_this_month = per.business_this_month;
 
             let quantity_opt = per.purchase_days.get(&day);
@@ -36,9 +91,19 @@ impl GameState {
                 }
             }
         }
+
+        for person_idx in death_queue {
+            self.people.remove(person_idx);
+        }
     }
 
     pub fn month_pass(&mut self, _month: i32, tax_rate: f32) {
+        if self.date.is_first_month() {
+            let starting_capacity = (self.month_unhospitalised_count as f32 + self.month_unhospitalised_count as f32 * 0.3) as i32;
+            self.cost_per_hospital_capacity = (starting_capacity as f32 / self.healthcare_investment) as i32;
+        }
+
+        self.month_unhospitalised_count = 0;
 
         for person in self.people.iter_mut() {
             let income = person.salary as f32;
@@ -127,21 +192,5 @@ impl GameState {
         }
 
         total
-    }
-}
-
-pub type GameStateSafe = Arc<Mutex<GameState>>;
-
-impl Default for GameState {
-    fn default() -> Self {
-        Self {
-            tax_rate: 0.24, // 24% default
-            business_tax_rate: 0.22, // 22% default - TODO: emit warning if the tax is raised above 30% - this is the maximum tax rate businesses will tolerate
-            businesses: Vec::new(),
-            people: Vec::new(),
-            gdp: 0.,
-            government_balance: 0.,
-            date: Date::default(),
-        }
     }
 }

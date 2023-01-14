@@ -36,8 +36,8 @@ pub fn generate_game(state_mux: &GameStateSafe) {
 
     for _ in 0..config.starting_population {
         let mut person = Person::default();
-        person.generate(&config, &mut product_demand);
 
+        person.generate(&config, &mut product_demand, state.people.len());
         state.people.push(person);
     }
 
@@ -53,8 +53,9 @@ pub fn generate_game(state_mux: &GameStateSafe) {
 
         let mut owner = Person::default();
         owner.job = Job::BusinessOwner(idx);
-        owner.generate(&config, &mut product_demand);
+        owner.generate(&config, &mut product_demand, state.people.len());
 
+        state.people.push(owner);
         state.businesses.push(business);
 
         if sufficient_businesses {

@@ -125,6 +125,10 @@ impl Date {
         self.day == 1 && self.month == 1 && self.year > 1
     }
 
+    pub fn is_first_month(&self) -> bool {
+        self.day == 1 && self.month == 1 && self.year == 1
+    }
+
     pub fn get_date_string(&self) -> String {
         format!("{}/{}/{}", zerofy(self.day, 2), zerofy(self.month, 2), zerofy(self.year, 4))
     }
