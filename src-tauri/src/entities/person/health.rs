@@ -80,8 +80,6 @@ impl Person {
         self.die_based_on_chance(death_chance, rng.gen_range(0..=death_chance / 2));
     }
 
-    // Regenerate health each month
-
     /// If chance is met, kill the current person
     fn die_based_on_chance(&mut self, chance: i32, days_until_death: i32) {
             let die = percentage_based_output_int(hashmap! {
