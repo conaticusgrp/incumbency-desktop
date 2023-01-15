@@ -67,7 +67,10 @@ impl GameState {
 
         let date = self.date.clone();
 
+        let mut idx = 0;
         for per in self.people.iter_mut() {
+            idx += 1;
+
             per.check_birthday(&date);
             per.balance -= per.daily_food_spending as f32;
 
@@ -90,7 +93,7 @@ impl GameState {
             if let Some(ref mut days) = per.days_until_death {
                 *days -= 1;
                 if *days <= 0 {
-                    death_queue.push(per.idx);
+                    death_queue.push(idx);
                     continue;
                 }
             }
@@ -125,19 +128,13 @@ impl GameState {
             }
         }
 
-        // TODO: this REALLY needs optimising
-        for person_idx in death_queue {
-            self.people.remove(person_idx);
-            // I can't believe we need another loop here - con
-            for idx in 0..self.people.len() {
-                self.people[idx].idx = idx; 
-            }
-        }
+        // for person_idx in death_queue {
+        //     self.people.remove(person_idx);
+        // }
 
     }
 
     pub fn month_pass(&mut self, tax_rate: f32) {
-        dbg!(self.people.len());
         for person in self.people.iter_mut() {
             let income = person.salary as f32;
             person.balance += income;
