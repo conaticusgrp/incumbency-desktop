@@ -4,7 +4,7 @@
 
   export let name = "?";
   export let icon: string | undefined;
-  export let badgeCount = 0;
+  export let badgeCount: number | undefined = 0;
   export let gridRow: string;
   export let index: number;
   
@@ -24,7 +24,7 @@
       <img src={icon} alt={name + " app icon"} />
     {/if}
 
-    {#if badgeCount > 0}
+    {#if badgeCount != undefined && badgeCount > 0}
       <div class="badge">{badgeCount}</div>
     {/if}
 
@@ -54,7 +54,7 @@
     position: relative;
   }
 
-  .icon img {
+  .icon > img {
     width: 100%;
     height: 100%;
     object-fit: cover;
