@@ -83,5 +83,5 @@ pub fn stabilize_game(state_mux: &GameStateSafe) {
     state.set_healthcare_investment(starting_investment as f32);
 
     let tax_rate = state.tax_rate;
-    state.month_pass(tax_rate);
+    state.month_pass(tax_rate, None);
 }

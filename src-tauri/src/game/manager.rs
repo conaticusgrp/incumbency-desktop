@@ -1,15 +1,8 @@
 use std::{time::Duration};
-use crate::{common::{payloads::{PayloadNewDay, NewGame}, util::Date}};
-use serde::{Deserialize, Serialize};
+use crate::{common::{payloads::{PayloadNewDay, NewGame}}};
 use tauri::{State, Manager};
 
 use super::{generation::{generate_game, stabilize_game}, state_manager::GameStateSafe};
-
-#[derive(Clone, Serialize, Deserialize)]
-struct ExampleDebugPayload {
-    people: Vec<Date>,
-    population: usize,
-}
 
 #[tauri::command] // TODO: Take in game name as argument and call "create_save(name)"
 pub async fn create_game(state_mux: State<'_, GameStateSafe>, app_handle: tauri::AppHandle) -> Result<(), ()> {
@@ -20,7 +13,6 @@ pub async fn create_game(state_mux: State<'_, GameStateSafe>, app_handle: tauri:
     {
         let state = state_mux.lock().unwrap();
         app_handle.emit_all("game_created", NewGame { population: state.people.len() as i32 }).unwrap();
-        app_handle.emit_all("debug_payload", ExampleDebugPayload { people: vec![state.date.clone(), state.date.clone()], population: state.people.len() }).unwrap();
     } // need these or state will never unlock;
 
     start_game_loop(&state_mux, &app_handle).await;
@@ -58,7 +50,7 @@ pub async fn start_game_loop(state_mux: &GameStateSafe, app_handle: &tauri::AppH
 
         if state.date.is_new_month() {
             let tax_rate = state.tax_rate; // Dont need to .clone on basic types like f32
-            state.month_pass(tax_rate);
+            state.month_pass(tax_rate, Some(app_handle));
         }
     }
 }

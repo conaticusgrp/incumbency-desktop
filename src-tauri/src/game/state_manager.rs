@@ -1,6 +1,8 @@
 use std::{sync::{Mutex, Arc}};
 use rand::Rng;
+use serde::{Serialize, Deserialize};
 use crate::{entities::{business::{Business, ProductType}, person::person::{Person, Job}}, as_decimal_percent, common::util::{Date}};
+use tauri::Manager;
 
 #[derive(Clone)]
 pub struct GameState {
@@ -132,7 +134,7 @@ impl GameState {
 
     }
 
-    pub fn month_pass(&mut self, tax_rate: f32) {
+    pub fn month_pass(&mut self, tax_rate: f32, app_handle: Option<&tauri::AppHandle>) {
         for person in self.people.iter_mut() {
             let income = person.salary as f32;
             person.balance += income;
@@ -215,6 +217,10 @@ impl GameState {
 
         self.month_unhospitalised_count = 0;
         self.government_balance -= self.healthcare_investment;
+
+        if let Some(app) = app_handle {
+            app.emit_all("debug_payload",  PlaceholderPopulationPayload { population: self.people.len() }).unwrap();
+        }
     }
 
     fn get_demand(&self, product_type: &ProductType) -> f32 {
@@ -226,4 +232,9 @@ impl GameState {
 
         total
     }
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+struct PlaceholderPopulationPayload {
+    population: usize,
 }
