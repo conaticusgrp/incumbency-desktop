@@ -17,7 +17,9 @@
   {#if key != undefined}
 
   <span class="key">
-    <button on:click={toggleDropdown}>+</button>
+    {#if value instanceof Object}
+      <button on:click={toggleDropdown}>+</button>
+    {/if}
     {key}
   </span>
 
