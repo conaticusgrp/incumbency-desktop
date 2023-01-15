@@ -1,7 +1,7 @@
 use std::{ops::Range, collections::HashMap};
 use maplit::hashmap;
 use rand::{Rng};
-use crate::{common::util::{float_range, percentage_based_output_int, generate_percentage, Date}, common::config::Config, game::{generation::{generate_education_level, get_expected_salary_range}}, entities::business::{ProductType, Business}, percentage_of};
+use crate::{common::util::{float_range, percentage_based_output_int, generate_percentage, Date}, common::config::Config, game::{generation::{generate_education_level, get_expected_salary_range}}, entities::business::{ProductType, Business}};
 use EducationLevel::*;
 
 use super::debt::Debt;
@@ -229,6 +229,7 @@ impl Person {
     }
     
     pub fn pay_tax(&mut self, government_balance: &mut f32, amount: f32) {
+        if amount < 0. { return }
         self.balance -= amount;
         *government_balance += amount;
     }

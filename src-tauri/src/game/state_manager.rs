@@ -46,6 +46,22 @@ impl Default for GameState {
 }
 
 impl GameState {
+    /// Returns whether the new investment is possible, if not it also returns the minimum healthcare investment
+    pub fn set_healthcare_investment(&mut self, investment: f32) -> (bool, Option<f32>) {
+        if investment < self.healthcare_investment {
+            let minimum_investment = self.healthcare_investment - (self.hospital_current_capacity as f32 * self.cost_per_hospital_capacity as f32);
+            if investment < minimum_investment {
+                return (false, Some(minimum_investment));
+            }
+        }
+
+        let previous_total_capacity = self.hospital_total_capacity;
+        self.hospital_total_capacity = self.cost_per_hospital_capacity * investment as i32;
+        self.hospital_current_capacity += self.hospital_total_capacity - previous_total_capacity;
+
+        (true, None)
+    }
+
     pub fn day_pass(&mut self, day: i32) {
         let mut death_queue: Vec<usize> = Vec::new(); // Queue of people who are going to die :) - we need this because rust memory
 
@@ -101,9 +117,8 @@ impl GameState {
         if self.date.is_first_month() {
             let starting_capacity = (self.month_unhospitalised_count as f32 + self.month_unhospitalised_count as f32 * 0.3) as i32;
             self.cost_per_hospital_capacity = (starting_capacity as f32 / self.healthcare_investment) as i32;
+            self.set_healthcare_investment((self.cost_per_hospital_capacity * starting_capacity) as f32);
         }
-
-        self.month_unhospitalised_count = 0;
 
         for person in self.people.iter_mut() {
             let income = person.salary as f32;
@@ -182,6 +197,9 @@ impl GameState {
 
             remaining_market_percentage -= assigned_percent;
         }
+
+        self.month_unhospitalised_count = 0;
+        self.government_balance -= self.healthcare_investment;
     }
 
     fn get_demand(&self, product_type: &ProductType) -> f32 {

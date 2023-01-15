@@ -208,6 +208,7 @@ impl Business {
     }
 
     pub fn pay_tax(&mut self, government_balance: &mut f32, amount: f32) {
+        if amount < 0. { return }
         self.balance -= amount;
         *government_balance += amount;
     }

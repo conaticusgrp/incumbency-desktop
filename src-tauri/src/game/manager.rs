@@ -27,7 +27,7 @@ pub fn set_tax(state_mux: State<'_, GameStateSafe>, tax_rate: f32) {
 #[tauri::command]
 pub fn set_healthcare_investment(state_mux: State<'_, GameStateSafe>, investment: f32) {
     let mut state = state_mux.lock().unwrap();
-    state.healthcare_investment = investment;
+    state.set_healthcare_investment(investment);
 }
 
 pub async fn start_game_loop(state_mux: &GameStateSafe, app_handle: &tauri::AppHandle) {

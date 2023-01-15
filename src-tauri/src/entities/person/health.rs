@@ -31,7 +31,6 @@ impl Person {
         }
     }
 
-    /// Either a positive or negative amount can be entered here.
     pub fn remove_health(&mut self, amount: i32, hospital_capacity: &mut i32, month_unhospitalised_count: &mut i32) {
         self.health_percentage -= amount;
         if self.health_percentage <= 2 {
@@ -80,7 +79,6 @@ impl Person {
         self.die_based_on_chance(death_chance, rng.gen_range(0..=death_chance / 2));
     }
 
-    /// If chance is met, kill the current person
     fn die_based_on_chance(&mut self, chance: i32, days_until_death: i32) {
             let die = percentage_based_output_int(hashmap! {
                 true => chance,
