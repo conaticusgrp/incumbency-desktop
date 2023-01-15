@@ -83,7 +83,7 @@
     console.log(d);
   });
 
-  listen('<DEBUG_EVENT>', (e) => {
+  listen('open_debugger_app', (e) => {
     //@ts-ignore
     handleOpenApp({ detail: { index: apps.findIndex((v) => v.name === "DEBUG") } });
   });

@@ -10,7 +10,7 @@
 
   let debugData: object | undefined;
 
-  listen('<DEBUG_NAME>', (e) => {
+  listen('debug_payload', (e) => {
     debugData = e.payload as object;
   });
 

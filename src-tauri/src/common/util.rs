@@ -1,4 +1,5 @@
 use rand::Rng;
+use serde::{Deserialize, Serialize};
 use std::{collections::HashMap};
 
 #[macro_export]
@@ -87,7 +88,7 @@ pub fn float_range(min: f32, max: f32, decimal_count: u32) -> f32 {
     set_decimal_count(rng.gen::<f32>() * (max - min) + min, decimal_count)
 }
 
-#[derive(Clone)]
+#[derive(Clone, Serialize, Deserialize)]
 pub struct Date {
     pub day: i32,
     pub month: i32,

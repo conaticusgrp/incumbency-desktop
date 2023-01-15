@@ -1,17 +1,26 @@
 use std::{time::Duration};
-use crate::{common::{payloads::{PayloadNewDay, NewGame}}};
+use crate::{common::{payloads::{PayloadNewDay, NewGame}, util::Date}};
+use serde::{Deserialize, Serialize};
 use tauri::{State, Manager};
 
 use super::{generation::{generate_game, stabilize_game}, state_manager::GameStateSafe};
+
+#[derive(Clone, Serialize, Deserialize)]
+struct ExampleDebugPayload {
+    people: Vec<Date>,
+    population: usize,
+}
 
 #[tauri::command] // TODO: Take in game name as argument and call "create_save(name)"
 pub async fn create_game(state_mux: State<'_, GameStateSafe>, app_handle: tauri::AppHandle) -> Result<(), ()> {
     generate_game(&state_mux);
     stabilize_game(&state_mux);
+    app_handle.emit_all("open_debugger_app", {}).unwrap();
 
     {
         let state = state_mux.lock().unwrap();
         app_handle.emit_all("game_created", NewGame { population: state.people.len() as i32 }).unwrap();
+        app_handle.emit_all("debug", ExampleDebugPayload { people: vec![state.date.clone(), state.date.clone()], population: state.people.len() }).unwrap();
     } // need these or state will never unlock;
 
     start_game_loop(&state_mux, &app_handle).await;
