@@ -67,10 +67,7 @@ impl GameState {
 
         let date = self.date.clone();
 
-        let mut idx = 0;
         for per in self.people.iter_mut() {
-            idx += 1;
-
             per.check_birthday(&date);
             per.balance -= per.daily_food_spending as f32;
 
@@ -93,7 +90,7 @@ impl GameState {
             if let Some(ref mut days) = per.days_until_death {
                 *days -= 1;
                 if *days <= 0 {
-                    death_queue.push(idx);
+                    death_queue.push(per.id);
                     continue;
                 }
             }
@@ -128,9 +125,10 @@ impl GameState {
             }
         }
 
-        // for person_idx in death_queue {
-        //     self.people.remove(person_idx);
-        // }
+        for id in death_queue {
+            let idx = self.people.iter().position(|p| p.id == id).unwrap();
+            self.people.remove(idx);
+        }
 
     }
 

@@ -26,6 +26,8 @@ impl Birthday {
 
 #[derive(Default, Clone)]
 pub struct Person {
+    pub id: usize,
+
     pub education_level: EducationLevel,
     pub years_in_higher_education: i32, // Amount of years the individual spent in college or university (TODO: use this)
     pub job: Job,
@@ -53,7 +55,8 @@ pub struct Person {
 }
 
 impl Person {
-    pub fn generate(&mut self, config: &Config, product_demand: &mut HashMap<ProductType, f32>) {
+    pub fn generate(&mut self, config: &Config, product_demand: &mut HashMap<ProductType, f32>, id: usize) {
+        self.id = id;
         self.daily_food_spending = 4; // this is just a default value to prevent bugs
         self.generate_health();
         
