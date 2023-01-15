@@ -1,10 +1,10 @@
 use std::{ops::Range, collections::HashMap};
 use maplit::hashmap;
 use rand::{Rng};
-use crate::{common::util::{float_range, percentage_based_output_int, generate_percentage, Date}, common::config::Config, game::{generation::{generate_education_level, get_expected_salary_range}}, entities::business::{ProductType, Business}};
+use crate::{common::util::{float_range, percentage_based_output_int, Date}, common::config::Config, game::{generation::{generate_education_level, get_expected_salary_range}}, entities::business::{ProductType, Business}};
 use EducationLevel::*;
 
-use super::debt::Debt;
+use super::debt::{Debt};
 
 #[derive(Default, Clone)]
 pub struct Birthday {
@@ -42,7 +42,6 @@ pub struct Person {
 
     pub spending_behaviour: SpendingBehaviour,
     pub daily_food_spending: i32,
-    pub food_spending_streak: i32, // The amount of months the person has undergone the current food spending
 
     pub demand: HashMap<ProductType, f32>,
     pub business_this_month: usize,  // The business the individual will buy from this month, until marketing is re-evaluated
@@ -58,6 +57,7 @@ pub struct Person {
 impl Person {
     pub fn generate(&mut self, config: &Config, product_demand: &mut HashMap<ProductType, f32>, idx: usize) {
         self.idx = idx;
+        self.daily_food_spending = 4; // this is just a default value to prevent bugs
         self.generate_health();
         
         self.education_level = generate_education_level(&config);
@@ -70,26 +70,9 @@ impl Person {
         self.age = self.generate_age();
         self.birthday = Birthday::generate();
         self.debts = Debt::generate(self, expected_salary);
-        self.daily_food_spending = self.generate_daily_food_spending(expected_salary, None);
 
         self.generate_demand(expected_salary, product_demand);
     }
-
-    // fn behaviour_one(&self, salary: f32) {
-
-    // }
-
-    // fn behaviour_two(&self, salary: f32) {
-
-    // }
-
-    // fn behaviour_three(&self, salary: f32) {
-
-    // }
-
-    // fn behaviour_four(&self, salary: f32) {
-
-    // }
 
     fn generate_balance(&self, salary: f32) -> f32 {
         if salary > 0. {
@@ -179,48 +162,61 @@ impl Person {
         *product_demand.get_mut(&ProductType::LEISURE).unwrap() += total_demand;
     }
 
-    /// `chances` - The percentage chance of going over or under minimum food spending. \
-    /// `chances` - `Option<(chance_under_minimum, chance_over_minimum)>`
-    fn generate_daily_food_spending(&self, salary: f32, chances: Option<(i32, i32)>) -> i32 {
-        let minimum = self.minimum_appropriate_daily_food_spending(salary);
-        let mut rng = rand::thread_rng();
+    /// This should be done every time the individual's salary changes, and every month.
+    pub fn calculate_daily_food_spending(&mut self) {
+        match self.job {
+            Job::BusinessOwner(_) => return, // TODO: implement me
+            _ => (), 
+        }
 
-        // TODO: change these boundaries when lower values are implemented
-        // TODO: make these boundaries more dynamic based on if the person can afford it
+        let debt_cost = self.get_monthly_debt_cost();
 
-        let percentage = generate_percentage();
-        let mut spending = if let Some((chance_under_min, chance_over_min)) = chances {
-            match percentage {
-                p if p >= 100 - chance_under_min => chance_under_min, 
-                p if p >= 100 - chance_under_min - chance_over_min => chance_over_min,
-                _ => minimum,
-            }
-        } else {
-            rng.gen_range(minimum - 1..minimum + 1)
-        };
+        let healthy_cost = debt_cost + (4 * 30) as f32;
+        let survivable_cost = debt_cost + (3 * 30) as f32;
+        let unhealthy_cost = debt_cost + (2 * 30) as f32;
 
-        if spending > 4 { spending = 4 }
-        else if spending < 1 { spending = 1 };
+        if self.can_afford_bare(healthy_cost) {
+            self.daily_food_spending = 4;
+            return;
+        } else if self.can_afford_bare(survivable_cost) {
+            self.daily_food_spending = 3;
+            return;
+        } else if self.can_afford_bare(unhealthy_cost) {
+            let (action_one_chance, action_two_chance) = match self.spending_behaviour {
+                SpendingBehaviour::One => (90, 10),
+                SpendingBehaviour::Two => (55, 45),
+                SpendingBehaviour::Three => (35, 65),
+                SpendingBehaviour::Four => (10, 90),
+            };
 
-        spending
-    }
+            let action = percentage_based_output_int(hashmap! {
+                1 => action_one_chance,
+                2 => action_two_chance,
+            });
 
-    fn minimum_appropriate_daily_food_spending(&self, salary: f32) -> i32 { // TODO: make this more random, sometimes choose a slightly less appropriate spending
-        if salary > 0. {
-            // TODO: handle case where none are affordable
-            for i in 1..4 {
-                if self.can_afford((i * 30) as f32) {
-                    return i;
-                }
+            if action == 1 {
+                self.daily_food_spending = 3;
+                return;
+            } else {
+                self.daily_food_spending = 2;
+                return;
             }
         }
 
-        0
+        // TODO: implement homelessness, remove the following line
+        self.daily_food_spending = 1;
     }
 
     pub fn can_afford(&self, price: f32) -> bool {
-        let cut_balance: f32 = self.balance - (self.balance * 0.1);
+        let mut cut_balance: f32 = self.balance - (self.balance * 0.1) - ((self.salary as f32 / 12.) * 0.1);
+        cut_balance -= self.get_monthly_debt_cost() as f32;
+
+        cut_balance -= self.daily_food_spending as f32 * 30.;
         cut_balance - price > 0.
+    }
+
+    pub fn can_afford_bare(&self, price: f32) -> bool {
+        self.balance - price > 0.
     }
 
     pub fn business_pay(&mut self, payee: &mut Business, amount: f32) {

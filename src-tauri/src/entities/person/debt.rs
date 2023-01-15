@@ -8,6 +8,19 @@ use rand::{Rng};
 
 const US_DEBT_REPAYMENT_THRESHOLD: f32 = 32_000.; // Minimum salary required to start paying debts
 
+
+impl Person {
+    pub fn get_monthly_debt_cost(&self) -> f32 {
+        let mut total = 0.;
+
+        for debt in self.debts.iter() {
+            total += debt.minimum_monthly_payoff;
+        }
+
+        total
+    }
+}
+
 #[derive(Clone)]
 pub struct Debt {
     pub owed: f32,

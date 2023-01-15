@@ -5,6 +5,7 @@ use super::person::Person;
 
 impl Person {
     pub fn add_health(&mut self, amount: i32) {
+        if self.health_percentage == 100 { return }
         self.health_percentage += amount;
     }
 
@@ -124,7 +125,7 @@ impl Person {
         let replenish = rand::thread_rng().gen_range(1..=30) == 30;
 
         if replenish {
-            self.health_percentage += 1;
+            self.add_health(1);
         }
     }
 }

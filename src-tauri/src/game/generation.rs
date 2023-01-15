@@ -64,6 +64,11 @@ pub fn generate_game(state_mux: &GameStateSafe) {
 
         stabilize_game(state_mux);
     }
+
+    // This of course cannot be calculated until after the businesses are generated
+    for per in state.people.iter_mut() {
+        per.calculate_daily_food_spending(); 
+    }
 }
 
 /// Runs 1 month of the game to prepare the economy and get all the required values

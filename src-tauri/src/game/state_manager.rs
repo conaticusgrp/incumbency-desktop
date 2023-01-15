@@ -1,6 +1,6 @@
-use std::sync::{Mutex, Arc};
-
-use crate::{entities::{business::{Business, ProductType}, person::person::{Person, Job}}, as_decimal_percent, common::util::Date};
+use std::{sync::{Mutex, Arc}};
+use rand::Rng;
+use crate::{entities::{business::{Business, ProductType}, person::person::{Person, Job}}, as_decimal_percent, common::util::{Date}};
 
 #[derive(Clone)]
 pub struct GameState {
@@ -69,6 +69,23 @@ impl GameState {
 
         for per in self.people.iter_mut() {
             per.check_birthday(&date);
+            per.balance -= per.daily_food_spending as f32;
+
+            let mut rng = rand::thread_rng();
+
+            let loss_chance: f32 = match per.daily_food_spending { // Chance that the individual will lose 1% of their health
+                1 => 50.,
+                2 => 25.,
+                3 => 0.9,
+                4 => 0.6,
+                _ => unreachable!(),
+            };
+
+            let maximum = 100 / loss_chance as i32;
+            let has_loss = rng.gen_range(0..=maximum) == maximum;
+            if has_loss {
+                per.remove_health(1, &mut self.hospital_current_capacity, &mut self.month_unhospitalised_count);
+            }
 
             if let Some(ref mut days) = per.days_until_death {
                 *days -= 1;
@@ -148,6 +165,8 @@ impl GameState {
                  // Add functionality to welfare if they can't afford debts
                  person.balance -= debt.minimum_monthly_payoff;
             }
+
+            person.calculate_daily_food_spending();
         }
 
         let mut reinvestment_budgets: Vec<(usize, f32)> = Vec::new();
