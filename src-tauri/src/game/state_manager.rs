@@ -113,13 +113,7 @@ impl GameState {
         }
     }
 
-    pub fn month_pass(&mut self, _month: i32, tax_rate: f32) {
-        if self.date.is_first_month() {
-            let starting_capacity = (self.month_unhospitalised_count as f32 + self.month_unhospitalised_count as f32 * 0.3) as i32;
-            self.cost_per_hospital_capacity = (starting_capacity as f32 / self.healthcare_investment) as i32;
-            self.set_healthcare_investment((self.cost_per_hospital_capacity * starting_capacity) as f32);
-        }
-
+    pub fn month_pass(&mut self, tax_rate: f32) {
         for person in self.people.iter_mut() {
             let income = person.salary as f32;
             person.balance += income;

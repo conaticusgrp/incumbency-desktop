@@ -61,5 +61,23 @@ pub fn generate_game(state_mux: &GameStateSafe) {
         if sufficient_businesses {
             break;
         }
+
+        stabilize_game(state_mux);
     }
+}
+
+/// Runs 1 month of the game to prepare the economy and get all the required values
+pub fn stabilize_game(state_mux: &GameStateSafe) {
+    let mut state = state_mux.lock().unwrap();
+    for day in 1..=30 {
+        state.day_pass(day);
+    }
+
+    let starting_capacity = (state.month_unhospitalised_count as f32 + state.month_unhospitalised_count as f32 * 0.3) as i32;
+    state.cost_per_hospital_capacity = (starting_capacity as f32 / state.healthcare_investment) as i32;
+    let starting_investment = state.cost_per_hospital_capacity * starting_capacity;
+    state.set_healthcare_investment(starting_investment as f32);
+
+    let tax_rate = state.tax_rate;
+    state.month_pass(tax_rate);
 }

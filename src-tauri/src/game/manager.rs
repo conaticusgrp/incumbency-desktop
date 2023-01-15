@@ -37,6 +37,7 @@ pub async fn start_game_loop(state_mux: &GameStateSafe, app_handle: &tauri::AppH
         interval.tick().await;
 
         let state = &mut state_mux.lock().unwrap();
+
         state.date.new_day();
 
         let day = state.date.day;
@@ -49,7 +50,7 @@ pub async fn start_game_loop(state_mux: &GameStateSafe, app_handle: &tauri::AppH
  
         if state.date.is_new_month() {
             let tax_rate = state.tax_rate; // Dont need to .clone on basic types like f32
-            state.month_pass(month, tax_rate);
+            state.month_pass(tax_rate);
         }
     }
 }
