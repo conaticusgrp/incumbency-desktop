@@ -13,7 +13,7 @@
   
   // DEBUG
   import { onMount } from 'svelte'
-  import DebugApp from "../windows/DebugApp.svelte";
+  import DebuggerApp from "../windows/DebuggerApp.svelte";
 
   let date: string = "undefined date";
   let windowContainer: HTMLElement;
@@ -79,8 +79,8 @@
   }
 
   listen('new_day', (d) => {
-    // date = ;
-    console.log(d);
+    //@ts-ignore
+    date = d.payload.date as string;
   });
 
   listen('open_debugger_app', (e) => {
@@ -125,7 +125,7 @@
     {/each}
 
     <div class="windows" bind:this={windowContainer}>
-      <DebugApp iconPath={apps[0].iconPath} on:windowClose={updateUI} on:windowMinimizeStateChange={updateUI} />
+      <DebuggerApp iconPath={apps[0].iconPath} on:windowClose={updateUI} on:windowMinimizeStateChange={updateUI} />
       <Email iconPath={apps[1].iconPath} on:windowClose={updateUI} on:windowMinimizeStateChange={updateUI} />
       <BudgetPanel iconPath={apps[2].iconPath} on:windowClose={updateUI} on:windowMinimizeStateChange={updateUI} />
     </div>
