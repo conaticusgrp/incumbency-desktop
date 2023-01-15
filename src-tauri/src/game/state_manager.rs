@@ -125,9 +125,15 @@ impl GameState {
             }
         }
 
+        // TODO: this REALLY needs optimising
         for person_idx in death_queue {
             self.people.remove(person_idx);
+            // I can't believe we need another loop here - con
+            for idx in 0..self.people.len() {
+                self.people[idx].idx = idx; 
+            }
         }
+
     }
 
     pub fn month_pass(&mut self, tax_rate: f32) {
