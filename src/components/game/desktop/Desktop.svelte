@@ -1,5 +1,6 @@
 <script lang="ts">
 
+  import { listen } from "@tauri-apps/api/event";
   import type { DesktopAppShortcut } from "../../../scripts/desktopApp";
   import type { NotificationData } from "../../../scripts/notificationData";
   import { DEFAULT_NOTIFICATION_DISPLAY_TIME, KEEP_NOTIFICATIONS_DISPLAYED, NOTIFICATIONS_WINDOW_HEIGHT, NOTIFICATIONS_WINDOW_WIDTH } from "../../../scripts/desktopConstants";
@@ -12,12 +13,18 @@
   
   // DEBUG
   import { onMount } from 'svelte'
-  
+  import DebugApp from "../windows/DebugApp.svelte";
+
+  let date: string = "undefined date";
   let windowContainer: HTMLElement;
   let toolbarHeightPercent: number = 7;
   let desktopPaddingRem = 2;
   let wallpaperPath: string | null = null;
   let apps: DesktopAppShortcut[] = [
+    {
+      name: "DEBUG",
+      iconPath: ""
+    },
     {
       name: "Email",
       iconPath: "https://seeklogo.com/images/M/mail-icon-logo-28FE0635D0-seeklogo.com.png",
@@ -45,13 +52,14 @@
   }
 
   const handleOpenApp = (e: CustomEvent): void => {
-    if (e.detail < 0 || e.detail.index >= windowContainer.children.length) return;
+    const index = e.detail.index;
+    if (index < 0 || index >= windowContainer.children.length) return;
 
-    if (getWindow(e.detail.index).dataset['minimized'] !== 'true') {
-      getWindow(e.detail.index).style.display = 'initial';
+    if (getWindow(index).dataset['minimized'] !== 'true') {
+      getWindow(index).style.display = 'initial';
       updateUI();
     } else {
-      unminimizeApp(e.detail.index);
+      unminimizeApp(index);
     }
   }
 
@@ -70,6 +78,16 @@
     apps = apps;
   }
 
+  listen('new_day', (d) => {
+    // date = ;
+    console.log(d);
+  });
+
+  listen('<DEBUG_EVENT>', (e) => {
+    //@ts-ignore
+    handleOpenApp({ detail: { index: apps.findIndex((v) => v.name === "DEBUG") } });
+  });
+
   // DEBUG
   onMount(() => {
     setTimeout(() => {
@@ -82,6 +100,7 @@
       ];
     }, 2000);
   });
+
 </script>
 
 <main style="background-image: {(wallpaperPath != null) ? `url(${wallpaperPath})` : "none"};">
@@ -89,6 +108,8 @@
   <div class="content" style="padding: {desktopPaddingRem}rem; height: calc({100 - toolbarHeightPercent}% - {desktopPaddingRem * 2}rem);">
 
     {#each apps as shortcut, i}
+
+    {#if shortcut.name !== "DEBUG"}
 
     <DesktopShortcut
       name={shortcut.name}
@@ -99,12 +120,14 @@
       on:openApp={handleOpenApp}
     />
 
+    {/if}
+
     {/each}
 
     <div class="windows" bind:this={windowContainer}>
-      <!-- TODO: add opened windows -->
-      <Email iconPath={apps[0].iconPath} on:windowClose={updateUI} on:windowMinimizeStateChange={updateUI} />
-      <BudgetPanel iconPath={apps[1].iconPath} on:windowClose={updateUI} on:windowMinimizeStateChange={updateUI} />
+      <DebugApp iconPath={apps[0].iconPath} on:windowClose={updateUI} on:windowMinimizeStateChange={updateUI} />
+      <Email iconPath={apps[1].iconPath} on:windowClose={updateUI} on:windowMinimizeStateChange={updateUI} />
+      <BudgetPanel iconPath={apps[2].iconPath} on:windowClose={updateUI} on:windowMinimizeStateChange={updateUI} />
     </div>
 
     <div class="notifications" style="width: {NOTIFICATIONS_WINDOW_WIDTH}px; height: {NOTIFICATIONS_WINDOW_HEIGHT}px;">
@@ -125,32 +148,39 @@
 
   <div class="toolbar" style="height: {toolbarHeightPercent}%;">
 
-    <ToolBarItem name="logo" iconPath={undefined} />
-    <ToolBarItem name="Search" iconPath={undefined} />
+    <div class="items">
 
-    {#each apps as shortcut, i}
+      <ToolBarItem name="logo" iconPath={undefined} />
+      <ToolBarItem name="Search" iconPath={undefined} />
 
-    {#if windowContainer != null && windowContainer.children.length > i &&
-        ((windowContainer.children[i].style.display != 'none' && windowContainer.children[i].dataset['minimized'] == 'false') ||
-        (windowContainer.children[i].style.display == 'none' && windowContainer.children[i].dataset['minimized'] == 'true'))}
+      {#each apps as shortcut, i}
 
-    <!-- !! to cast (boolean | undefined) to boolean -->
-    <!-- empty on:keydown to supress a warning -->
-    <span
-      data-minimized={!!apps[i].minimized}
-      style="background-image: url('{shortcut.iconPath}');"
-      title={shortcut.name}
-      on:click={() => unminimizeApp(i)}
-      on:keydown={() => {}}
-    >
-      {#if shortcut.iconPath == null}
-      {shortcut.iconPath} {shortcut.name}
+      {#if windowContainer != null && windowContainer.children.length > i && apps[i].name !== "DEBUG" &&
+          ((windowContainer.children[i].style.display != 'none' && windowContainer.children[i].dataset['minimized'] == 'false') ||
+          (windowContainer.children[i].style.display == 'none' && windowContainer.children[i].dataset['minimized'] == 'true'))}
+
+      <!-- !! to cast (boolean | undefined) to boolean -->
+      <!-- empty on:keydown to supress a warning -->
+      <span
+        data-minimized={!!apps[i].minimized}
+        style="background-image: url('{shortcut.iconPath}');"
+        title={shortcut.name}
+        on:click={() => unminimizeApp(i)}
+        on:keydown={() => {}}
+      >
+        {#if shortcut.iconPath == null}
+        {shortcut.iconPath} {shortcut.name}
+        {/if}
+      </span>
+
       {/if}
-    </span>
 
-    {/if}
+      {/each}
+    </div>
 
-    {/each}
+    <div class="date-time">
+      {date}
+    </div>
 
   </div>
 
@@ -180,11 +210,17 @@
     width: 100%;
     display: flex;
     flex-direction: row;
-    align-items: center;
+    justify-content: space-between;
     background-color: #A0A0A0;
   }
   
-  .toolbar span {
+  .toolbar > .items {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+  }
+  
+  .toolbar > .items > span {
     position: relative;
     width: 50px;
     height: 50px;
@@ -194,7 +230,7 @@
     background-repeat: no-repeat;
   }
 
-  .toolbar span[data-minimized="true"]:after {
+  .toolbar > .items > span[data-minimized="true"]:after {
     content: '';
     position: absolute;
     top: 0;
@@ -202,6 +238,15 @@
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
+  }
+
+  .toolbar > .date-time {
+    width: 150px;
+    margin: 0.5em;
+    box-sizing: border-box;
+    text-align: center;
+    border: 1px solid black;
+    color: black;
   }
 
   .windows {

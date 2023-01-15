@@ -338,7 +338,7 @@
     isolation: isolate;
   }
 
-  .window-buttons button {
+  .window-buttons > button {
     display: flex;
     justify-content: center;
     align-items: center;
@@ -350,8 +350,8 @@
     transition: all 0.2s ease-in-out;
   }
 
-  .window-buttons button:hover,
-  .window-buttons button:focus {
+  .window-buttons > button:hover,
+  .window-buttons > button:focus {
     outline: none;
     border: none;
   }
