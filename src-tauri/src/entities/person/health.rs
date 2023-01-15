@@ -57,11 +57,11 @@ impl Person {
             }
 
             *hospital_capacity -= 1;
-            self.hospitalize(percentage_below_hospitalisation, death_chance);
+            self.hospitalize(percentage_below_hospitalisation, death_chance, amount);
         }
     }
 
-    pub fn hospitalize(&mut self, percentage_below_hospitalisation: i32, death_chance: i32) {
+    pub fn hospitalize(&mut self, percentage_below_hospitalisation: i32, death_chance: i32, initial_health_loss: i32) {
         self.hospitalisation_count += 1;
 
         let mut rng = rand::thread_rng();
@@ -78,6 +78,9 @@ impl Person {
 
         self.days_left_in_hospital = Some(death_chance / 2);
         self.die_based_on_chance(death_chance, rng.gen_range(0..=death_chance / 2));
+
+        self.health_percentage = self.hospitalisation_percentage + (initial_health_loss / 2);
+        if self.health_percentage > 100 { self.health_percentage = 100 }
     }
 
     fn die_based_on_chance(&mut self, chance: i32, days_until_death: i32) {
