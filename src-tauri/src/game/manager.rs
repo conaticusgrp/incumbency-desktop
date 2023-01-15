@@ -2,19 +2,19 @@ use std::{time::Duration};
 use crate::{common::{payloads::{PayloadNewDay, NewGame}}};
 use tauri::{State, Manager};
 
-use super::{generation::generate_game, state_manager::GameStateSafe};
+use super::{generation::{generate_game, stabilize_game}, state_manager::GameStateSafe};
 
 #[tauri::command] // TODO: Take in game name as argument and call "create_save(name)"
 pub async fn create_game(state_mux: State<'_, GameStateSafe>, app_handle: tauri::AppHandle) -> Result<(), ()> {
-
     generate_game(&state_mux);
+    stabilize_game(&state_mux);
+
     {
         let state = state_mux.lock().unwrap();
         app_handle.emit_all("game_created", NewGame { population: state.people.len() as i32 }).unwrap();
     } // need these or state will never unlock;
+
     start_game_loop(&state_mux, &app_handle).await;
-
-
     Ok(())
 }
 
@@ -46,7 +46,7 @@ pub async fn start_game_loop(state_mux: &GameStateSafe, app_handle: &tauri::AppH
         state.day_pass(day);
 
         app_handle.emit_all("new_day", PayloadNewDay { date: date_string }).unwrap();
- 
+
         if state.date.is_new_month() {
             let tax_rate = state.tax_rate; // Dont need to .clone on basic types like f32
             state.month_pass(tax_rate);

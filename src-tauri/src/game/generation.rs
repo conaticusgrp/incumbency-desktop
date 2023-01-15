@@ -62,7 +62,6 @@ pub fn generate_game(state_mux: &GameStateSafe) {
             break;
         }
 
-        stabilize_game(state_mux);
     }
 
     // This of course cannot be calculated until after the businesses are generated

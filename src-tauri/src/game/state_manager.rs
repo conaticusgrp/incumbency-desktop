@@ -81,7 +81,7 @@ impl GameState {
                 _ => unreachable!(),
             };
 
-            let maximum = 100 / loss_chance as i32;
+            let maximum = (100. / loss_chance) as i32;
             let has_loss = rng.gen_range(0..=maximum) == maximum;
             if has_loss {
                 per.remove_health(1, &mut self.hospital_current_capacity, &mut self.month_unhospitalised_count);
@@ -131,6 +131,7 @@ impl GameState {
     }
 
     pub fn month_pass(&mut self, tax_rate: f32) {
+        dbg!(self.people.len());
         for person in self.people.iter_mut() {
             let income = person.salary as f32;
             person.balance += income;
