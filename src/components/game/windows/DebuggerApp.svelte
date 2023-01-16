@@ -12,7 +12,12 @@
   let debugData: object | undefined;
 
   listen('debug_payload', (e) => {
-    debugData = e.payload as object;
+    if (debugData) {
+      debugData = { ...debugData, ...e.payload as object }
+      return;
+    }
+
+    debugData =  e.payload as object;
   });
 
 </script>
@@ -26,8 +31,6 @@
   on:windowMinimize={() => dispatcher('windowMinimizeStateChange')}
 >
   <main>
-
-    <h2>Tracked data:</h2>
   
     <div>
 
@@ -52,12 +55,7 @@
     height: 100%;
     text-align: left;
   }
-
-  h2 {
-    height: 1em;
-    margin: 0.5em;
-  }
-
+  
   div {
     height: calc(100% - 2em);
     overflow-x: scroll;

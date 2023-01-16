@@ -74,7 +74,7 @@ pub fn generate_game(state_mux: &GameStateSafe) {
 pub fn stabilize_game(state_mux: &GameStateSafe) {
     let mut state = state_mux.lock().unwrap();
     for day in 1..=30 {
-        state.day_pass(day);
+        state.day_pass(day, None);
     }
 
     let starting_capacity = (state.month_unhospitalised_count as f32 + state.month_unhospitalised_count as f32 * 0.3) as i32;

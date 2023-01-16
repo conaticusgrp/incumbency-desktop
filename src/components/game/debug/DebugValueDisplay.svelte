@@ -8,7 +8,18 @@
       return value instanceof Object || value instanceof Array;
     }
 
+    const compactify = (value: any): string  => {
+      if (typeof value === "number" && value > 50000) {
+          return new Intl.NumberFormat("en-US", { notation: "compact" }).format(value);
+      }
+      
+      console.log(value);
+
+      return value;
+    }
+
     let dropdownShown = !isObj(value);
+
 
     const toggleDropdown = (): void => {
       dropdownShown = !dropdownShown;
@@ -45,7 +56,7 @@
       {/each}
 
     {:else}
-      {value}
+      {compactify(value)}
     {/if}
 
   </span>

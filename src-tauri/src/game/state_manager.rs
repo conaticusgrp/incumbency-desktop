@@ -1,4 +1,5 @@
 use std::{sync::{Mutex, Arc}};
+use maplit::hashmap;
 use rand::Rng;
 use serde::{Serialize, Deserialize};
 use crate::{entities::{business::{Business, ProductType}, person::person::{Person, Job}}, as_decimal_percent, common::util::{Date}};
@@ -64,7 +65,7 @@ impl GameState {
         (true, None)
     }
 
-    pub fn day_pass(&mut self, day: i32) {
+    pub fn day_pass(&mut self, day: i32, app_handle: Option<&tauri::AppHandle>) {
         let mut death_queue: Vec<usize> = Vec::new(); // Queue of people who are going to die :) - we need this because rust memory
 
         let date = self.date.clone();
@@ -92,6 +93,7 @@ impl GameState {
             if let Some(ref mut days) = per.days_until_death {
                 *days -= 1;
                 if *days <= 0 {
+                    dbg!(per.age);
                     death_queue.push(per.id);
                     continue;
                 }
@@ -132,6 +134,9 @@ impl GameState {
             self.people.remove(idx);
         }
 
+        if let Some(app) = app_handle {
+            app.emit_all("debug_payload",  hashmap! { "Population" => self.people.len() }).unwrap();
+        }
     }
 
     pub fn month_pass(&mut self, tax_rate: f32, app_handle: Option<&tauri::AppHandle>) {
@@ -217,9 +222,9 @@ impl GameState {
 
         self.month_unhospitalised_count = 0;
         self.government_balance -= self.healthcare_investment;
-
+        
         if let Some(app) = app_handle {
-            app.emit_all("debug_payload",  PlaceholderPopulationPayload { population: self.people.len(), dates: vec![self.date.clone(), self.date.clone()] }).unwrap();
+            app.emit_all("debug_payload",  hashmap! { "Government Balance" => self.government_balance as i32 }).unwrap();
         }
     }
 
@@ -232,10 +237,4 @@ impl GameState {
 
         total
     }
-}
-
-#[derive(Serialize, Deserialize, Clone)]
-struct PlaceholderPopulationPayload {
-    population: usize,
-    dates: Vec<Date>,
 }

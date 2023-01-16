@@ -44,7 +44,7 @@ pub async fn start_game_loop(state_mux: &GameStateSafe, app_handle: &tauri::AppH
         let day = state.date.day;
         let date_string = state.date.get_date_string();
 
-        state.day_pass(day);
+        state.day_pass(day, Some(app_handle));
 
         app_handle.emit_all("new_day", PayloadNewDay { date: date_string }).unwrap();
 
