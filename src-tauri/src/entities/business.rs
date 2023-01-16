@@ -207,9 +207,9 @@ impl Business {
         owner.business_pay(self, owner_expected_income);
     }
 
-    pub fn pay_tax(&mut self, government_balance: &mut f32, amount: f32) {
+    pub fn pay_tax(&mut self, government_balance: &mut u128, amount: f32) {
         if amount < 0. { return }
         self.balance -= amount;
-        *government_balance += amount;
+        *government_balance += amount as u128;
     }
 }

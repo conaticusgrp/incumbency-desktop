@@ -224,10 +224,10 @@ impl Person {
         payee.balance -= amount;
     }
     
-    pub fn pay_tax(&mut self, government_balance: &mut f32, amount: f32) {
+    pub fn pay_tax(&mut self, government_balance: &mut u128, amount: f32) {
         if amount < 0. { return }
         self.balance -= amount;
-        *government_balance += amount;
+        *government_balance += amount as u128;
     }
 
     pub fn check_birthday(&mut self, date: &Date) {

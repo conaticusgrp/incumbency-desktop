@@ -1,7 +1,6 @@
 use std::{sync::{Mutex, Arc}};
 use maplit::hashmap;
 use rand::Rng;
-use serde::{Serialize, Deserialize};
 use crate::{entities::{business::{Business, ProductType}, person::person::{Person, Job}}, as_decimal_percent, common::util::{Date}};
 use tauri::Manager;
 
@@ -14,8 +13,8 @@ pub struct GameState {
   pub gdp: f32,
   pub date: Date,
 
-  pub government_balance: f32,
-  pub healthcare_investment: f32,
+  pub government_balance: u128, // This is expected to be quite large
+  pub healthcare_investment: f64,
 
   pub hospital_total_capacity: i32,
   pub hospital_current_capacity: i32,
@@ -23,7 +22,7 @@ pub struct GameState {
   pub month_unhospitalised_count: i32, // Number of patient that could not go to hospital because of the full capacity
 }
 
-const GOVERNMENT_START_BALANCE: f32 = 12000000.; // TODO: changeme
+const GOVERNMENT_START_BALANCE: u32 = 12000000; // TODO: changeme
 
 pub type GameStateSafe = Arc<Mutex<GameState>>;
 
@@ -37,8 +36,8 @@ impl Default for GameState {
             gdp: 0.,
             date: Date::default(),
 
-            government_balance: GOVERNMENT_START_BALANCE,
-            healthcare_investment: GOVERNMENT_START_BALANCE * 0.07, // For now, 7% of the government budget should be spent on hospitals
+            government_balance: GOVERNMENT_START_BALANCE as u128,
+            healthcare_investment: GOVERNMENT_START_BALANCE as f64 * 0.07, // For now, 7% of the government budget should be spent on hospitals
             
             hospital_total_capacity: 0,
             hospital_current_capacity: 0,
@@ -50,9 +49,9 @@ impl Default for GameState {
 
 impl GameState {
     /// Returns whether the new investment is possible, if not it also returns the minimum healthcare investment
-    pub fn set_healthcare_investment(&mut self, investment: f32) -> (bool, Option<f32>) {
+    pub fn set_healthcare_investment(&mut self, investment: f64) -> (bool, Option<f64>) {
         if investment < self.healthcare_investment {
-            let minimum_investment = self.healthcare_investment - (self.hospital_current_capacity as f32 * self.cost_per_hospital_capacity as f32);
+            let minimum_investment = self.healthcare_investment - (self.hospital_current_capacity as f64 * self.cost_per_hospital_capacity as f64);
             if investment < minimum_investment {
                 return (false, Some(minimum_investment));
             }
@@ -221,7 +220,7 @@ impl GameState {
         }
 
         self.month_unhospitalised_count = 0;
-        self.government_balance -= self.healthcare_investment;
+        self.government_balance -= self.healthcare_investment as u128;
         
         if let Some(app) = app_handle {
             app.emit_all("debug_payload",  hashmap! { "Government Balance" => self.government_balance as i32 }).unwrap();
