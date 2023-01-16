@@ -9,7 +9,7 @@
     }
 
     const compactify = (value: any): string  => {
-      if (typeof value === "number" && value > 999_999) {
+      if (typeof value === "number" && (value > 999_999 || value < -999_999)) {
           return new Intl.NumberFormat("en-US", { notation: "compact" }).format(value);
       }      
 
