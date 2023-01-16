@@ -219,7 +219,7 @@ impl GameState {
         self.government_balance -= self.healthcare_investment;
 
         if let Some(app) = app_handle {
-            app.emit_all("debug_payload",  PlaceholderPopulationPayload { population: self.people.len() }).unwrap();
+            app.emit_all("debug_payload",  PlaceholderPopulationPayload { population: self.people.len(), dates: vec![self.date.clone(), self.date.clone()] }).unwrap();
         }
     }
 
@@ -237,4 +237,5 @@ impl GameState {
 #[derive(Serialize, Deserialize, Clone)]
 struct PlaceholderPopulationPayload {
     population: usize,
+    dates: Vec<Date>,
 }

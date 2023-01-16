@@ -13,7 +13,6 @@
 
   listen('debug_payload', (e) => {
     debugData = e.payload as object;
-    console.log(debugData);
   });
 
 </script>

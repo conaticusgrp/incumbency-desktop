@@ -4,12 +4,15 @@
     export let value: any;
     export let indentation: number = 0;
 
-    let dropdownShown = false;
+    const isObj = (value: any): boolean => {
+      return value instanceof Object || value instanceof Array;
+    }
+
+    let dropdownShown = !isObj(value);
 
     const toggleDropdown = (): void => {
       dropdownShown = !dropdownShown;
     }
-
 </script>
 
 <main style="margin-left: calc(10px * {indentation});">
@@ -25,7 +28,7 @@
 
   {/if}
 
-  {#if key == undefined || dropdownShown}
+  {#if dropdownShown || key === undefined }
 
   <span class="value">
 
@@ -38,7 +41,7 @@
     {:else if value instanceof Object}
 
       {#each Object.entries(value) as [newKey, entry]}
-        <svelte:self key={newKey} value={entry} indentation={indentation + 1} />
+        <svelte:self key={newKey} value={entry} indentation={indentation + 1}} />
       {/each}
 
     {:else}
