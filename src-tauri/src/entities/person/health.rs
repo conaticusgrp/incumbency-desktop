@@ -5,7 +5,11 @@ use super::person::Person;
 
 impl Person {
     pub fn add_health(&mut self, amount: i32) {
-        if self.health_percentage == 100 { return }
+        if self.health_percentage + amount > self.maximum_health {
+            self.health_percentage = self.maximum_health;
+            return;
+        }
+
         self.health_percentage += amount;
     }
 
@@ -39,26 +43,25 @@ impl Person {
             return;
         }
 
-        let percentage_below_hospitalisation = -(self.health_percentage - self.hospitalisation_count);
-        if percentage_below_hospitalisation >= 0 {
+        let percentage_below_hospitalisation = -(self.health_percentage - self.hospitalisation_percentage);
+        if percentage_below_hospitalisation < 0 { return }
 
-            let death_chance = self.get_death_chance();
-            let predetermined_health_factor = if self.hospitalisation_percentage > 20 { percentage_below_hospitalisation } else { 0 };
-            
-            let mut chance_of_death = death_chance + predetermined_health_factor; // death chance is higher based on age and capacity for new patients
-            chance_of_death = (chance_of_death as f32 * self.multiplyer_based_on_capacity(*hospital_capacity)) as i32;
+        let death_chance = self.get_death_chance();
+        let predetermined_health_factor = if self.hospitalisation_percentage > 20 { percentage_below_hospitalisation } else { 0 };
+        
+        let mut chance_of_death = death_chance + predetermined_health_factor; // death chance is higher based on age and capacity for new patients
+        chance_of_death = (chance_of_death as f32 * self.multiplyer_based_on_capacity(*hospital_capacity)) as i32;
 
-            if chance_of_death > 100 { chance_of_death = 100 }
+        if chance_of_death > 100 { chance_of_death = 100 }
 
-            if *hospital_capacity == 0 {
-                *month_unhospitalised_count += 1;
-                self.die_based_on_chance(chance_of_death, 0); // will die for the proceeding day - TODO: die on the current day instead, if possible
-                return;
-            }
-
-            *hospital_capacity -= 1;
-            self.hospitalize(percentage_below_hospitalisation, death_chance, amount);
+        if *hospital_capacity == 0 {
+            *month_unhospitalised_count += 1;
+            self.die_based_on_chance(chance_of_death, 0); // will die for the proceeding day - TODO: die on the current day instead, if possible
+            return;
         }
+
+        *hospital_capacity -= 1;
+        self.hospitalize(percentage_below_hospitalisation, death_chance, amount);
     }
 
     pub fn hospitalize(&mut self, percentage_below_hospitalisation: i32, death_chance: i32, initial_health_loss: i32) {
@@ -80,7 +83,7 @@ impl Person {
         self.die_based_on_chance(death_chance, rng.gen_range(0..=death_chance / 2));
 
         self.health_percentage = self.hospitalisation_percentage + (initial_health_loss / 2);
-        if self.health_percentage > 100 { self.health_percentage = 100 }
+        if self.health_percentage > self.maximum_health { self.health_percentage = self.maximum_health }
     }
 
     fn die_based_on_chance(&mut self, chance: i32, days_until_death: i32) {
@@ -101,12 +104,12 @@ impl Person {
     }
 
     pub fn generate_health(&mut self) {
-        let (health_range, hospitalisation_percentage_range, hospitalisation_count_range) = match self.age {
-            a if a <= 20 => (75..95, 8..15, 0..3),
-            a if a <= 35 => (65..85, 12..20, 1..6),
-            a if a <= 55 => (55..80, 15..25, 1..12),
-            a if a <= 75 => (30..55, 20..40, 5..25),
-            _ => (20..30, 25..50, 5..25) // TODO: Allow people to live older
+        let (health_range, hospitalisation_percentage_range, hospitalisation_count_range, maximum_health_range) = match self.age {
+            a if a <= 20 => (75..95, 8..15, 0..3, 97..100),
+            a if a <= 35 => (65..85, 12..20, 1..6, 85..97),
+            a if a <= 55 => (55..80, 15..25, 1..12, 72..88),
+            a if a <= 75 => (30..55, 35..50, 5..25, 64..72),
+            _ => (20..30, 45..70, 5..25, 40..55) // TODO: Allow people to live older
         };
 
         let mut rng = rand::thread_rng(); 
@@ -114,6 +117,7 @@ impl Person {
         self.health_percentage = rng.gen_range(health_range);
         self.hospitalisation_percentage = rng.gen_range(hospitalisation_percentage_range);
         self.hospitalisation_count = rng.gen_range(hospitalisation_count_range);
+        self.maximum_health = rng.gen_range(maximum_health_range);
     }
 
     pub fn grow_up(&mut self) {
@@ -125,7 +129,15 @@ impl Person {
 
     // This should be executed everyday
     pub fn replenish_health(&mut self) {
-        let replenish = rand::thread_rng().gen_range(1..=30) == 30;
+        // Age determines the chance that the individual will regenerate their health
+        let replenish_chance = 30 * match self.age {
+            a if a >= 75 => 4,
+            a if a >= 60 => 3,
+            a if a >= 50 => 2,
+            _ => 1,
+        };
+
+        let replenish = rand::thread_rng().gen_range(0..=replenish_chance) == replenish_chance;
 
         if replenish {
             self.add_health(1);

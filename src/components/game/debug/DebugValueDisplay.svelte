@@ -9,13 +9,11 @@
     }
 
     const compactify = (value: any): string  => {
-      if (typeof value === "number" && value > 50000) {
+      if (typeof value === "number" && value > 999_999) {
           return new Intl.NumberFormat("en-US", { notation: "compact" }).format(value);
-      }
-      
-      console.log(value);
+      }      
 
-      return value;
+      return new Intl.NumberFormat("en-US").format(value);
     }
 
     let dropdownShown = !isObj(value);

@@ -52,6 +52,7 @@ pub struct Person {
     pub hospitalisation_count: i32, // The amount of times the individual has been hospitalised
     pub days_until_death: Option<i32>, // If the person is predicted to die, use this as a counter
     pub days_left_in_hospital: Option<i32>, // Days left that the person is in hospitalisation
+    pub maximum_health: i32,
 }
 
 impl Person {
@@ -204,7 +205,7 @@ impl Person {
         }
 
         // TODO: implement homelessness, remove the following line
-        self.daily_food_spending = 1;
+        // TODO: handle those without a job
     }
 
     pub fn can_afford(&self, price: f32) -> bool {

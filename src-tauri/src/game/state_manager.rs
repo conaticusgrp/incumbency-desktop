@@ -18,7 +18,7 @@ pub struct GameState {
 
   pub hospital_total_capacity: i32,
   pub hospital_current_capacity: i32,
-  pub cost_per_hospital_capacity: i32, // This is the cost per person capacity in a hospital for the government, each month
+  pub cost_per_hospital_capacity: f64, // This is the cost per person capacity in a hospital for the government, each month
   pub month_unhospitalised_count: i32, // Number of patient that could not go to hospital because of the full capacity
 }
 
@@ -41,7 +41,7 @@ impl Default for GameState {
             
             hospital_total_capacity: 0,
             hospital_current_capacity: 0,
-            cost_per_hospital_capacity: 0,
+            cost_per_hospital_capacity: 0.,
             month_unhospitalised_count: 0,
         }
     }
@@ -51,14 +51,14 @@ impl GameState {
     /// Returns whether the new investment is possible, if not it also returns the minimum healthcare investment
     pub fn set_healthcare_investment(&mut self, investment: f64) -> (bool, Option<f64>) {
         if investment < self.healthcare_investment {
-            let minimum_investment = self.healthcare_investment - (self.hospital_current_capacity as f64 * self.cost_per_hospital_capacity as f64);
+            let minimum_investment = (self.hospital_total_capacity - self.hospital_current_capacity) as f64 * self.cost_per_hospital_capacity as f64;
             if investment < minimum_investment {
                 return (false, Some(minimum_investment));
             }
         }
 
         let previous_total_capacity = self.hospital_total_capacity;
-        self.hospital_total_capacity = self.cost_per_hospital_capacity * investment as i32;
+        self.hospital_total_capacity = (investment / self.cost_per_hospital_capacity) as i32;
         self.hospital_current_capacity += self.hospital_total_capacity - previous_total_capacity;
 
         (true, None)
@@ -92,8 +92,8 @@ impl GameState {
             if let Some(ref mut days) = per.days_until_death {
                 *days -= 1;
                 if *days <= 0 {
-                    dbg!(per.age);
                     death_queue.push(per.id);
+                    self.hospital_current_capacity += 1;
                     continue;
                 }
             }
