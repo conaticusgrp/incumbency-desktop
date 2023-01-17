@@ -1,7 +1,7 @@
 use std::{sync::{Mutex, Arc}};
 use maplit::hashmap;
 use rand::Rng;
-use crate::{entities::{business::{Business, ProductType}, person::person::{Person, Job}}, as_decimal_percent, common::util::{Date}};
+use crate::{entities::{business::{Business, ProductType}, person::person::{Person, Job}}, as_decimal_percent, common::util::{Date, float_range}};
 use tauri::Manager;
 
 #[derive(Clone)]
@@ -68,12 +68,16 @@ impl GameState {
         let mut death_queue: Vec<usize> = Vec::new(); // Queue of people who are going to die :) - we need this because rust memory
 
         let date = self.date.clone();
+        let mut rng = rand::thread_rng();
 
         for per in self.people.iter_mut() {
             per.check_birthday(&date);
-            per.balance -= per.daily_food_spending as f32;
-
-            let mut rng = rand::thread_rng();
+            if per.homeless {
+                per.balance += rng.gen_range(1..=3) as f32;
+                per.daily_food_spending = per.calculate_daily_food_spending();
+            } else {
+                per.balance -= per.daily_food_spending as f32;
+            }
 
             let loss_chance: f32 = match per.daily_food_spending { // Chance that the individual will lose 1% of their health
                 1 => 50.,

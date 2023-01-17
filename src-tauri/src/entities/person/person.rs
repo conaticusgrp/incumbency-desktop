@@ -53,12 +53,15 @@ pub struct Person {
     pub days_until_death: Option<i32>, // If the person is predicted to die, use this as a counter
     pub days_left_in_hospital: Option<i32>, // Days left that the person is in hospitalisation
     pub maximum_health: i32,
+
+    pub homeless: bool,
 }
 
 impl Person {
     pub fn generate(&mut self, config: &Config, product_demand: &mut HashMap<ProductType, f32>, id: usize) {
         self.id = id;
         self.daily_food_spending = 4; // this is just a default value to prevent bugs
+        self.homeless = false;
         self.generate_health();
         
         self.education_level = generate_education_level(&config);
@@ -163,12 +166,7 @@ impl Person {
         *product_demand.get_mut(&ProductType::LEISURE).unwrap() += total_demand;
     }
 
-    /// This should be done every time the individual's salary changes, and every month.
-    pub fn calculate_daily_food_spending(&mut self) {
-        match self.job {
-            Job::BusinessOwner(_) => return, // TODO: implement me
-            _ => (), 
-        }
+    pub fn calculate_daily_food_spending(&self) -> i32 {
 
         let debt_cost = self.get_monthly_debt_cost();
 
@@ -177,11 +175,9 @@ impl Person {
         let unhealthy_cost = debt_cost + (2 * 30) as f32;
 
         if self.can_afford_bare(healthy_cost) {
-            self.daily_food_spending = 4;
-            return;
+            return 4;
         } else if self.can_afford_bare(survivable_cost) {
-            self.daily_food_spending = 3;
-            return;
+            return 3;
         } else if self.can_afford_bare(unhealthy_cost) {
             let (action_one_chance, action_two_chance) = match self.spending_behaviour {
                 SpendingBehaviour::One => (90, 10),
@@ -196,16 +192,32 @@ impl Person {
             });
 
             if action == 1 {
-                self.daily_food_spending = 3;
-                return;
+                return 3;
             } else {
-                self.daily_food_spending = 2;
-                return;
+                return 2;
             }
         }
 
-        // TODO: implement homelessness, remove the following line
-        // TODO: handle those without a job
+        1
+
+    }
+
+    /// This should be done every time the individual's salary changes, and every month.
+    pub fn generate_daily_food_spending(&mut self) {
+        match self.job {
+            Job::BusinessOwner(_) => return, // TODO: implement me
+            _ => (), 
+        }
+        
+        self.daily_food_spending = self.calculate_daily_food_spending();
+
+        // 0.17% chance of being homeless
+        let mut rng = rand::thread_rng();
+        let maximum = (100. / 0.17) as i32; 
+        let is_homeless = rng.gen_range(0..=maximum) == maximum;
+        self.homeless = is_homeless;
+
+        // TODO: handle unemployed
     }
 
     pub fn can_afford(&self, price: f32) -> bool {

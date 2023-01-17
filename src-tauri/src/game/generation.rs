@@ -66,7 +66,7 @@ pub fn generate_game(state_mux: &GameStateSafe) {
 
     // This of course cannot be calculated until after the businesses are generated
     for per in state.people.iter_mut() {
-        per.calculate_daily_food_spending(); 
+        per.daily_food_spending = per.calculate_daily_food_spending();
     }
 }
 
