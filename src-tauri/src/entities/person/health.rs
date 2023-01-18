@@ -108,9 +108,10 @@ impl Person {
             a if a <= 20 => (75..95, 8..15, 0..3, 97..100),
             a if a <= 35 => (65..85, 12..20, 1..6, 85..97),
             a if a <= 55 => (55..80, 15..25, 1..12, 72..88),
-            a if a <= 75 => (30..55, 35..50, 5..25, 64..72),
-            _ => (20..30, 45..70, 5..25, 40..55) // TODO: Allow people to live older
+            a if a <= 75 => (30..55, 35..50, 5..25, 45..60),
+            _ => (20..30, 45..70, 5..25, 35..50)
         };
+
 
         let mut rng = rand::thread_rng(); 
 
@@ -131,9 +132,8 @@ impl Person {
     pub fn replenish_health(&mut self) {
         // Age determines the chance that the individual will regenerate their health
         let replenish_chance = 30 * match self.age {
-            a if a >= 75 => 4,
-            a if a >= 60 => 3,
-            a if a >= 50 => 2,
+            a if a >= 75 => 3,
+            a if a >= 60 => 2,
             _ => 1,
         };
 

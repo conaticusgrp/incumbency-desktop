@@ -73,11 +73,11 @@ impl GameState {
         for per in self.people.iter_mut() {
             per.check_birthday(&date);
             if per.homeless {
-                per.balance += rng.gen_range(1..=3) as f32;
+                per.balance += rng.gen_range(1..=2) as f32;
                 per.daily_food_spending = per.calculate_daily_food_spending();
-            } else {
-                per.balance -= per.daily_food_spending as f32;
             }
+
+            per.balance -= per.daily_food_spending as f32;
 
             let loss_chance: f32 = match per.daily_food_spending { // Chance that the individual will lose 1% of their health
                 1 => 50.,
