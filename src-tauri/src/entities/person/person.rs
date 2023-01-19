@@ -94,7 +94,10 @@ impl Person {
             return Gender::Male;
         }
 
-        self.birth_age = Some(rand::thread_rng().gen_range(20..40));
+        if percentage_chance(60.) { // 60% chance of a woman having a baby in her life
+            self.birth_age = Some(rand::thread_rng().gen_range(20..40));
+        }
+
         Gender::Female
     }
 
