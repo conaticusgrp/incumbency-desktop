@@ -1,4 +1,4 @@
-use std::{ops::Range, collections::HashMap};
+use std::{ops::Range, collections::HashMap, f32::consts::E};
 use maplit::hashmap;
 use rand::{Rng};
 use crate::{common::util::{float_range, percentage_based_output_int, Date, percentage_chance}, common::config::Config, game::{generation::{generate_education_level, get_expected_salary_range}}, entities::business::{ProductType, Business}};
@@ -22,6 +22,13 @@ impl Birthday {
             month: rng.gen_range(1..=12),
         }
     }
+}
+
+#[derive(Default, Clone)]
+pub enum Gender {
+    #[default]
+    Male,
+    Female,
 }
 
 #[derive(Default, Clone)]
@@ -55,6 +62,9 @@ pub struct Person {
     pub maximum_health: i32,
 
     pub homeless: bool,
+
+    pub gender: Gender,
+    pub birth_age: Option<i32>, // The age in which the individual has a child, only possible if female
 }
 
 impl Person {
@@ -64,6 +74,7 @@ impl Person {
         self.homeless = false;
         self.age = self.generate_age();
         self.generate_health();
+        self.gender = self.generate_gender();
         
         self.education_level = generate_education_level(&config);
         self.expected_salary_range = get_expected_salary_range(&config, &self.education_level);
@@ -76,6 +87,15 @@ impl Person {
         self.debts = Debt::generate(self, expected_salary);
 
         self.generate_demand(expected_salary, product_demand);
+    }
+
+    fn generate_gender(&mut self) -> Gender {
+        if percentage_chance(50.) {
+            return Gender::Male;
+        }
+
+        self.birth_age = Some(rand::thread_rng().gen_range(20..40));
+        Gender::Female
     }
 
     fn generate_balance(&self, salary: f32) -> f32 {

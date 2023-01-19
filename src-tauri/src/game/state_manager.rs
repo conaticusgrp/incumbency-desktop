@@ -66,12 +66,19 @@ impl GameState {
 
     pub fn day_pass(&mut self, day: i32, app_handle: Option<&tauri::AppHandle>) {
         let mut death_queue: Vec<usize> = Vec::new(); // Queue of people who are going to die :) - we need this because rust memory
+        let mut baby_count = 0;
 
         let date = self.date.clone();
         let mut rng = rand::thread_rng();
 
         for per in self.people.iter_mut() {
             per.check_birthday(&date);
+            if let Some(_) = per.birth_age {
+                // TODO: handle new people - check default values
+                // TODO: chance of death when having baby
+                baby_count += 1;
+            }
+            
             if per.homeless {
                 per.balance += rng.gen_range(1..=2) as f32;
                 per.daily_food_spending = per.calculate_daily_food_spending();
@@ -128,6 +135,10 @@ impl GameState {
                     // TODO: handle welfare on not affording an item
                 }
             }
+        }
+
+        for _ in 0..baby_count {
+            self.people.push(Person::default());
         }
 
         for id in death_queue {
