@@ -1,7 +1,7 @@
 use std::{ops::Range, collections::HashMap};
 use maplit::hashmap;
 use rand::{Rng};
-use crate::{common::util::{float_range, percentage_based_output_int, Date}, common::config::Config, game::{generation::{generate_education_level, get_expected_salary_range}}, entities::business::{ProductType, Business}};
+use crate::{common::util::{float_range, percentage_based_output_int, Date, percentage_chance}, common::config::Config, game::{generation::{generate_education_level, get_expected_salary_range}}, entities::business::{ProductType, Business}};
 use EducationLevel::*;
 
 use super::debt::{Debt};
@@ -211,13 +211,15 @@ impl Person {
         
         self.daily_food_spending = self.calculate_daily_food_spending();
 
-        // 0.17% chance of being homeless
-        let mut rng = rand::thread_rng();
-        let maximum = (100. / 0.17) as i32; 
-        let is_homeless = rng.gen_range(0..=maximum) == maximum;
-        self.homeless = is_homeless;
+        if self.job == Job::Unemployed {
+            // 5% chance of an unemployed person being homeless (roughly 0.17% chance in total)
+            if percentage_chance(5.) {
+                self.homeless = true;
+                return;
+            }
 
-        // TODO: handle unemployed
+            self.salary = rand::thread_rng().gen_range(300..=1100); // TODO: make me more dynamic
+        }
     }
 
     pub fn can_afford(&self, price: f32) -> bool {

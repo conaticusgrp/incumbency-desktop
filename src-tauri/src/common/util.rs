@@ -160,3 +160,8 @@ pub fn length(n: u32) -> i32 {
 
     count
 }
+
+pub fn percentage_chance(percent: f32) -> bool {
+    let maximum = (100. / percent) as i32;
+    rand::thread_rng().gen_range(0..=maximum) == maximum
+}
