@@ -1,7 +1,7 @@
 use std::{sync::{Mutex, Arc}};
 use maplit::hashmap;
 use rand::Rng;
-use crate::{entities::{business::{Business, ProductType}, person::person::{Person, Job}}, as_decimal_percent, common::util::{Date, float_range}};
+use crate::{entities::{business::{Business, ProductType}, person::person::{Person, Job}}, as_decimal_percent, common::util::{Date, float_range, percentage_chance}};
 use tauri::Manager;
 
 #[derive(Clone)]
@@ -87,10 +87,8 @@ impl GameState {
                 _ => unreachable!(),
             };
 
-            let maximum = (100. / loss_chance) as i32;
-            let has_loss = rng.gen_range(0..=maximum) == maximum;
-            if has_loss {
-                per.remove_health(rng.gen_range(1..=3), &mut self.hospital_current_capacity, &mut self.month_unhospitalised_count);
+            if percentage_chance(loss_chance) {
+                per.remove_health(1, &mut self.hospital_current_capacity, &mut self.month_unhospitalised_count);
             }
 
             if let Some(ref mut days) = per.days_until_death {
