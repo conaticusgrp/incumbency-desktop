@@ -62,6 +62,7 @@ impl Person {
         self.id = id;
         self.daily_food_spending = 4; // this is just a default value to prevent bugs
         self.homeless = false;
+        self.age = self.generate_age();
         self.generate_health();
         
         self.education_level = generate_education_level(&config);
@@ -71,7 +72,6 @@ impl Person {
 
         self.spending_behaviour = self.generate_spending_behaviour();
         self.balance = self.generate_balance(expected_salary);
-        self.age = self.generate_age();
         self.birthday = Birthday::generate();
         self.debts = Debt::generate(self, expected_salary);
 
@@ -167,7 +167,6 @@ impl Person {
     }
 
     pub fn calculate_daily_food_spending(&self) -> i32 {
-
         let debt_cost = self.get_monthly_debt_cost();
 
         let healthy_cost = debt_cost + (4 * 30) as f32;
@@ -199,7 +198,6 @@ impl Person {
         }
 
         1
-
     }
 
     /// This should be done every time the individual's salary changes, and every month.
