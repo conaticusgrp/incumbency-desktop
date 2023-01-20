@@ -1,27 +1,27 @@
 <script lang="ts">
 
-    export let key: string | undefined;
-    export let value: any;
-    export let indentation: number = 0;
+  export let key: string | undefined;
+  export let value: any;
+  export let indentation: number = 0;
 
-    const isObj = (value: any): boolean => {
-      return value instanceof Object || value instanceof Array;
-    }
+  const formatter = new Intl.NumberFormat("en-US");
+  const compactFormatter = new Intl.NumberFormat("en-US", { notation: "compact" });
 
-    const compactify = (value: any): string  => {
-      if (typeof value === "number" && (value > 999_999 || value < -999_999)) {
-          return new Intl.NumberFormat("en-US", { notation: "compact" }).format(value);
-      }      
+  const compactify = (value: any): string  => {
+    if (typeof value === "number" && (value > 999_999 || value < -999_999)) {
+        return compactFormatter.format(value);
+    }      
 
-      return new Intl.NumberFormat("en-US").format(value);
-    }
+    return formatter.format(value);
+  }
 
-    let dropdownShown = !isObj(value);
+  let dropdownShown = !(value instanceof Object);
 
 
-    const toggleDropdown = (): void => {
-      dropdownShown = !dropdownShown;
-    }
+  const toggleDropdown = (): void => {
+    dropdownShown = !dropdownShown;
+  }
+
 </script>
 
 <main style="margin-left: calc(10px * {indentation});">

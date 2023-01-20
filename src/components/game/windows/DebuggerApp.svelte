@@ -57,9 +57,18 @@
   }
   
   div {
-    height: calc(100% - 2em);
+    height: 100%;
     overflow-x: scroll;
     overflow-y: scroll;
+  }
+
+  div::-webkit-scrollbar,
+  div::-webkit-scrollbar-corner {
+    background-color: black;
+  }
+  
+  div::-webkit-scrollbar-thumb {
+    background-color: var(--color-secondary);
   }
 
 </style>
