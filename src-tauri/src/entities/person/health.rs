@@ -52,10 +52,6 @@ impl Person {
         death_chance += predetermined_health_factor; // death chance is higher based on age and capacity for new patients
         death_chance = (death_chance as f32 * self.multiplyer_based_on_capacity(*hospital_capacity)) as i32;
 
-        if death_chance == 0 && self.age > 70 {
-            println!("balls");
-        }
-
         if death_chance > 100 { death_chance = 100 }
 
         if *hospital_capacity == 0 {
@@ -73,14 +69,10 @@ impl Person {
         let mut rng = rand::thread_rng();
         self.days_left_in_hospital = Some(death_chance / 2);
 
-        if self.hospitalisation_count == self.death_hospitalisation_count {
-            self.die(rng.gen_range(0..=death_chance / 2));
-        }
-
         let increase_percent = rng.gen_range(0..=1) == 1;
 
         let hospitalisation_percent_increase = match percentage_below_hospitalisation {
-            p if p <= 8 => if increase_percent { 1 } else { 0 },
+            p if p <= 8 => i32::from(increase_percent),
             p if p <= 15 => 3,
             p if p <= 25 => 5,
             _ => 8,
@@ -102,7 +94,6 @@ impl Person {
 
             if die {
                 self.die(days_until_death); // massive L, the person will automatically die the following day
-                return;
             }
     }
 

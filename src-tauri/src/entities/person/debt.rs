@@ -62,7 +62,7 @@ impl Debt {
             SpendingBehaviour::Two => Debt::get_education_prepaid_amount(15, 100..300),
             SpendingBehaviour::Three => Debt::get_education_prepaid_amount(30, 400..1200),
             SpendingBehaviour::Four => Debt::get_education_prepaid_amount(72, 800..3500),
-        } as f32;
+        };
 
         if owed < 0. {
             return debts;

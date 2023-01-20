@@ -32,7 +32,7 @@ pub fn generate_game(state_mux: &GameStateSafe) {
     let config = load_config();
 
     let mut product_demand: HashMap<ProductType, f32> = HashMap::new();
-    product_demand.insert(ProductType::LEISURE, 0.);
+    product_demand.insert(ProductType::Leisure, 0.);
 
     for _ in 0..config.starting_population {
         let mut person = Person::default();
@@ -49,10 +49,9 @@ pub fn generate_game(state_mux: &GameStateSafe) {
 
         let tax_rate = state.tax_rate;
 
-        let sufficient_businesses = business.generate(&config, ProductType::LEISURE, product_demand[&ProductType::LEISURE], &mut remaning_market_percentage, &mut state.people, idx, tax_rate);
+        let sufficient_businesses = business.generate(&config, ProductType::Leisure, product_demand[&ProductType::Leisure], &mut remaning_market_percentage, &mut state.people, idx, tax_rate);
 
-        let mut owner = Person::default();
-        owner.job = Job::BusinessOwner(idx);
+        let mut owner = Person { job: Job::BusinessOwner(idx), ..Person::default() };
         owner.generate(&config, &mut product_demand, state.people.len());
 
         state.people.push(owner);
@@ -81,7 +80,7 @@ pub fn stabilize_game(state_mux: &GameStateSafe) {
     state.cost_per_hospital_capacity = state.healthcare_investment / starting_capacity as f64;
 
     let starting_investment = state.cost_per_hospital_capacity * starting_capacity as f64;
-    state.set_healthcare_investment(starting_investment as f64);
+    state.set_healthcare_investment(starting_investment);
 
     let tax_rate = state.tax_rate;
     state.month_pass(tax_rate, None);

@@ -1,7 +1,7 @@
 use std::{sync::{Mutex, Arc}};
 use maplit::hashmap;
 use rand::Rng;
-use crate::{entities::{business::{Business, ProductType}, person::person::{Person, Job}}, as_decimal_percent, common::util::{Date, float_range, percentage_chance}};
+use crate::{entities::{business::{Business, ProductType}, person::person::{Person, Job}}, as_decimal_percent, common::util::{Date, percentage_chance}};
 use tauri::Manager;
 
 #[derive(Clone)]
@@ -51,7 +51,7 @@ impl GameState {
     /// Returns whether the new investment is possible, if not it also returns the minimum healthcare investment
     pub fn set_healthcare_investment(&mut self, investment: f64) -> (bool, Option<f64>) {
         if investment < self.healthcare_investment {
-            let minimum_investment = (self.hospital_total_capacity - self.hospital_current_capacity) as f64 * self.cost_per_hospital_capacity as f64;
+            let minimum_investment = (self.hospital_total_capacity - self.hospital_current_capacity) as f64 * self.cost_per_hospital_capacity;
             if investment < minimum_investment {
                 return (false, Some(minimum_investment));
             }
@@ -79,7 +79,7 @@ impl GameState {
             }
 
             per.check_birthday(&date);
-            if let Some(_) = per.birth_age {
+            if per.birth_age.is_some() {
                 // TODO: handle new people - check default values
                 // TODO: chance of death when having baby
                 baby_count += 1;
@@ -253,7 +253,7 @@ impl GameState {
         let mut total: f32 = 0.;
 
         for person in self.people.iter() {
-            total += person.demand[&product_type];
+            total += person.demand[product_type];
         }
 
         total

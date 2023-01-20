@@ -8,7 +8,7 @@ use super::{generation::{generate_game, stabilize_game}, state_manager::GameStat
 pub async fn create_game(state_mux: State<'_, GameStateSafe>, app_handle: tauri::AppHandle) -> Result<(), ()> {
     generate_game(&state_mux);
     stabilize_game(&state_mux);
-    app_handle.emit_all("open_debugger_app", {}).unwrap();
+    app_handle.emit_all("open_debugger_app", ()).unwrap();
 
     {
         let state = state_mux.lock().unwrap();

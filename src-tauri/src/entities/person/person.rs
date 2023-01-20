@@ -1,4 +1,4 @@
-use std::{ops::Range, collections::HashMap, f32::consts::E};
+use std::{ops::Range, collections::HashMap};
 use maplit::hashmap;
 use rand::{Rng};
 use crate::{common::util::{float_range, percentage_based_output_int, Date, percentage_chance}, common::config::Config, game::{generation::{generate_education_level, get_expected_salary_range}}, entities::business::{ProductType, Business}};
@@ -60,7 +60,6 @@ pub struct Person {
     pub days_until_death: Option<i32>, // If the person is predicted to die, use this as a counter
     pub days_left_in_hospital: Option<i32>, // Days left that the person is in hospitalisation
     pub maximum_health: i32,
-    pub death_hospitalisation_count: i32,
 
     pub homeless: bool,
 
@@ -76,10 +75,9 @@ impl Person {
         self.age = self.generate_age();
         self.generate_health();
         self.gender = self.generate_gender();
-        self.death_hospitalisation_count = rand::thread_rng().gen_range(20..40); // This makes sure old people die lol
         
-        self.education_level = generate_education_level(&config);
-        self.expected_salary_range = get_expected_salary_range(&config, &self.education_level);
+        self.education_level = generate_education_level(config);
+        self.expected_salary_range = get_expected_salary_range(config, &self.education_level);
 
         let expected_salary = ((self.expected_salary_range.start + self.expected_salary_range.end) / 2) as f32;
 
@@ -183,12 +181,12 @@ impl Person {
             SpendingBehaviour::Four => (float_range(0.005, 0.058, 4), 0.),
         };
 
-        let mut total_demand = self.balance * (balance_percentage as f32 / 100.);
+        let mut total_demand = self.balance * (balance_percentage / 100.);
         
-        total_demand += (salary / 12.) * (salary_percentage as f32 / 100.);
+        total_demand += (salary / 12.) * (salary_percentage / 100.);
 
-        self.demand.insert(ProductType::LEISURE, total_demand);
-        *product_demand.get_mut(&ProductType::LEISURE).unwrap() += total_demand;
+        self.demand.insert(ProductType::Leisure, total_demand);
+        *product_demand.get_mut(&ProductType::Leisure).unwrap() += total_demand;
     }
 
     pub fn calculate_daily_food_spending(&self) -> i32 {
@@ -227,10 +225,7 @@ impl Person {
 
     /// This should be done every time the individual's salary changes, and every month.
     pub fn generate_daily_food_spending(&mut self) {
-        match self.job {
-            Job::BusinessOwner(_) => return, // TODO: implement me
-            _ => (), 
-        }
+        if let Job::BusinessOwner(_) = self.job { return }
         
         self.daily_food_spending = self.calculate_daily_food_spending();
 
@@ -247,7 +242,7 @@ impl Person {
 
     pub fn can_afford(&self, price: f32) -> bool {
         let mut cut_balance: f32 = self.balance - (self.balance * 0.1) - ((self.salary as f32 / 12.) * 0.1);
-        cut_balance -= self.get_monthly_debt_cost() as f32;
+        cut_balance -= self.get_monthly_debt_cost();
 
         cut_balance -= self.daily_food_spending as f32 * 30.;
         cut_balance - price > 0.
