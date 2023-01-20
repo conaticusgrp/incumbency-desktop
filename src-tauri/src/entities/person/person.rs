@@ -60,6 +60,7 @@ pub struct Person {
     pub days_until_death: Option<i32>, // If the person is predicted to die, use this as a counter
     pub days_left_in_hospital: Option<i32>, // Days left that the person is in hospitalisation
     pub maximum_health: i32,
+    pub death_hospitalisation_count: i32,
 
     pub homeless: bool,
 
@@ -75,6 +76,7 @@ impl Person {
         self.age = self.generate_age();
         self.generate_health();
         self.gender = self.generate_gender();
+        self.death_hospitalisation_count = rand::thread_rng().gen_range(20..40); // This makes sure old people die lol
         
         self.education_level = generate_education_level(&config);
         self.expected_salary_range = get_expected_salary_range(&config, &self.education_level);
@@ -94,7 +96,10 @@ impl Person {
             return Gender::Male;
         }
 
-        self.birth_age = Some(rand::thread_rng().gen_range(20..40));
+        if percentage_chance(60.) { // 60% chance of a woman having a baby in her life
+            self.birth_age = Some(rand::thread_rng().gen_range(20..40));
+        }
+
         Gender::Female
     }
 

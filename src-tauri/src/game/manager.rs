@@ -32,7 +32,7 @@ pub fn set_healthcare_investment(state_mux: State<'_, GameStateSafe>, investment
 }
 
 pub async fn start_game_loop(state_mux: &GameStateSafe, app_handle: &tauri::AppHandle) {
-    let mut interval = tokio::time::interval(Duration::from_millis(10)); // TODO: put me back to seconds
+    let mut interval = tokio::time::interval(Duration::from_micros(1)); // TODO: put me back to seconds
 
     loop {
         interval.tick().await;

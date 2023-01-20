@@ -72,6 +72,12 @@ impl GameState {
         let mut rng = rand::thread_rng();
 
         for per in self.people.iter_mut() {
+            let minor_accident_max = 5475; // roughly 1 accident every 15 years (365 * 15)
+            let has_minor_accident = rng.gen_range(0..=minor_accident_max) == minor_accident_max;
+            if has_minor_accident {
+                per.remove_health(rng.gen_range(15..=25), &mut self.hospital_current_capacity, &mut self.month_unhospitalised_count);
+            }
+
             per.check_birthday(&date);
             if let Some(_) = per.birth_age {
                 // TODO: handle new people - check default values
@@ -128,7 +134,10 @@ impl GameState {
                 for _ in 0..*quantity {
                     if per.can_afford(item_cost) {
                         per.balance -= item_cost;
-                        *per.demand.get_mut(&business.product_type).unwrap() -= item_cost;
+                        let demand = per.demand.get_mut(&business.product_type).unwrap();
+                        *demand -= item_cost;
+                        if *demand < 0. { *demand = 0. }
+
                         business.balance += item_cost;
                         // TODO - fulfill the welfare of purchasing the item
                     }
@@ -138,7 +147,7 @@ impl GameState {
         }
 
         for _ in 0..baby_count {
-            self.people.push(Person::default());
+            // self.people.push(Person::default());
         }
 
         for id in death_queue {

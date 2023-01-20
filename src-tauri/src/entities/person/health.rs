@@ -46,17 +46,21 @@ impl Person {
         let percentage_below_hospitalisation = -(self.health_percentage - self.hospitalisation_percentage);
         if percentage_below_hospitalisation < 0 { return }
 
-        let death_chance = self.get_death_chance();
+        let mut death_chance = self.get_death_chance();
         let predetermined_health_factor = if self.hospitalisation_percentage > 20 { percentage_below_hospitalisation } else { 0 };
         
-        let mut chance_of_death = death_chance + predetermined_health_factor; // death chance is higher based on age and capacity for new patients
-        chance_of_death = (chance_of_death as f32 * self.multiplyer_based_on_capacity(*hospital_capacity)) as i32;
+        death_chance += predetermined_health_factor; // death chance is higher based on age and capacity for new patients
+        death_chance = (death_chance as f32 * self.multiplyer_based_on_capacity(*hospital_capacity)) as i32;
 
-        if chance_of_death > 100 { chance_of_death = 100 }
+        if death_chance == 0 && self.age > 70 {
+            println!("balls");
+        }
+
+        if death_chance > 100 { death_chance = 100 }
 
         if *hospital_capacity == 0 {
             *month_unhospitalised_count += 1;
-            self.die_based_on_chance(chance_of_death, 0); // will die for the proceeding day - TODO: die on the current day instead, if possible
+            self.die_based_on_chance(death_chance, 0); // will die for the proceeding day - TODO: die on the current day instead, if possible
             return;
         }
 
@@ -66,8 +70,13 @@ impl Person {
 
     pub fn hospitalize(&mut self, percentage_below_hospitalisation: i32, death_chance: i32, initial_health_loss: i32) {
         self.hospitalisation_count += 1;
-
         let mut rng = rand::thread_rng();
+        self.days_left_in_hospital = Some(death_chance / 2);
+
+        if self.hospitalisation_count == self.death_hospitalisation_count {
+            self.die(rng.gen_range(0..=death_chance / 2));
+        }
+
         let increase_percent = rng.gen_range(0..=1) == 1;
 
         let hospitalisation_percent_increase = match percentage_below_hospitalisation {
@@ -79,7 +88,6 @@ impl Person {
 
         self.hospitalisation_percentage += hospitalisation_percent_increase;
 
-        self.days_left_in_hospital = Some(death_chance / 2);
         self.die_based_on_chance(death_chance, rng.gen_range(0..=death_chance / 2));
 
         self.health_percentage = self.hospitalisation_percentage + (initial_health_loss / 2);
