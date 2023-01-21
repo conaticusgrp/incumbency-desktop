@@ -4,7 +4,6 @@
     --color-primary: #242424;
     --color-secondary: rgba(255, 255, 255, 0.87);
     --color-tertiary: #f5f5f5;
-    --app-border-radius: 0.5rem;
 
     /*  */
 
@@ -27,7 +26,6 @@
 * {
     margin: 0;
     padding: 0;
-    user-select: none;
 }
 
 a {
@@ -58,7 +56,7 @@ h1 {
 }
 
 #app {
-    /* max-width: 1280px; */
+    max-width: 1280px;
     margin: 0 auto;
     text-align: center;
 
@@ -68,7 +66,7 @@ h1 {
 }
 
 button {
-    border-radius: var(--app-border-radius);
+    border-radius: 8px;
     border: 1px solid transparent;
     padding: 0.6em 1.2em;
     font-size: 1em;
@@ -91,10 +89,4 @@ button:disabled {
     background-color: rgb(16, 16, 16);
     color: rgb(42, 42, 42);
     cursor: default;
-}
-
-.center {
-    display: flex;
-    justify-content: center;
-    align-items: center;
 }
