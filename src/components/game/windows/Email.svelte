@@ -108,7 +108,12 @@
   .email-list {
     display: flex;
     flex-direction: column;
+    border-right: 1px solid var(--color-secondary);
     overflow-y: scroll;
+  }
+
+  .email-list::-webkit-scrollbar {
+    display: none;
   }
 
   .email-list-entry {
