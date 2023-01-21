@@ -93,6 +93,7 @@ pub struct Date {
     pub day: i32,
     pub month: i32,
     pub year: i32,
+    pub on_new_month: bool,
 }
 
 impl Default for Date {
@@ -101,12 +102,14 @@ impl Default for Date {
             day: 1,
             month: 1,
             year: 1,
+            on_new_month: false,
         }
     }
 }
 
 impl Date {
     pub fn new_day(&mut self) {
+        self.on_new_month = false;
         self.day += 1;
         if self.day == 31 {
             self.new_month();
@@ -120,10 +123,8 @@ impl Date {
             self.year += 1;
             self.month = 1;
         }
-    }
 
-    pub fn is_new_month(&self) -> bool {
-        self.day == 1 && self.month == 1 && self.year > 1
+        self.on_new_month = true;
     }
 
     pub fn get_date_string(&self) -> String {

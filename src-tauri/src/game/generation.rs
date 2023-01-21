@@ -76,10 +76,9 @@ pub fn stabilize_game(state_mux: &GameStateSafe) {
         state.day_pass(day, None);
     }
 
-    let starting_capacity = 30;
-    state.cost_per_hospital_capacity = state.healthcare_investment / starting_capacity as f64;
+    state.cost_per_hospital_capacity = state.healthcare_investment / state.month_unhospitalised_count as f64;
 
-    let starting_investment = state.cost_per_hospital_capacity * starting_capacity as f64;
+    let starting_investment = state.cost_per_hospital_capacity * state.month_unhospitalised_count as f64;
     state.set_healthcare_investment(starting_investment);
 
     let tax_rate = state.tax_rate;
