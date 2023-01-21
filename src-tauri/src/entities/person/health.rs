@@ -47,7 +47,7 @@ impl Person {
         if percentage_below_hospitalisation < 0 { return }
 
         let mut death_chance = self.get_death_chance();
-        let predetermined_health_factor = if self.hospitalisation_percentage > 20 { percentage_below_hospitalisation } else { 0 };
+        let predetermined_health_factor = if self.hospitalisation_percentage > 35 { percentage_below_hospitalisation + (self.hospitalisation_percentage / 8) } else { 0 };
         
         death_chance += predetermined_health_factor; // death chance is higher based on age and capacity for new patients
         death_chance = (death_chance as f32 * self.multiplyer_based_on_capacity(*hospital_capacity)) as i32;
@@ -56,7 +56,7 @@ impl Person {
 
         if *hospital_capacity == 0 {
             *month_unhospitalised_count += 1;
-            self.die_based_on_chance(death_chance, 0); // will die for the proceeding day - TODO: die on the current day instead, if possible
+            self.die_based_on_chance(death_chance * 3, 0); // will die for the proceeding day - TODO: die on the current day instead, if possible
             return;
         }
 
