@@ -69,81 +69,8 @@ impl GameState {
         let mut baby_count = 0;
 
         let date = self.date.clone();
-        let mut rng = rand::thread_rng();
-
         for per in self.people.iter_mut() {
-            let minor_accident_max = 5475; // roughly 1 accident every 15 years (365 * 15)
-            let has_minor_accident = rng.gen_range(0..=minor_accident_max) == minor_accident_max;
-            if has_minor_accident {
-                per.remove_health(rng.gen_range(15..=25), &mut self.hospital_current_capacity, &mut self.month_unhospitalised_count);
-            }
-
-            per.check_birthday(&date);
-            if per.birth_age.is_some() {
-                // TODO: handle new people - check default values
-                // TODO: chance of death when having baby
-                baby_count += 1;
-            }
-            
-            if per.homeless {
-                per.balance += rng.gen_range(1..=2) as f32;
-                per.daily_food_spending = per.calculate_daily_food_spending();
-            }
-
-            per.balance -= per.daily_food_spending as f32;
-
-            let loss_chance: f32 = match per.daily_food_spending { // Chance that the individual will lose 1% of their health
-                1 => 50.,
-                2 => 25.,
-                3 => 0.9,
-                4 => 0.6,
-                _ => unreachable!(),
-            };
-
-            if percentage_chance(loss_chance) {
-                per.remove_health(1, &mut self.hospital_current_capacity, &mut self.month_unhospitalised_count);
-            }
-
-            if let Some(ref mut days) = per.days_until_death {
-                *days -= 1;
-                if *days <= 0 {
-                    death_queue.push(per.id);
-                    self.hospital_current_capacity += 1;
-                    continue;
-                }
-            }
-
-            if let Some(ref mut days) = per.days_left_in_hospital {
-                *days -= 1;
-                if *days <= 0 {
-                    per.days_left_in_hospital = None;
-                    self.hospital_current_capacity += 1;
-                }
-            }
-
-            per.replenish_health();
-
-            let business_this_month = per.business_this_month;
-
-            let quantity_opt = per.purchase_days.get(&day);
-
-            if let Some(quantity) = quantity_opt {
-                let business = self.businesses.get_mut(business_this_month).unwrap();
-                let item_cost = (business.product_price * quantity) as f32;
-
-                for _ in 0..*quantity {
-                    if per.can_afford(item_cost) {
-                        per.balance -= item_cost;
-                        let demand = per.demand.get_mut(&business.product_type).unwrap();
-                        *demand -= item_cost;
-                        if *demand < 0. { *demand = 0. }
-
-                        business.balance += item_cost;
-                        // TODO - fulfill the welfare of purchasing the item
-                    }
-                    // TODO: handle welfare on not affording an item
-                }
-            }
+            per.day_pass(day, &mut self.hospital_current_capacity, &mut self.month_unhospitalised_count, &date, &mut death_queue, &mut baby_count, &mut self.businesses);
         }
 
         for _ in 0..baby_count {

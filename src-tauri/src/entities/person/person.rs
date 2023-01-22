@@ -1,7 +1,7 @@
 use std::{ops::Range, collections::HashMap};
 use maplit::hashmap;
 use rand::{Rng};
-use crate::{common::util::{float_range, percentage_based_output_int, Date, percentage_chance}, common::config::Config, game::{generation::{generate_education_level, get_expected_salary_range}}, entities::business::{ProductType, Business}};
+use crate::{common::util::{float_range, percentage_based_output_int, Date, percentage_chance}, common::config::Config, game::{generation::{generate_education_level, get_expected_salary_range}, state_manager::GameState}, entities::business::{ProductType, Business}};
 use EducationLevel::*;
 
 use super::debt::{Debt};
@@ -266,6 +266,84 @@ impl Person {
     pub fn check_birthday(&mut self, date: &Date) {
         if date.day == self.birthday.day && date.month == self.birthday.month {
             self.grow_up();
+        }
+    }
+
+    pub fn day_pass(&mut self, day: i32, hospital_current_capacity: &mut i32, month_unhospitalised_count: &mut i32, date: &Date, death_queue: &mut Vec<usize>, baby_count: &mut i32, businesses: &mut Vec<Business>) {
+        self.check_birthday(date);
+
+        let mut rng = rand::thread_rng();
+
+        let minor_accident_max = 5475; // roughly 1 accident every 15 years (365 * 15)
+        let has_minor_accident = rng.gen_range(0..=minor_accident_max) == minor_accident_max;
+        if has_minor_accident {
+            self.remove_health(rng.gen_range(15..=25), hospital_current_capacity, month_unhospitalised_count);
+        }
+
+        if self.birth_age.is_some() {
+            // TODO: handle new people - check default values
+            // TODO: chance of death when having baby
+            *baby_count += 1;
+        }
+
+        if self.homeless {
+            self.balance += rng.gen_range(1..=2) as f32;
+            self.daily_food_spending = self.calculate_daily_food_spending();
+        }
+
+        self.balance -= self.daily_food_spending as f32;
+
+        let loss_chance: f32 = match self.daily_food_spending { // Chance that the individual will lose 1% of their health
+            1 => 50.,
+            2 => 25.,
+            3 => 0.9,
+            4 => 0.6,
+            _ => unreachable!(),
+        };
+
+        if percentage_chance(loss_chance) {
+            self.remove_health(1, hospital_current_capacity, month_unhospitalised_count);
+        }
+
+        if let Some(ref mut days) = self.days_until_death {
+            *days -= 1;
+            if *days <= 0 {
+                death_queue.push(self.id);
+                *hospital_current_capacity += 1;
+                return;
+            }
+        }
+
+        if let Some(ref mut days) = self.days_left_in_hospital {
+            *days -= 1;
+            if *days <= 0 {
+                self.days_left_in_hospital = None;
+                *hospital_current_capacity += 1;
+            }
+        }
+
+        self.replenish_health();
+
+        let business_this_month = self.business_this_month;
+
+        let quantity_opt = self.purchase_days.get(&day);
+
+        if let Some(quantity) = quantity_opt {
+            let business = businesses.get_mut(business_this_month).unwrap();
+            let item_cost = (business.product_price * quantity) as f32;
+
+            for _ in 0..*quantity {
+                if self.can_afford(item_cost) {
+                    self.balance -= item_cost;
+                    let demand = self.demand.get_mut(&business.product_type).unwrap();
+                    *demand -= item_cost;
+                    if *demand < 0. { *demand = 0. }
+
+                    business.balance += item_cost;
+                    // TODO - fulfill the welfare of purchasing the item
+                }
+                // TODO: handle welfare on not affording an item
+            }
         }
     }
 }
