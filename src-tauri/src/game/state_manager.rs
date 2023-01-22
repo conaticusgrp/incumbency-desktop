@@ -13,7 +13,7 @@ pub struct GameState {
   pub gdp: f32,
   pub date: Date,
 
-  pub government_balance: u128, // This is expected to be quite large
+  pub government_balance: u64, // This is expected to be quite large
   pub healthcare_investment: f64,
 
   pub hospital_total_capacity: i32,
@@ -39,7 +39,7 @@ impl Default for GameState {
             gdp: 0.,
             date: Date::default(),
 
-            government_balance: GOVERNMENT_START_BALANCE as u128,
+            government_balance: GOVERNMENT_START_BALANCE as u64,
             healthcare_investment: GOVERNMENT_START_BALANCE as f64 * 0.07, // For now, 7% of the government budget should be spent on hospitals
             
             hospital_total_capacity: 0,
@@ -182,10 +182,10 @@ impl GameState {
         }
 
         self.month_unhospitalised_count = 0;
-        self.government_balance -= self.healthcare_investment as u128;
+        self.government_balance -= self.healthcare_investment as u64;
         
         if let Some(app) = app_handle {
-            app.emit_all("debug_payload",  hashmap! { "Government Balance" => self.government_balance as i32 }).unwrap();
+            app.emit_all("debug_payload",  hashmap! { "Government Balance" => self.government_balance }).unwrap();
         }
     }
 

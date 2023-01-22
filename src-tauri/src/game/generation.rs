@@ -1,5 +1,6 @@
 use std::{collections::{HashMap}, ops::Range};
 use maplit::hashmap;
+use rand::Rng;
 
 use crate::{common::{config::{load_config, Config}, util::percentage_based_output_int}, entities::{person::person::{EducationLevel::{*, self}, Person, Job}, business::{ProductType, Business}}};
 
@@ -48,7 +49,7 @@ pub fn generate_game(state_mux: &GameStateSafe, config: &Config) {
 
         let sufficient_businesses = business.generate(&config, ProductType::Leisure, product_demand[&ProductType::Leisure], &mut remaning_market_percentage, &mut state.people, idx, tax_rate);
 
-        let owner = Person { job: Job::BusinessOwner(idx), ..Person::new_generate(&config, &mut product_demand, state.people.len()) };
+        let owner = Person { job: Job::BusinessOwner(idx), age: rand::thread_rng().gen_range(20..70), ..Person::new_generate(&config, &mut product_demand, state.people.len()) };
 
         state.people.push(owner);
         state.businesses.push(business);
