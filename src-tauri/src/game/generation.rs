@@ -27,17 +27,14 @@ pub fn get_expected_salary_range(config: &Config, education_level: &EducationLev
     }
 }
 
-pub fn generate_game(state_mux: &GameStateSafe) {
+pub fn generate_game(state_mux: &GameStateSafe, config: &Config) {
     let mut state = state_mux.lock().unwrap();
-    let config = load_config();
 
     let mut product_demand: HashMap<ProductType, f32> = HashMap::new();
     product_demand.insert(ProductType::Leisure, 0.);
 
     for _ in 0..config.starting_population {
-        let mut person = Person::default();
-
-        person.generate(&config, &mut product_demand, state.people.len());
+        let person = Person::new_generate(&config, &mut product_demand, state.people.len());
         state.people.push(person);
     }
 
@@ -51,8 +48,7 @@ pub fn generate_game(state_mux: &GameStateSafe) {
 
         let sufficient_businesses = business.generate(&config, ProductType::Leisure, product_demand[&ProductType::Leisure], &mut remaning_market_percentage, &mut state.people, idx, tax_rate);
 
-        let mut owner = Person { job: Job::BusinessOwner(idx), ..Person::default() };
-        owner.generate(&config, &mut product_demand, state.people.len());
+        let owner = Person { job: Job::BusinessOwner(idx), ..Person::new_generate(&config, &mut product_demand, state.people.len()) };
 
         state.people.push(owner);
         state.businesses.push(business);
@@ -60,20 +56,21 @@ pub fn generate_game(state_mux: &GameStateSafe) {
         if sufficient_businesses {
             break;
         }
-
     }
 
     // This of course cannot be calculated until after the businesses are generated
     for per in state.people.iter_mut() {
         per.generate_daily_food_spending();
     }
+
+    state.population_counter = state.people.len() as f64;
 }
 
 /// Runs 1 month of the game to prepare the economy and get all the required values
-pub fn stabilize_game(state_mux: &GameStateSafe) {
+pub fn stabilize_game(state_mux: &GameStateSafe, config: &Config) {
     let mut state = state_mux.lock().unwrap();
     for day in 1..=30 {
-        state.day_pass(day, None);
+        state.day_pass(day, None, config);
     }
 
     state.cost_per_hospital_capacity = state.healthcare_investment / state.month_unhospitalised_count as f64;

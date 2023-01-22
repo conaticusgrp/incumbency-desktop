@@ -14,7 +14,9 @@ impl Person {
         let mut total = 0.;
 
         for debt in self.debts.iter() {
-            total += debt.minimum_monthly_payoff;
+            if Debt::required_to_pay(self) {
+                total += (self.salary / 12) as f32 * debt.minimum_monthly_payoff;
+            }
         }
 
         total
@@ -25,22 +27,27 @@ impl Person {
 pub struct Debt {
     pub owed: f32,
     pub minimum_monthly_payoff: f32, // Amount required to be paid per month
-    pub required_to_pay: bool,
+    pub debt_type: DebtType,
+}
+
+#[derive(Clone, PartialEq)]
+pub enum DebtType {
+    Education,
 }
 
 impl Debt {
     // TODO: add more types of debt
-    pub fn generate(person: &mut Person, salary: f32) -> Vec<Self> {
+    pub fn generate(person: &mut Person, salary: i32) -> Vec<Self> {
         let mut debts: Vec<Self> = Vec::new();
+        let mut rng = rand::thread_rng();
+
+        person.years_in_higher_education = rng.gen_range(1..4);
 
         if person.age < 18 {
             return debts;
         }
 
-        let mut rng = rand::thread_rng();
-        let salary_percentage: f32 = rng.gen_range(25..43) as f32 / 100.; // Percentage of salary that must be paid on debts
-
-        person.years_in_higher_education = rng.gen_range(1..4);
+        let salary_percentage: f32 = rng.gen_range(20..32) as f32 / 100.; // Percentage of salary that must be paid on debts
 
         let mut owed: f32 = match person.education_level {
             NoFormalEducation | HighSchoolDiploma => 0,
@@ -49,11 +56,10 @@ impl Debt {
             AdvancedDegree => rng.gen_range(30000..34000) * person.years_in_higher_education,
         } as f32;
 
-        let required_to_pay = salary >= US_DEBT_REPAYMENT_THRESHOLD;
         let education_finished_age = 18 + person.years_in_higher_education; // Age at which the individual finishes education
 
-        if required_to_pay && person.age >= education_finished_age {
-           owed -= (person.age - education_finished_age) as f32 * salary_percentage * salary;
+        if Debt::required_to_pay(person) && person.age >= education_finished_age {
+           owed -= (person.age - education_finished_age) as f32 * salary_percentage * salary as f32;
         }
 
         // TODO: make these values random
@@ -71,7 +77,7 @@ impl Debt {
         debts.push(Self {
             owed,
             minimum_monthly_payoff: salary_percentage,
-            required_to_pay
+            debt_type: DebtType::Education,
         });
 
         debts
@@ -89,5 +95,9 @@ impl Debt {
         }
 
         rand::thread_rng().gen_range(prepaid_range) as f32
+    }
+
+    pub fn required_to_pay(person: &Person) -> bool {
+        person.age < 18 || person.salary as f32 >= US_DEBT_REPAYMENT_THRESHOLD
     }
 }

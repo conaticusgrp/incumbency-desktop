@@ -1,7 +1,7 @@
 use std::{sync::{Mutex, Arc}};
 use maplit::hashmap;
 use rand::Rng;
-use crate::{entities::{business::{Business, ProductType}, person::person::{Person, Job}}, as_decimal_percent, common::util::{Date, percentage_chance}};
+use crate::{entities::{business::{Business, ProductType}, person::{person::{Person, Job, Birthday, SpendingBehaviour}, debt::{Debt, DebtType}}}, as_decimal_percent, common::{util::{Date, percentage_chance}, config::Config}};
 use tauri::Manager;
 
 #[derive(Clone)]
@@ -20,9 +20,12 @@ pub struct GameState {
   pub hospital_current_capacity: i32,
   pub cost_per_hospital_capacity: f64, // This is the cost per person capacity in a hospital for the government, each month
   pub month_unhospitalised_count: i32, // Number of patient that could not go to hospital because of the full capacity
+
+  pub population_counter: f64,
 }
 
 const GOVERNMENT_START_BALANCE: u32 = 12000000; // TODO: changeme
+const POPULATION_DAILY_INCREASE_PERCENTAGE: f32 = 4.8125e-5; // Based on real world statistics - TODO: make me more dynamic
 
 pub type GameStateSafe = Arc<Mutex<GameState>>;
 
@@ -43,6 +46,8 @@ impl Default for GameState {
             hospital_current_capacity: 0,
             cost_per_hospital_capacity: 0.,
             month_unhospitalised_count: 0,
+
+            population_counter: 0.,
         }
     }
 }
@@ -64,17 +69,12 @@ impl GameState {
         (true, None)
     }
 
-    pub fn day_pass(&mut self, day: i32, app_handle: Option<&tauri::AppHandle>) {
+    pub fn day_pass(&mut self, day: i32, app_handle: Option<&tauri::AppHandle>, config: &Config) {
         let mut death_queue: Vec<usize> = Vec::new(); // Queue of people who are going to die :) - we need this because rust memory
-        let mut baby_count = 0;
 
         let date = self.date.clone();
         for per in self.people.iter_mut() {
-            per.day_pass(day, &mut self.hospital_current_capacity, &mut self.month_unhospitalised_count, &date, &mut death_queue, &mut baby_count, &mut self.businesses);
-        }
-
-        for _ in 0..baby_count {
-            // self.people.push(Person::default());
+            per.day_pass(day, &mut self.hospital_current_capacity, &mut self.month_unhospitalised_count, &date, &mut death_queue, &mut self.businesses);
         }
 
         for id in death_queue {
@@ -84,6 +84,12 @@ impl GameState {
 
         if let Some(app) = app_handle {
             app.emit_all("debug_payload",  hashmap! { "Population" => self.people.len() }).unwrap();
+        }
+
+        self.population_counter += (self.people.len() as f32 * POPULATION_DAILY_INCREASE_PERCENTAGE) as f64;
+        if self.population_counter.floor() as usize > self.people.len() {
+            let infant = Person::new_infant(self.people.len(), Birthday::from(&date), config);
+            self.people.push(infant);
         }
     }
 
@@ -110,8 +116,15 @@ impl GameState {
 
             for i in 0..person.debts.len() {
                 // TODO: Add functionality based on spending behaviour
+                if !Debt::required_to_pay(&person) {
+                    break
+                }
+
                 let debt = &mut person.debts[i];
-                if !debt.required_to_pay { continue }
+
+                if debt.debt_type == DebtType::Education && person.age < (18 + person.years_in_higher_education) {
+                    continue
+                }
 
                 if debt.owed < debt.minimum_monthly_payoff {
                     person.balance -= debt.owed;

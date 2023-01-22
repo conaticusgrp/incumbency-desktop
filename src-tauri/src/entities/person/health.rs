@@ -1,7 +1,7 @@
 use maplit::hashmap;
 use rand::Rng;
 use crate::{common::util::percentage_based_output_int};
-use super::person::Person;
+use super::{person::Person, debt::Debt};
 
 impl Person {
     pub fn add_health(&mut self, amount: i32) {
@@ -122,6 +122,15 @@ impl Person {
 
     pub fn grow_up(&mut self) {
         self.age += 1;
+
+        let education_finished_age = 18 + self.years_in_higher_education;
+        if self.age == education_finished_age {}
+
+        if self.age == 18 {
+            self.debts = Debt::generate(self, self.salary);
+            self.generate_daily_food_spending();
+        }
+
         if self.age % 2 == 0 {
             self.hospitalisation_percentage += 1;
         }

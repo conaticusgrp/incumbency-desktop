@@ -129,12 +129,12 @@ impl Business {
         let reach = (market_percentage * people.len() as f32) as i32;
 
         // People who have not yet picked a business to buy from
-        let unassigned_people: Vec<&mut Person> = people.iter_mut().filter(|p| p.business_this_month == 0).collect(); // TODO: optimise this
+        let unassigned_people: Vec<&mut Person> = people.iter_mut().filter(|p| p.business_this_month.is_none()).collect(); // TODO: optimise this
 
         for (count, person) in unassigned_people.into_iter().enumerate() {
             if count == reach as usize { break }
 
-            person.business_this_month = idx;
+            person.business_this_month = Some(idx);
             let person_demand = person.demand[&self.product_type];
             let purchase_capacity = person_demand as i32 / self.product_price;
 
@@ -148,7 +148,7 @@ impl Business {
     fn assign_employees(&self, people: &mut [Person], employee_count: i32, idx: usize) {
         let minimum_education_level = self.minimum_education_level.clone();
         let unemployed_people: Vec<&mut Person> = people.iter_mut().filter(|p| {
-            p.job == Job::Unemployed && p.education_level == minimum_education_level
+            p.job == Job::Unemployed && p.education_level == minimum_education_level && p.age >= 18
         }).collect(); // TODO: optimise this
 
         for (count, person) in unemployed_people.into_iter().enumerate() {
