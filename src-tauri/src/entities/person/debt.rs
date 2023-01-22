@@ -43,12 +43,6 @@ impl Debt {
 
         person.years_in_higher_education = rng.gen_range(1..4);
 
-        if person.age < 18 {
-            return debts;
-        }
-
-        let salary_percentage: f32 = rng.gen_range(20..32) as f32 / 100.; // Percentage of salary that must be paid on debts
-
         let mut owed: f32 = match person.education_level {
             NoFormalEducation | HighSchoolDiploma => 0,
             College | AssociateDegree => rng.gen_range(10000..12500) * person.years_in_higher_education,
@@ -57,9 +51,10 @@ impl Debt {
         } as f32;
 
         let education_finished_age = 18 + person.years_in_higher_education; // Age at which the individual finishes education
+        let salary_percentage = rng.gen_range(11..35);
 
         if Debt::required_to_pay(person) && person.age >= education_finished_age {
-           owed -= (person.age - education_finished_age) as f32 * salary_percentage * salary as f32;
+           owed -= (person.age - education_finished_age) as f32 * salary_percentage as f32 * salary as f32;
         }
 
         // TODO: make these values random
@@ -76,7 +71,7 @@ impl Debt {
 
         debts.push(Self {
             owed,
-            minimum_monthly_payoff: salary_percentage,
+            minimum_monthly_payoff: salary_percentage as f32,
             debt_type: DebtType::Education,
         });
 
