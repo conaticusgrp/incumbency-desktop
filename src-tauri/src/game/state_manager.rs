@@ -129,8 +129,12 @@ impl GameState {
                 if debt.owed < debt.minimum_monthly_payoff {
                     person.balance -= debt.owed;
                     person.debts.remove(i);
+                    person.calculate_daily_food_spending();
+
                     continue;
                 }
+
+                debt.owed -= debt.minimum_monthly_payoff;
 
                  // Add functionality to welfare if they can't afford debts
                  person.balance -= debt.minimum_monthly_payoff;
