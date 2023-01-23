@@ -357,6 +357,10 @@ impl Person {
                 _ => unreachable!(),
             };
 
+            self.welfare_machine.remove_welfare_if(20, day, self.daily_food_spending == 1);
+            self.welfare_machine.remove_welfare_if(10, day, self.daily_food_spending == 2);
+            self.welfare_machine.remove_welfare_if(5, day, self.daily_food_spending == 3);
+
             if percentage_chance(loss_chance) {
                 self.remove_health(1, hospital_current_capacity, month_unhospitalised_count);
             }
@@ -384,7 +388,6 @@ impl Person {
         }
 
         self.welfare_machine.remove_welfare_if(5, day, in_hospital);
-
         self.replenish_health();
 
         let business_this_month = match self.business_this_month {
