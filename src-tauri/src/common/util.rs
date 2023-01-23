@@ -167,7 +167,7 @@ pub fn percentage_chance(percent: f32) -> bool {
     rand::thread_rng().gen_range(0..=maximum) == maximum
 }
 
-#[derive(Debug, Clone)]
+#[derive(Default, Debug, Clone)]
 pub struct SlotArray<T> {
     pub array: Vec<T>,
     current_idx: usize,

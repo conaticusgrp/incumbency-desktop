@@ -1,10 +1,10 @@
 use std::{ops::Range, collections::HashMap};
 use maplit::hashmap;
 use rand::{Rng};
-use crate::{common::util::{float_range, percentage_based_output_int, Date, percentage_chance}, common::config::Config, game::{generation::{generate_education_level, get_expected_salary_range}}, entities::business::{ProductType, Business}};
+use crate::{common::util::{float_range, percentage_based_output_int, Date, percentage_chance}, common::config::Config, game::{generation::{generate_education_level, get_expected_salary_range}}, entities::business::{ProductType, Business}, percentage_of};
 use EducationLevel::*;
 
-use super::debt::{Debt};
+use super::{debt::{Debt}, welfare::WelfareMachine};
 
 #[derive(Default, Clone)]
 pub struct Birthday {
@@ -71,6 +71,8 @@ pub struct Person {
     pub homeless: bool,
 
     pub gender: Gender,
+
+    pub welfare_machine: WelfareMachine,
 }
 
 // Static methods
@@ -369,13 +371,19 @@ impl Person {
             }
         }
 
+        let mut in_hospital = false;
+
         if let Some(ref mut days) = self.days_left_in_hospital {
+            in_hospital = true;
+
             *days -= 1;
             if *days <= 0 {
                 self.days_left_in_hospital = None;
                 *hospital_current_capacity += 1;
             }
         }
+
+        self.welfare_machine.remove_welfare_if(5, day, in_hospital);
 
         self.replenish_health();
 
@@ -386,6 +394,7 @@ impl Person {
 
         let quantity_opt = self.purchase_days.get(&day);
 
+        let mut not_afford_wanted_item = false;
         if let Some(quantity) = quantity_opt {
             let business = businesses.get_mut(business_this_month).unwrap();
             let item_cost = (business.product_price * quantity) as f32;
@@ -399,12 +408,38 @@ impl Person {
 
                     business.balance += item_cost;
                     // TODO - fulfill the welfare of purchasing the item
+                } else {
+                    not_afford_wanted_item = true;
                 }
                 // TODO: handle welfare on not affording an item
             }
         }
+
+        self.welfare_machine.remove_welfare_if(3, day, not_afford_wanted_item);
         
         // WARNING: new code here won't run if there is no business for the current month
+    }
+
+    pub fn get_welfare(&self) -> i32 {
+        let mut range_total = 0;
+        let mut amount_total = 0;
+
+        for day in self.welfare_machine.welfare_days.iter() {
+            let mut minimum = day.minimum;
+
+            if day.minimum < 0 {
+                minimum = 0;
+            }
+
+            range_total += minimum + (day.maximum + -day.minimum);
+            amount_total += day.amount + (-day.minimum);
+        }
+
+        if range_total == 0 {
+            return 100;
+        }
+
+        percentage_of!(amount_total; / range_total)
     }
 }
 

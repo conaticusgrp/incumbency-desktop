@@ -1,7 +1,7 @@
 use std::{sync::{Mutex, Arc}};
 use maplit::hashmap;
 use serde_json::json;
-use crate::{entities::{business::{Business, ProductType}, person::{person::{Person, Job, Birthday}, debt::{Debt, DebtType}}}, as_decimal_percent, common::{util::{Date, SlotArray, set_decimal_count}, config::Config}};
+use crate::{entities::{business::{Business, ProductType}, person::{person::{Person, Job, Birthday}, debt::{Debt, DebtType}, self}}, as_decimal_percent, common::{util::{Date, SlotArray, set_decimal_count}, config::Config}};
 use tauri::Manager;
 
 #[derive(Clone)]
@@ -211,7 +211,16 @@ impl GameState {
                 deaths_total += day_amount;
             }
 
+            let mut total_welfare_percentage = 0;
+            for person in self.people.iter() {
+                total_welfare_percentage += person.get_welfare();
+            }
+
+            let average_welfare = total_welfare_percentage as f32 / self.people.len() as f32;
+            let average_welfare = set_decimal_count(average_welfare, 2);
+
             app.emit_all("debug_payload",  json! ({
+                "Average Welfare": average_welfare,
                 "Government Balance": self.government_balance,
                 "Monthly Births": births_total,
                 "Monthly Deaths": deaths_total,
