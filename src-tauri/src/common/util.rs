@@ -1,6 +1,6 @@
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap};
+use std::{collections::HashMap, ops::{Index, IndexMut}};
 
 #[macro_export]
 macro_rules! percentage_of {
@@ -165,4 +165,43 @@ pub fn length(n: u32) -> i32 {
 pub fn percentage_chance(percent: f32) -> bool {
     let maximum = (100. / percent) as i32;
     rand::thread_rng().gen_range(0..=maximum) == maximum
+}
+
+#[derive(Debug, Clone)]
+pub struct SlotArray<T> {
+    pub array: Vec<T>,
+    current_idx: usize,
+}
+
+impl<T: Default + Clone> SlotArray<T> {
+    pub fn new(size: usize) -> Self {
+        Self {
+            array: vec![T::default(); size],
+            current_idx: 0,
+        }
+    }
+
+    pub fn push(&mut self, item: T) {
+        self.array[self.current_idx] = item;
+
+        self.current_idx += 1;
+        if self.current_idx == self.array.capacity() {
+            self.current_idx = 0;
+        }
+    }
+
+    pub fn len(&self) -> usize { self.array.len() }
+}
+
+impl<T> Index<usize> for SlotArray<T> {
+    type Output = T;
+    fn index<'a>(&'a self, i: usize) -> &'a T {
+        &self.array[i]
+    }
+}
+
+impl<T> IndexMut<usize> for SlotArray<T> {
+    fn index_mut<'a>(&'a mut self, i: usize) -> &'a mut T {
+        &mut self.array[i]
+    }
 }

@@ -1,7 +1,7 @@
 use std::{sync::{Mutex, Arc}};
 use maplit::hashmap;
-use rand::Rng;
-use crate::{entities::{business::{Business, ProductType}, person::{person::{Person, Job, Birthday, SpendingBehaviour}, debt::{Debt, DebtType}}}, as_decimal_percent, common::{util::{Date, percentage_chance}, config::Config}};
+use serde_json::json;
+use crate::{entities::{business::{Business, ProductType}, person::{person::{Person, Job, Birthday}, debt::{Debt, DebtType}}}, as_decimal_percent, common::{util::{Date, SlotArray, set_decimal_count}, config::Config}};
 use tauri::Manager;
 
 #[derive(Clone)]
@@ -22,6 +22,9 @@ pub struct GameState {
   pub month_unhospitalised_count: i32, // Number of patient that could not go to hospital because of the full capacity
 
   pub population_counter: f64,
+
+  pub births_in_last_month: SlotArray<usize>,
+  pub deaths_in_last_month: SlotArray<usize>,
 }
 
 const GOVERNMENT_START_BALANCE: u32 = 12000000; // TODO: changeme
@@ -48,6 +51,9 @@ impl Default for GameState {
             month_unhospitalised_count: 0,
 
             population_counter: 0.,
+
+            births_in_last_month: SlotArray::new(30),
+            deaths_in_last_month: SlotArray::new(30),
         }
     }
 }
@@ -77,20 +83,26 @@ impl GameState {
             per.day_pass(day, &mut self.hospital_current_capacity, &mut self.month_unhospitalised_count, &date, &mut death_queue, &mut self.businesses);
         }
 
-        for id in death_queue {
-            let idx = self.people.iter().position(|p| p.id == id).unwrap();
+        for id in &death_queue {
+            let idx = self.people.iter().position(|p| p.id == *id).unwrap();
             self.people.remove(idx);
         }
+
+        self.deaths_in_last_month.push(death_queue.len());
 
         if let Some(app) = app_handle {
             app.emit_all("debug_payload",  hashmap! { "Population" => self.people.len() }).unwrap();
         }
 
         self.population_counter += (self.people.len() as f32 * POPULATION_DAILY_INCREASE_PERCENTAGE) as f64;
-        if self.population_counter.floor() as usize > self.people.len() {
+
+        let new_birth_count = self.population_counter.floor() as usize - self.people.len();
+        for _ in 0..new_birth_count {
             let infant = Person::new_infant(self.people.len(), Birthday::from(&date), config);
             self.people.push(infant);
         }
+
+        self.births_in_last_month.push(new_birth_count);
     }
 
     pub fn month_pass(&mut self, tax_rate: f32, app_handle: Option<&tauri::AppHandle>) {
@@ -185,12 +197,28 @@ impl GameState {
             remaining_market_percentage -= assigned_percent;
         }
 
-        self.month_unhospitalised_count = 0;
         self.government_balance -= self.healthcare_investment as u64;
         
         if let Some(app) = app_handle {
-            app.emit_all("debug_payload",  hashmap! { "Government Balance" => self.government_balance }).unwrap();
+            let mut births_total = 0;
+            let mut deaths_total = 0;
+
+            for day_amount in &self.births_in_last_month.array {
+                births_total += day_amount; 
+            }
+
+            for day_amount in &self.deaths_in_last_month.array {
+                deaths_total += day_amount;
+            }
+
+            app.emit_all("debug_payload",  json! ({
+                "Government Balance": self.government_balance,
+                "Monthly Births": births_total,
+                "Monthly Deaths": deaths_total,
+            })).unwrap();
         }
+
+        self.month_unhospitalised_count = 0;
     }
 
     fn get_demand(&self, product_type: &ProductType) -> f32 {
