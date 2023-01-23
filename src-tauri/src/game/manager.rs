@@ -34,6 +34,14 @@ pub fn set_healthcare_investment(state_mux: State<'_, GameStateSafe>, investment
     state.set_healthcare_investment(investment);
 }
 
+#[tauri::command]
+pub fn get_healthcare_cost(state_mux: State<'_, GameStateSafe>) -> f64 {
+    let mut state = state_mux.lock().unwrap();
+
+    state.cost_per_hospital_capacity = state.healthcare_investment / state.month_unhospitalised_count as f64;
+    state.cost_per_hospital_capacity
+}
+
 pub async fn start_game_loop(state_mux: &GameStateSafe, app_handle: &tauri::AppHandle, config: &Config) {
     let mut interval = tokio::time::interval(Duration::from_micros(1)); // TODO: put me back to seconds
 
