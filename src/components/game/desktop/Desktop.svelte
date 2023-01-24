@@ -159,14 +159,11 @@
       <!-- empty on:keydown to supress a warning -->
       <span
         data-minimized={!!apps[i].minimized}
-        style="background-image: url('{shortcut.iconPath}');"
         title={shortcut.name}
         on:click={() => unminimizeApp(i)}
         on:keydown={() => {}}
       >
-        {#if shortcut.iconPath == null}
-        {shortcut.iconPath} {shortcut.name}
-        {/if}
+        {shortcut.name}
       </span>
 
       {/if}
