@@ -53,7 +53,7 @@
   const handleClose = (): void => {
     thisObj.style.display = 'none';
     thisObj.dataset['focused'] = 'false';
-    dispatcher('windowClose');
+    dispatcher('criticalWindowEvent', { type: 'windowClose' });
   }
 
   const handleMaximize = (): void => {
@@ -177,7 +177,7 @@
             focused = thisObj?.dataset['focused'] as unknown as boolean;
           } else if (mutation.attributeName === "data-minimized") {
             thisObj.style.display = (thisObj?.dataset['minimized'] !== 'true') ? 'initial' : 'none';
-            dispatcher('windowMinimizeStateChange');
+            dispatcher('criticalWindowEvent', { type: 'windowMinimizeStateChange' });
           }
         }
       });

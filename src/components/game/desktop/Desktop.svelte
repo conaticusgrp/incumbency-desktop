@@ -134,9 +134,9 @@
       bind:this={windowContainer}
     >
 
-      <DebuggerApp on:windowClose={updateUI} on:windowMinimizeStateChange={updateUI} />
-      <Email on:windowClose={updateUI} on:windowMinimizeStateChange={updateUI} />
-      <BudgetPanel on:windowClose={updateUI} on:windowMinimizeStateChange={updateUI} />
+      <DebuggerApp on:criticalWindowEvent={updateUI} />
+      <Email on:criticalWindowEvent={updateUI} />
+      <BudgetPanel on:criticalWindowEvent={updateUI} />
 
     </div>
 

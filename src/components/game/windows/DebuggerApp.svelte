@@ -24,8 +24,7 @@
   title="DEBUG"
   pos={{ x: 100, y: 50 }}
   size={{ width: 800, height: 600 }}
-  on:windowClose={() => dispatcher('windowClose')}
-  on:windowMinimize={() => dispatcher('windowMinimizeStateChange')}
+  on:criticalWindowEvent={(e) => dispatcher('criticalWindowEvent', e.detail)}
 >
   <main>
   
