@@ -284,6 +284,7 @@
   }
 
   .windows {
+    position: relative;
     z-index: 100;
     isolation: isolate;
     pointer-events: none;
