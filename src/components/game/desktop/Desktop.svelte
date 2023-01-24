@@ -15,23 +15,18 @@
   import { onMount } from 'svelte'
   import DebuggerApp from "../windows/DebuggerApp.svelte";
 
+  // TODO: desktop constants for min height
+
   let date: string = "undefined date";
   let windowContainer: HTMLElement;
+  let appListWidthPixels = 300;
   let toolbarHeightPercent: number = 7;
-  let desktopPaddingRem = 2;
+  let dateTimeHeightPercent: number = 7;
   let wallpaperPath: string | null = null;
   let apps: DesktopAppShortcut[] = [
-    {
-      name: "DEBUG"
-    },
-    {
-      name: "Email",
-      badgeCount: 2
-    },
-    {
-      name: "Government Spending",
-      badgeCount: 1
-    }
+    { name: "DEBUG" },
+    { name: "Email", badgeCount: 2 },
+    { name: "Government Spending", badgeCount: 1 }
   ];
   
   let notifications: NotificationData[] = [];
@@ -101,6 +96,63 @@
 </script>
 
 <main style="background-image: {(wallpaperPath != null) ? `url(${wallpaperPath})` : "none"};">
+
+  <div
+    class="app-list-section"
+    style="width: {appListWidthPixels}px;"
+  >
+
+    <h2>Installed Software</h2>
+
+    <div class="app-list">
+
+      {#each apps as shortcut}
+
+      <div style="color: {false ? 'grey' : 'white'};">{shortcut.name}</div>
+
+      {/each}
+
+    </div>
+
+  </div>
+
+  <div
+    class="content"
+    style="background-image: url({wallpaperPath ?? ''}); width: calc(100% - {appListWidthPixels}px);"
+  >
+
+    <div
+      class="date-time"
+      style="height: {dateTimeHeightPercent}%;"
+    >
+      {date}
+    </div>
+
+    <div
+      class="windows"
+      style="height: {100 - dateTimeHeightPercent - toolbarHeightPercent}%"
+      bind:this={windowContainer}
+    >
+
+      <DebuggerApp on:windowClose={updateUI} on:windowMinimizeStateChange={updateUI} />
+      <Email on:windowClose={updateUI} on:windowMinimizeStateChange={updateUI} />
+      <BudgetPanel on:windowClose={updateUI} on:windowMinimizeStateChange={updateUI} />
+
+    </div>
+
+    <div
+      class="toolbar"
+      style="height: {toolbarHeightPercent}%;"
+    >
+
+    </div>
+
+  </div>
+
+</main>
+
+<!--
+<main style="background-image: {(wallpaperPath != null) ? `url(${wallpaperPath})` : "none"};">
   
   <div class="content" style="padding: {desktopPaddingRem}rem; height: calc({100 - toolbarHeightPercent}% - {desktopPaddingRem * 2}rem);">
 
@@ -155,8 +207,8 @@
           ((windowContainer.children[i].style.display != 'none' && windowContainer.children[i].dataset['minimized'] == 'false') ||
           (windowContainer.children[i].style.display == 'none' && windowContainer.children[i].dataset['minimized'] == 'true'))}
 
-      <!-- !! to cast (boolean | undefined) to boolean -->
-      <!-- empty on:keydown to supress a warning -->
+      <!- !! to cast (boolean | undefined) to boolean ->
+      <!- empty on:keydown to supress a warning ->
       <span
         data-minimized={!!apps[i].minimized}
         title={shortcut.name}
@@ -179,33 +231,72 @@
 
 </main>
 
+-->
+
 <style>
 
   main {
+    display: flex;
+    flex-direction: row;
     position: relative;
     width: 100%;
     height: 100%;
+    background-color: black;
     background-repeat: no-repeat;
     background-position: center;
+    background-size: contain;
   }
 
+  .app-list-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border-right: 1px solid green;
+  }
+
+  .app-list-section > h2 {
+    margin: 1em 2em 2em 2em;
+  }
+
+  .app-list {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: calc(100% - 1em * 2);
+    margin: 0 1em 0 1em;
+  }
+
+  .app-list > div {
+    margin: 0.5em 0 0.5em 0;
+    
+  }
+  
   .content {
-    position: relative;
-    display: grid;
-    grid-template-columns: repeat(16, 1fr);
-    grid-template-rows: repeat(7, 1fr);
-    background-color: #171717;
+    display: flex;
+    flex-direction: column;
   }
 
+  .date-time {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-bottom: 1px solid green;
+  }
+
+  .windows {
+    z-index: 100;
+    isolation: isolate;
+    pointer-events: none;
+  }
+  
   .toolbar {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
+    /* width: 100%; */
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
-    background-color: #A0A0A0;
+    border-top: 1px solid green;
   }
+
+  /* to be updated */
   
   .toolbar > .items {
     display: flex;
@@ -231,26 +322,6 @@
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
-  }
-
-  .toolbar > .date-time {
-    width: 150px;
-    margin: 0.5em;
-    box-sizing: border-box;
-    text-align: center;
-    border: 1px solid black;
-    color: black;
-  }
-
-  .windows {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 100;
-    isolation: isolate;
-    pointer-events: none;
   }
 
   .notifications {
