@@ -3,7 +3,6 @@
   import { createEventDispatcher } from "svelte";
 
   export let name = "?";
-  export let icon: string | undefined;
   export let badgeCount: number | undefined = 0;
   export let gridRow: string;
   export let index: number;
@@ -19,10 +18,6 @@
 <main style="gridRow: {gridRow};" on:mouseup={open}>
 
   <div class="icon">
-
-    {#if icon != undefined}
-      <img src={icon} alt={name + " app icon"} />
-    {/if}
 
     {#if badgeCount != undefined && badgeCount > 0}
       <div class="badge">{badgeCount}</div>
@@ -52,12 +47,6 @@
     background: #3d3d3d;
     background-size: cover;
     position: relative;
-  }
-
-  .icon > img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
   }
 
   .badge {

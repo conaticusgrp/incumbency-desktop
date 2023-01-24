@@ -1,7 +1,7 @@
 <script lang="ts">
   
   import { Close, Remove, SquareOutline } from "svelte-ionicons"
-  import { createEventDispatcher, onMount } from "svelte";
+  import { createEventDispatcher, onMount } from "svelte"
 
   import {
     MIN_WINDOW_HEIGHT,
@@ -10,14 +10,13 @@
     WINDOW_HEADER_HEIGHT,
   } from "../../../scripts/desktopConstants"
 
-  export let title: string = "?"
-  export let iconPath: string | undefined = undefined
-  export let pos: { x: number; y: number } = { x: 0, y: 0 }
+  export let title: string = "?";
+  export let pos: { x: number; y: number } = { x: 0, y: 0 };
   export let size: { width: number; height: number, maximized?: boolean } = {
     width: 600,
     height: 400,
     maximized: false
-  }
+  };
   
   let thisObj: HTMLElement;
   let dragOffset: { dx: number; dy: number };
@@ -74,7 +73,7 @@
       e.target instanceof HTMLImageElement ||
       e.target instanceof HTMLButtonElement
     )
-      return
+      return;
 
     if (size.maximized) {
       // cursorPos(max)/width(max) = cursorPos(min)/width(min)
@@ -85,56 +84,56 @@
       pos.y = 0;
     }
 
-    document.addEventListener("mousemove", handleDrag)
-    document.addEventListener("mouseup", handleDragEnd)
+    document.addEventListener("mousemove", handleDrag);
+    document.addEventListener("mouseup", handleDragEnd);
 
     dragOffset = {
       dx: e.clientX - pos.x,
       dy: e.clientY - pos.y,
-    }
+    };
   }
 
   const handleDrag = (e: MouseEvent): void => {
     pos.x = Math.max(
       Math.min(e.clientX - dragOffset.dx, (thisObj.parentElement?.clientWidth ?? 0) - size.width),
       0
-    )
+    );
     pos.y = Math.max(
       Math.min(e.clientY - dragOffset.dy, (thisObj.parentElement?.clientHeight ?? 0) - size.height),
       0
-    )
+    );
   }
 
   const handleDragEnd = (e: MouseEvent): void => {
-    handleDrag(e)
-    document.removeEventListener("mousemove", handleDrag)
-    document.removeEventListener("mouseup", handleDragEnd)
+    handleDrag(e);
+    document.removeEventListener("mousemove", handleDrag);
+    document.removeEventListener("mouseup", handleDragEnd);
   }
 
   const handleResizeStart = (e: MouseEvent): void => {
     const classList = (e.target as HTMLElement).classList
     if (classList.contains("width-resize-bar-right")) {
-      resizeType = { w: 'r' }
+      resizeType = { w: 'r' };
     } else if (classList.contains("width-resize-bar-left")) {
-      resizeType = { w: 'l' }
+      resizeType = { w: 'l' };
     } else if (classList.contains("height-resize-bar-bottom")) {
-      resizeType = { h: 'b' }
+      resizeType = { h: 'b' };
     } else if (classList.contains("height-resize-bar-top")) {
-      resizeType = { h: 't' }
+      resizeType = { h: 't' };
     } else if (classList.contains("width-height-resize-bar-bottom-right")) {
-      resizeType = { w: 'r', h: 'b' }
+      resizeType = { w: 'r', h: 'b' };
     } else if (classList.contains("width-height-resize-bar-top-left")) {
-      resizeType = { w: 'l', h: 't' }
+      resizeType = { w: 'l', h: 't' };
     } else if (classList.contains("width-height-resize-bar-top-right")) {
-      resizeType = { w: 'r', h: 't' }
+      resizeType = { w: 'r', h: 't' };
     } else if (classList.contains("width-height-resize-bar-bottom-left")) {
-      resizeType = { w: 'l', h: 'b'}
+      resizeType = { w: 'l', h: 'b'};
     } else {
-      return
+      return;
     }
 
-    document.addEventListener("mousemove", handleResize)
-    document.addEventListener("mouseup", handleResizeEnd)
+    document.addEventListener("mousemove", handleResize);
+    document.addEventListener("mouseup", handleResizeEnd);
   }
 
   const handleResize = (e: MouseEvent): void => {
@@ -142,7 +141,7 @@
       size.width = Math.max(
         Math.min(e.clientX - pos.x, (thisObj.parentElement?.clientWidth ?? 0) - pos.x),
         MIN_WINDOW_WIDTH
-      )
+      );
     } else if (resizeType.w === 'l') {
       const newX = Math.max(Math.min(e.clientX, pos.x + size.width - MIN_WINDOW_WIDTH), 0);
       size.width = size.width + (pos.x - newX);
@@ -153,7 +152,7 @@
       size.height = Math.max(
         Math.min(e.clientY - pos.y, (thisObj.parentElement?.clientHeight ?? 0) - pos.y),
         MIN_WINDOW_HEIGHT
-      )
+      );
     } else if (resizeType.h === 't') {
       const newY = Math.max(Math.min(e.clientY, pos.y + size.height - MIN_WINDOW_HEIGHT), 0);
       size.height = size.height + (pos.y - newY);
@@ -163,9 +162,9 @@
   }
 
   const handleResizeEnd = (e: MouseEvent): void => {
-    handleResize(e)
-    document.removeEventListener("mousemove", handleResize)
-    document.removeEventListener("mouseup", handleResizeEnd)
+    handleResize(e);
+    document.removeEventListener("mousemove", handleResize);
+    document.removeEventListener("mouseup", handleResizeEnd);
   }
 
   onMount(() => {
@@ -213,12 +212,6 @@
     on:mousedown={handleDragStart}
   >
     <div>
-      <img
-        src={iconPath || ""}
-        alt="icon"
-        {title}
-        style="width: {WINDOW_HEADER_HEIGHT}px; height: {WINDOW_HEADER_HEIGHT}px;"
-      />
       <span>{title}</span>
     </div>
     <div class="window-buttons">
@@ -323,10 +316,6 @@
   .header :last-child {
     display: flex;
     flex-direction: row-reverse;
-  }
-
-  img {
-    margin-left: 0.5rem;
   }
 
   span {

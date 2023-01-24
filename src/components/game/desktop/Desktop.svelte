@@ -22,17 +22,14 @@
   let wallpaperPath: string | null = null;
   let apps: DesktopAppShortcut[] = [
     {
-      name: "DEBUG",
-      iconPath: ""
+      name: "DEBUG"
     },
     {
       name: "Email",
-      iconPath: "https://seeklogo.com/images/M/mail-icon-logo-28FE0635D0-seeklogo.com.png",
       badgeCount: 2
     },
     {
       name: "Government Spending",
-      iconPath: "https://cdn-icons-png.flaticon.com/512/217/217853.png",
       badgeCount: 1
     }
   ];
@@ -113,7 +110,6 @@
 
     <DesktopShortcut
       name={shortcut.name}
-      icon={shortcut.iconPath}
       badgeCount={shortcut.badgeCount}
       gridRow={`${i} / ${i + 1}`}
       index={i}
@@ -125,9 +121,9 @@
     {/each}
 
     <div class="windows" bind:this={windowContainer}>
-      <DebuggerApp iconPath={apps[0].iconPath} on:windowClose={updateUI} on:windowMinimizeStateChange={updateUI} />
-      <Email iconPath={apps[1].iconPath} on:windowClose={updateUI} on:windowMinimizeStateChange={updateUI} />
-      <BudgetPanel iconPath={apps[2].iconPath} on:windowClose={updateUI} on:windowMinimizeStateChange={updateUI} />
+      <DebuggerApp on:windowClose={updateUI} on:windowMinimizeStateChange={updateUI} />
+      <Email on:windowClose={updateUI} on:windowMinimizeStateChange={updateUI} />
+      <BudgetPanel on:windowClose={updateUI} on:windowMinimizeStateChange={updateUI} />
     </div>
 
     <div class="notifications" style="width: {NOTIFICATIONS_WINDOW_WIDTH}px; height: {NOTIFICATIONS_WINDOW_HEIGHT}px;">

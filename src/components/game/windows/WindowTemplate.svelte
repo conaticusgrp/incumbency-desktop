@@ -9,15 +9,12 @@
   import { createEventDispatcher } from "svelte";
   import Window from "./Window.svelte"
 
-  export let iconPath: string | undefined = undefined;
-
   let dispatcher = createEventDispatcher();
 
 </script>
 
 <Window
   title="WindowTemplate"
-  {iconPath}
   pos={{ x: 100, y: 50 }}
   size={{ width: 800, height: 600 }}
   on:windowClose={() => dispatcher('windowClose')}

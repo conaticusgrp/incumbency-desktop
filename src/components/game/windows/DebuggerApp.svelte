@@ -5,8 +5,6 @@
   import Window from "./Window.svelte"
   import DebugValueDisplay from "../debug/DebugValueDisplay.svelte";
 
-  export let iconPath: string | undefined = undefined;
-
   let dispatcher = createEventDispatcher();
 
   let debugData: object | undefined;
@@ -24,7 +22,6 @@
 
 <Window
   title="DEBUG"
-  {iconPath}
   pos={{ x: 100, y: 50 }}
   size={{ width: 800, height: 600 }}
   on:windowClose={() => dispatcher('windowClose')}
