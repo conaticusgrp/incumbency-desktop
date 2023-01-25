@@ -1,6 +1,5 @@
 <script lang="ts">
   
-  import { Close, Remove, SquareOutline } from "svelte-ionicons"
   import { createEventDispatcher, onMount } from "svelte"
 
   import {
