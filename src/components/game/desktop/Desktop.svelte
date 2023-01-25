@@ -14,7 +14,7 @@
 
   let date: string = "undefined date";
   let windowContainer: HTMLElement;
-  let wallpaperPath: string | null = "./assets/Wallpaper.png";
+  let wallpaperPath: string | null = "./src/assets/Wallpaper.png";
   let apps: DesktopAppShortcut[] = [
     { name: "DEBUG" },
     { name: "Email", badgeCount: 2 },
@@ -91,7 +91,7 @@
 
 </script>
 
-<main style="background-image: {(wallpaperPath != null) ? `url(${wallpaperPath})` : "none"};">
+<main>
 
   <div
     class="app-list-section"
@@ -127,7 +127,7 @@
 
   <div
     class="content"
-    style="background-image: url({wallpaperPath ?? ''}); width: calc({100 - APP_LIST_WIDTH_PERCENT}%);"
+    style="width: calc({100 - APP_LIST_WIDTH_PERCENT}%);"
   >
 
     <div
@@ -139,7 +139,10 @@
 
     <div
       class="windows"
-      style="height: calc(100% - {DATE_TIME_HEIGHT}em - {TOOLBAR_HEIGHT}em)"
+      style="
+        height: calc(100% - {DATE_TIME_HEIGHT}em - {TOOLBAR_HEIGHT}em);
+        background-image: {(wallpaperPath != null) ? `url(${wallpaperPath})` : "none"};
+      "
       bind:this={windowContainer}
     >
 
@@ -196,8 +199,6 @@
     height: 100%;
     color: var(--color-highlight);
     background-color: black;
-    background-repeat: no-repeat;
-    background-position: center;
   }
 
   .app-list-section {
@@ -248,6 +249,8 @@
     z-index: 100;
     isolation: isolate;
     pointer-events: none;
+    background-repeat: no-repeat;
+    background-position: center;
   }
   
   .toolbar {
