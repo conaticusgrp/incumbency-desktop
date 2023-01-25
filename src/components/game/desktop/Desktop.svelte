@@ -2,8 +2,8 @@
 
   import { listen } from "@tauri-apps/api/event";
   import type { DesktopAppShortcut } from "../../../scripts/desktopApp";
-  import type { NotificationData } from "../../../scripts/notificationData";
-  import { DATE_TIME_HEIGHT, TOOLBAR_HEIGHT } from "../../../scripts/desktopConstants";
+  //import type { NotificationData } from "../../../scripts/notificationData";
+  import { APP_LIST_MIN_WIDTH, APP_LIST_WIDTH_PERCENT, DATE_TIME_HEIGHT, TOOLBAR_HEIGHT } from "../../../scripts/desktopConstants";
 
   import Email from "../windows/Email.svelte";
   import BudgetPanel from "../windows/BudgetPanel.svelte";
@@ -14,15 +14,14 @@
 
   let date: string = "undefined date";
   let windowContainer: HTMLElement;
-  let appListWidthPixels = 300;
-  let wallpaperPath: string | null = null;
+  let wallpaperPath: string | null = "./assets/Wallpaper.png";
   let apps: DesktopAppShortcut[] = [
     { name: "DEBUG" },
     { name: "Email", badgeCount: 2 },
     { name: "Government Spending", badgeCount: 1 }
   ];
   
-  let notifications: NotificationData[] = [];
+  //let notifications: NotificationData[] = [];
 
   const getWindow = (index: number): HTMLElement => {
     console.assert(windowContainer != undefined && index >= 0 && index < windowContainer.children.length, "Tried to get a window that doesn't exist");
@@ -77,6 +76,7 @@
 
   // DEBUG
   onMount(() => {
+    /*
     setTimeout(() => {
       notifications = [
         {
@@ -86,6 +86,7 @@
         }
       ];
     }, 2000);
+    */
   });
 
 </script>
@@ -94,7 +95,7 @@
 
   <div
     class="app-list-section"
-    style="width: {appListWidthPixels}px;"
+    style="width: {APP_LIST_WIDTH_PERCENT}%; min-width: {APP_LIST_MIN_WIDTH}px;"
   >
 
     <h2>Installed Software</h2>
@@ -109,7 +110,14 @@
                           windowContainer.children[i].dataset['minimized'] == 'false') ||
                           (windowContainer.children[i].style.display == 'none' &&
                           windowContainer.children[i].dataset['minimized'] == 'true'))}
-      <div style="color: {appOpened ? 'grey' : 'white'};">{shortcut.name}</div>
+      
+      <div style="color: var({appOpened ? '--color-highlight' : '--color-shaded'});">
+        {shortcut.name}
+        
+        {#if shortcut.badgeCount != undefined && shortcut.badgeCount > 0}
+        <span>({shortcut.badgeCount})</span>
+        {/if}
+      </div>
 
       {/each}
 
@@ -119,19 +127,19 @@
 
   <div
     class="content"
-    style="background-image: url({wallpaperPath ?? ''}); width: calc(100% - {appListWidthPixels}px);"
+    style="background-image: url({wallpaperPath ?? ''}); width: calc({100 - APP_LIST_WIDTH_PERCENT}%);"
   >
 
     <div
       class="date-time"
-      style="height: {DATE_TIME_HEIGHT}%;"
+      style="height: {DATE_TIME_HEIGHT}em;"
     >
       {date}
     </div>
 
     <div
       class="windows"
-      style="height: {100 - DATE_TIME_HEIGHT - TOOLBAR_HEIGHT}%"
+      style="height: calc(100% - {DATE_TIME_HEIGHT}em - {TOOLBAR_HEIGHT}em)"
       bind:this={windowContainer}
     >
 
@@ -143,7 +151,7 @@
 
     <div
       class="toolbar"
-      style="height: {TOOLBAR_HEIGHT}%;"
+      style="height: {TOOLBAR_HEIGHT}em;"
     >
 
       {#each apps as shortcut, i}
@@ -186,10 +194,10 @@
     position: relative;
     width: 100%;
     height: 100%;
+    color: var(--color-highlight);
     background-color: black;
     background-repeat: no-repeat;
     background-position: center;
-    background-size: contain;
   }
 
   .app-list-section {
@@ -200,7 +208,9 @@
   }
 
   .app-list-section > h2 {
-    margin: 1em 2em 2em 2em;
+    margin: 2em;
+    font-size: 14px;
+    font-weight: bold;
   }
 
   .app-list {
@@ -213,7 +223,11 @@
 
   .app-list > div {
     margin: 0.5em 0 0.5em 0;
-    
+  }
+
+  .app-list > div > span {
+    color: var(--color-critical);
+    font-weight: bold;
   }
   
   .content {
