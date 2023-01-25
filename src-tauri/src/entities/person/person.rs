@@ -4,7 +4,7 @@ use rand::{Rng};
 use crate::{common::util::{float_range, percentage_based_output_int, Date, percentage_chance}, common::config::Config, game::{generation::{generate_education_level, get_expected_salary_range}}, entities::business::{ProductType, Business}, percentage_of};
 use EducationLevel::*;
 
-use super::{debt::{Debt}, welfare::WelfareMachine};
+use super::{debt::{Debt}, welfare::{WelfareMachine, WELFARE_IMPACT_FOUR, WELFARE_IMPACT_FIVE, WELFARE_IMPACT_THREE, WELFARE_IMPACT_TWO}};
 
 #[derive(Default, Clone)]
 pub struct Birthday {
@@ -349,19 +349,18 @@ impl Person {
         if self.age >= 18 {
             self.balance -= self.daily_food_spending as f32;
 
-            let loss_chance: f32 = match self.daily_food_spending { // Chance that the individual will lose 1% of their health
-                1 => 50.,
-                2 => 25.,
-                3 => 0.9,
-                4 => 0.6,
+            let (health_loss_chance, welfare_loss) = match self.daily_food_spending { // Chance that the individual will lose 1% of their health
+                1 => (50., WELFARE_IMPACT_FIVE),
+                2 => (25., WELFARE_IMPACT_FOUR),
+                3 => (0.9, WELFARE_IMPACT_THREE),
+                4 => (0.6, 0),
                 _ => unreachable!(),
             };
 
-            self.welfare_machine.remove_welfare_if(20, day, self.daily_food_spending == 1);
-            self.welfare_machine.remove_welfare_if(10, day, self.daily_food_spending == 2);
-            self.welfare_machine.remove_welfare_if(5, day, self.daily_food_spending == 3);
+            self.welfare_machine.welfare_reset(day);
+            self.welfare_machine.remove_welfare_if(welfare_loss, day, welfare_loss != 0);
 
-            if percentage_chance(loss_chance) {
+            if percentage_chance(health_loss_chance) {
                 self.remove_health(1, hospital_current_capacity, month_unhospitalised_count);
             }
         }
@@ -387,10 +386,10 @@ impl Person {
             }
         }
 
-        self.welfare_machine.remove_welfare_if(5, day, in_hospital);
+        self.welfare_machine.remove_welfare_if(WELFARE_IMPACT_THREE, day, in_hospital);
         self.replenish_health();
 
-        let business_this_month = match self.business_this_month {
+        let business_this_month= match self.business_this_month {
             Some(idx) => idx,
             _ => return,
         };
@@ -410,7 +409,7 @@ impl Person {
                     if *demand < 0. { *demand = 0. }
 
                     business.balance += item_cost;
-                    // TODO - fulfill the welfare of purchasing the item
+                    self.welfare_machine.add_welfare_if(WELFARE_IMPACT_TWO, day, true);
                 } else {
                     not_afford_wanted_item = true;
                 }
@@ -418,7 +417,7 @@ impl Person {
             }
         }
 
-        self.welfare_machine.remove_welfare_if(3, day, not_afford_wanted_item);
+        self.welfare_machine.remove_welfare_if(WELFARE_IMPACT_THREE, day, not_afford_wanted_item);
         
         // WARNING: new code here won't run if there is no business for the current month
     }

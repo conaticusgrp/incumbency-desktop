@@ -1,3 +1,11 @@
+pub const WELFARE_IMPACT_ONE: i32 = 2;
+pub const WELFARE_IMPACT_TWO: i32 = 5;
+pub const WELFARE_IMPACT_THREE: i32 = 10;
+pub const WELFARE_IMPACT_FOUR: i32 = 20;
+pub const WELFARE_IMPACT_FIVE: i32 = 45;
+pub const WELFARE_IMPACT_SIX: i32 = 70;
+pub const WELFARE_IMPACT_SEVEN: i32 = 100;  
+
 #[derive(Default, Clone)]
 pub struct WelfareDay {
     pub maximum: i32, // Maximum possible welfare for that day
@@ -37,5 +45,10 @@ impl WelfareMachine {
         }
 
         self.welfare_days[idx].minimum -= amount
+    }
+
+    pub fn welfare_reset(&mut self, day: i32) {
+        let idx = (day - 1) as usize;
+        self.welfare_days[idx] = WelfareDay::default();
     }
 }
