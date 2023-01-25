@@ -211,30 +211,31 @@
     style="height: {WINDOW_HEADER_HEIGHT}px;"
     on:mousedown={handleDragStart}
   >
+
+    <button class="close-button" title="Close" on:click={handleClose}>
+      Close
+    </button>
+
+    <button
+      class="minimize-button"
+      title="Minimize"
+      on:click={handleMinimize}
+    >
+      Minimize
+    </button>
+
+    <button
+      class="maximize-button"
+      title="Maximize"
+      on:click={handleMaximize}
+    >
+      Maximize
+    </button>
+
     <div>
-      <span>{title}</span>
+      {title}
     </div>
-    <div class="window-buttons">
-      <button class="close-button" title="Close" on:click={handleClose}>
-        <Close />
-      </button>
 
-      <button
-        class="maximize-button"
-        title="Maximize"
-        on:click={handleMaximize}
-      >
-        <SquareOutline size="14" />
-      </button>
-
-      <button
-        class="minimize-button"
-        title="Minimize"
-        on:click={handleMinimize}
-      >
-        <Remove />
-      </button>
-    </div>
   </div>
 
   <!-- Viewport -->
@@ -295,63 +296,33 @@
 
   main {
     position: absolute;
-    border: 1px solid grey;
+    border: 1px solid var(--color-accent);
     border-top: none;
     pointer-events: all;
+    background-color: var(--color-bg);
   }
-
+  
   .header {
-    display: grid;
-    grid-template-rows: 1fr;
-    grid-template-columns: 1fr 1fr;
-    align-items: center;
-    background-color: grey;
-  }
-
-  .header :first-child {
     display: flex;
     flex-direction: row;
+    align-items: stretch;
+    border-top: 1px solid var(--color-accent);
+    border-bottom: 1px solid var(--color-accent);
   }
 
-  .header :last-child {
-    display: flex;
-    flex-direction: row-reverse;
+  .header > button {
+    padding: 0 1em 0 1em;
+    border-right: 1px solid var(--color-accent);
   }
 
-  span {
-    margin-left: 1rem;
+  .header > div {
+    margin: auto;
   }
 
   .viewport {
-    background-color: #121212;
+    background-color: var(--color-bg);
+    border-bottom: 1px solid var(--color-accent);
     isolation: isolate;
-  }
-
-  .window-buttons > button {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 20px;
-    width: 20px;
-    padding: 0;
-    margin: 0 0.25rem 0 0.25rem;
-    border-radius: 50%;
-    transition: all 0.2s ease-in-out;
-  }
-
-  .window-buttons > button:hover,
-  .window-buttons > button:focus {
-    outline: none;
-    border: none;
-  }
-
-  .close-button:hover {
-    background-color: rgb(204, 70, 70);
-  }
-
-  .maximize-button:hover,
-  .minimize-button:hover {
-    background-color: rgba(255, 255, 255, 0.151);
   }
 
   /* Resize bars */
