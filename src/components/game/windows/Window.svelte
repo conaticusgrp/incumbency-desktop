@@ -27,6 +27,19 @@
   let focused = false;
   let dispatcher = createEventDispatcher();
 
+  const getParentBox = (): { x: number, y: number, width: number, height: number } => {
+    const box = thisObj.parentElement?.getBoundingClientRect();
+    if (box == undefined) {
+      return {
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0
+      };
+    }
+    return box; 
+  }
+
   const requestFocus = (): void => {
     if (thisObj.parentElement == undefined) return;
     // NOTE: The next line breaks the focus system. Do not add it to the code
@@ -94,11 +107,11 @@
 
   const handleDrag = (e: MouseEvent): void => {
     pos.x = Math.max(
-      Math.min(e.clientX - dragOffset.dx, (thisObj.parentElement?.clientWidth ?? 0) - size.width),
+      Math.min(e.clientX - dragOffset.dx, getParentBox().width - size.width),
       0
     );
     pos.y = Math.max(
-      Math.min(e.clientY - dragOffset.dy, (thisObj.parentElement?.clientHeight ?? 0) - size.height),
+      Math.min(e.clientY - dragOffset.dy, getParentBox().height - size.height),
       0
     );
   }
@@ -110,7 +123,7 @@
   }
 
   const handleResizeStart = (e: MouseEvent): void => {
-    const classList = (e.target as HTMLElement).classList
+    const classList = (e.target as HTMLElement).classList;
     if (classList.contains("width-resize-bar-right")) {
       resizeType = { w: 'r' };
     } else if (classList.contains("width-resize-bar-left")) {
@@ -137,25 +150,35 @@
 
   const handleResize = (e: MouseEvent): void => {
     if (resizeType.w === 'r') {
-      size.width = Math.max(
-        Math.min(e.clientX - pos.x, (thisObj.parentElement?.clientWidth ?? 0) - pos.x),
-        MIN_WINDOW_WIDTH
-      );
+
+      const untilRightBorder = getParentBox().width - pos.x;
+      const x = e.clientX - getParentBox().x - pos.x;
+      size.width = Math.max(Math.min(x, untilRightBorder), MIN_WINDOW_WIDTH);
+
     } else if (resizeType.w === 'l') {
-      const newX = Math.max(Math.min(e.clientX, pos.x + size.width - MIN_WINDOW_WIDTH), 0);
+
+      const x = e.clientX - getParentBox().x;
+      const untilMinWidth = pos.x + size.width - MIN_WINDOW_WIDTH;
+      const newX = Math.max(Math.min(x, untilMinWidth), 0);
       size.width = size.width + (pos.x - newX);
       pos.x = newX;
+
     }
 
     if (resizeType.h === 'b') {
-      size.height = Math.max(
-        Math.min(e.clientY - pos.y, (thisObj.parentElement?.clientHeight ?? 0) - pos.y),
-        MIN_WINDOW_HEIGHT
-      );
+
+      const untilParentHeight = getParentBox().height - pos.y;
+      const y = e.clientY - getParentBox().y - pos.y;
+      size.height = Math.max(Math.min(y, untilParentHeight), MIN_WINDOW_HEIGHT);
+
     } else if (resizeType.h === 't') {
-      const newY = Math.max(Math.min(e.clientY, pos.y + size.height - MIN_WINDOW_HEIGHT), 0);
+
+      const untilMinHeight = pos.y + size.height - MIN_WINDOW_HEIGHT;
+      const y = e.clientY - getParentBox().y;
+      const newY = Math.max(Math.min(y, untilMinHeight), 0);
       size.height = size.height + (pos.y - newY);
       pos.y = newY;
+      
     }
     
   }
@@ -308,10 +331,16 @@
     border-top: 1px solid var(--color-accent);
     border-bottom: 1px solid var(--color-accent);
   }
-
+  
   .header > button {
     padding: 0 1em 0 1em;
     border-right: 1px solid var(--color-accent);
+  }
+
+  .header > button:hover {
+    color: var(--color-bg);
+    background-color: var(--color-accent);
+    font-weight: bold;
   }
 
   .header > div {

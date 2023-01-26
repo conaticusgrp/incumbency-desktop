@@ -55,10 +55,16 @@
   }
 
   const updateUI = () => {
-    // console.log("update");
+    console.log("update");
     // console.assert(apps.length <= windowContainer.children.length);
+    /*
     for (let i = 0; i < windowContainer.children.length; i++) {
       apps[i].minimized = getWindow(i).dataset['minimized'] === 'true';
+    }
+    */
+
+    for (let i = 0; i < windowContainer.children.length; i++) {
+      console.log(getWindow(i).style.display);
     }
 
     apps = apps;
@@ -105,14 +111,14 @@
       {#each apps as shortcut, i}
 
       {@const appExists = windowContainer != null && windowContainer.children.length > i}
-      {@const appOpened = appExists &&
-                          ((windowContainer.children[i].style.display != 'none' &&
-                          windowContainer.children[i].dataset['minimized'] == 'false') ||
-                          (windowContainer.children[i].style.display == 'none' &&
-                          windowContainer.children[i].dataset['minimized'] == 'true'))}
+      {@const appOpened = appExists && windowContainer.children[i].style.display != 'none'}
       
       <div style="color: var({appOpened ? '--color-highlight' : '--color-shaded'});">
         {shortcut.name}
+
+        {#if appExists}
+        [{getWindow(i).style.display}]
+        {/if}
         
         {#if shortcut.badgeCount != undefined && shortcut.badgeCount > 0}
         <span>({shortcut.badgeCount})</span>
@@ -159,7 +165,7 @@
 
       {#each apps as shortcut, i}
 
-      {#if windowContainer != null && windowContainer.children.length > i && (apps[i].name !== "DEBUG" || true)}
+      {#if windowContainer != null && windowContainer.children.length > i}
 
       {@const appShown = windowContainer.children[i].style.display != 'none'}
       {@const appMinimized = windowContainer.children[i].dataset['minimized'] == 'true'}
