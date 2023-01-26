@@ -9,7 +9,7 @@
     WINDOW_HEADER_HEIGHT,
   } from "../../../scripts/desktopConstants";
 
-  import { WINDOW_AQUIRE_FOCUS, WINDOW_CLOSE, WINDOW_MINIMIZE_STATE_CHANGE } from "../../../scripts/windowEvent";
+  import { WINDOW_AQUIRE_FOCUS, WINDOW_CLOSE, WINDOW_MINIMIZE } from "../../../scripts/windowEvent";
 
   export let title: string = "?";
   export let pos: { x: number; y: number } = { x: 0, y: 0 };
@@ -73,7 +73,7 @@
   }
 
   const handleMinimize = (): void => {
-    // 
+    dispatcher('criticalWindowEvent', { type: WINDOW_MINIMIZE });
   }
 
   const handleDragStart = (e: MouseEvent): void => {
@@ -184,12 +184,6 @@
     document.removeEventListener("mousemove", handleResize);
     document.removeEventListener("mouseup", handleResizeEnd);
   }
-
-  onMount(() => {
-    
-  });
-
-  // dispatcher('criticalWindowEvent', { type: WINDOW_MINIMIZE_STATE_CHANGE });
   
 </script>
 

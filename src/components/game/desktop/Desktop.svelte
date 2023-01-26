@@ -11,7 +11,7 @@
   // DEBUG
   import { onMount } from 'svelte'
   import DebuggerApp from "../windows/DebuggerApp.svelte";
-  import { WINDOW_AQUIRE_FOCUS, WINDOW_CLOSE } from "../../../scripts/windowEvent";
+  import { WINDOW_AQUIRE_FOCUS, WINDOW_CLOSE, WINDOW_MINIMIZE } from "../../../scripts/windowEvent";
 
   let date: string = "undefined date";
   let windowContainer: HTMLElement;
@@ -61,8 +61,9 @@
   }
 
   const unminimizeApp = (index: number) => {
-    return;
-    getWindow(index).dataset['minimized'] = 'false';
+    if (index < 0 || index >= apps.length) return;
+    
+    apps[index].minimized = false;
     updateUI();
   }
 
@@ -87,6 +88,14 @@
           apps.forEach((e, i) => {
             if (i !== index && e.component != null) e.component.unfocus();
           });
+          updateUI();
+        }
+        break;
+
+      case WINDOW_MINIMIZE:
+        {
+          apps[index].minimized = true;
+          updateUI();
         }
         break;
 
@@ -171,7 +180,7 @@
 
       {#each apps as app, i}
 
-      {#if app.opened}
+      {#if app.opened && !app.minimized}
 
       <svelte:component
         this={app.componentConstructor}
@@ -297,16 +306,10 @@
     border: 1px solid green;
   }
 
-  /* to be updated */
-
-  .toolbar > .items > span[data-minimized="true"]:after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+  .toolbar > span[data-minimized="true"] {
+    background-color: var(--color-accent);
+    color: var(--color-bg);
+    font-weight: bold;
   }
 
 </style>
