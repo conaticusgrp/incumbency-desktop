@@ -1,13 +1,15 @@
 <script lang="ts">
   
-  import { createEventDispatcher, onMount } from "svelte"
+  import { createEventDispatcher, onMount } from "svelte";
 
   import {
     MIN_WINDOW_HEIGHT,
     MIN_WINDOW_WIDTH,
     RESIZE_BAR_SIZE,
     WINDOW_HEADER_HEIGHT,
-  } from "../../../scripts/desktopConstants"
+  } from "../../../scripts/desktopConstants";
+
+  import { WINDOW_AQUIRE_FOCUS, WINDOW_CLOSE, WINDOW_MINIMIZE_STATE_CHANGE } from "../../../scripts/windowEvent";
 
   export let title: string = "?";
   export let pos: { x: number; y: number } = { x: 0, y: 0 };
@@ -22,10 +24,12 @@
   let resizeType: { w?: 'r' | 'l', h?: 't' | 'b' };
   let boundsBeforeMaximizing: { x: number, y: number, width: number, height: number };
   
-  let observer: MutationObserver;
-  let opened = false;
   let focused = false;
   let dispatcher = createEventDispatcher();
+
+  export const unfocus = (): void => {
+    focused = false;
+  }
 
   const getParentBox = (): { x: number, y: number, width: number, height: number } => {
     const box = thisObj.parentElement?.getBoundingClientRect();
@@ -41,14 +45,7 @@
   }
 
   const requestFocus = (): void => {
-    if (thisObj.parentElement == undefined) return;
-    // NOTE: The next line breaks the focus system. Do not add it to the code
-    // if (focused) return;
-
-    const others = thisObj.parentElement.children;
-    for (let i = 0; i < others.length; i++) {
-      (others[i] as HTMLElement).dataset['focused'] = String(others[i] == thisObj);
-    }
+    dispatcher('criticalWindowEvent', { type: WINDOW_AQUIRE_FOCUS });
   }
 
   const maximize = (): void => {
@@ -63,9 +60,8 @@
   }
 
   const handleClose = (): void => {
-    thisObj.style.display = 'none';
-    thisObj.dataset['focused'] = 'false';
-    dispatcher('criticalWindowEvent', { type: 'windowClose' });
+    focused = true;
+    dispatcher('criticalWindowEvent', { type: WINDOW_CLOSE });
   }
 
   const handleMaximize = (): void => {
@@ -77,7 +73,7 @@
   }
 
   const handleMinimize = (): void => {
-    thisObj.dataset['minimized'] = 'true';
+    // 
   }
 
   const handleDragStart = (e: MouseEvent): void => {
@@ -190,26 +186,10 @@
   }
 
   onMount(() => {
-    observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.type === "attributes") {
-          if (mutation.attributeName === "style") {
-            opened = thisObj?.style.display != 'none';
-          } else if (mutation.attributeName === "data-focused") {
-            focused = thisObj?.dataset['focused'] as unknown as boolean;
-          } else if (mutation.attributeName === "data-minimized") {
-            thisObj.style.display = (thisObj?.dataset['minimized'] !== 'true') ? 'initial' : 'none';
-            dispatcher('criticalWindowEvent', { type: 'windowMinimizeStateChange' });
-          }
-        }
-      });
-    });
-    thisObj.style.display = 'none';
-
-    observer.observe(thisObj, {
-      attributes: true
-    });
+    
   });
+
+  // dispatcher('criticalWindowEvent', { type: WINDOW_MINIMIZE_STATE_CHANGE });
   
 </script>
 
@@ -222,8 +202,6 @@
     height: {size.height}px;
     z-index: {focused ? 10_000 : 9999};
   "
-  data-focused={false}
-  data-minimized={false}
   on:mousedown={requestFocus}
   bind:this={thisObj}
 >

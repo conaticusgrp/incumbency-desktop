@@ -11,22 +11,19 @@
   // DEBUG
   import { onMount } from 'svelte'
   import DebuggerApp from "../windows/DebuggerApp.svelte";
+  import { WINDOW_AQUIRE_FOCUS, WINDOW_CLOSE } from "../../../scripts/windowEvent";
 
   let date: string = "undefined date";
   let windowContainer: HTMLElement;
   let wallpaperPath: string | null = "./src/assets/Wallpaper.png";
   let apps: DesktopAppShortcut[] = [
-    { name: "DEBUG" },
-    { name: "Email", badgeCount: 2 },
-    { name: "Government Spending", badgeCount: 1 }
+    { componentConstructor: DebuggerApp, name: "DEBUG" },
+    { componentConstructor: Email,       name: "Email", badgeCount: 2 },
+    { componentConstructor: BudgetPanel, name: "Budget Panel", badgeCount: 1 }
   ];
+  let focusedApp: number | null = null;
   
   //let notifications: NotificationData[] = [];
-
-  const getWindow = (index: number): HTMLElement => {
-    console.assert(windowContainer != undefined && index >= 0 && index < windowContainer.children.length, "Tried to get a window that doesn't exist");
-    return windowContainer.children[index] as HTMLElement;
-  }
 
   /*
   $: if (notifications.length > 0 && !KEEP_NOTIFICATIONS_DISPLAYED) {
@@ -37,37 +34,64 @@
   }
   */
 
+  const getWindow = (index: number): HTMLElement | null => {
+    if (windowContainer == null) return null;
+
+    for (let i = 0; i < windowContainer.children.length; i++) {
+      if (apps[i].opened) {
+        index--;
+      }
+
+      if (index === 0) {
+        return windowContainer.children[i] as HTMLElement;
+      }
+    }
+
+    return null;
+  }
+
   const handleOpenApp = (e: CustomEvent): void => {
     const index = e.detail.index;
-    if (index < 0 || index >= windowContainer.children.length) return;
+    if (index < 0 || index >= apps.length) return;
 
-    if (getWindow(index).dataset['minimized'] !== 'true') {
-      getWindow(index).style.display = 'initial';
-      updateUI();
-    } else {
-      unminimizeApp(index);
-    }
+    console.log("open app");
+
+    apps[index].opened = true;
+    updateUI();
   }
 
   const unminimizeApp = (index: number) => {
+    return;
     getWindow(index).dataset['minimized'] = 'false';
     updateUI();
   }
 
   const updateUI = () => {
-    console.log("update");
-    // console.assert(apps.length <= windowContainer.children.length);
-    /*
-    for (let i = 0; i < windowContainer.children.length; i++) {
-      apps[i].minimized = getWindow(i).dataset['minimized'] === 'true';
-    }
-    */
-
-    for (let i = 0; i < windowContainer.children.length; i++) {
-      console.log(getWindow(i).style.display);
-    }
-
     apps = apps;
+  }
+
+  const handleCriticalEvent = (index: number, e: CustomEvent): void => {
+    if (index < 0 || index >= apps.length) return;
+
+    switch (e.detail.type) {
+      case WINDOW_CLOSE:
+        {
+          apps[index].opened = false;
+          updateUI();
+        }
+        break;
+
+      case WINDOW_AQUIRE_FOCUS:
+        {
+          focusedApp = index;
+          apps.forEach((e, i) => {
+            if (i !== index && e.component != null) e.component.unfocus();
+          });
+        }
+        break;
+
+      default: break;
+    }
   }
 
   listen('new_day', (d) => {
@@ -110,15 +134,8 @@
 
       {#each apps as shortcut, i}
 
-      {@const appExists = windowContainer != null && windowContainer.children.length > i}
-      {@const appOpened = appExists && windowContainer.children[i].style.display != 'none'}
-      
-      <div style="color: var({appOpened ? '--color-highlight' : '--color-shaded'});">
+      <div style="color: var({apps[i].opened ? '--color-highlight' : '--color-shaded'});">
         {shortcut.name}
-
-        {#if appExists}
-        [{getWindow(i).style.display}]
-        {/if}
         
         {#if shortcut.badgeCount != undefined && shortcut.badgeCount > 0}
         <span>({shortcut.badgeCount})</span>
@@ -152,9 +169,20 @@
       bind:this={windowContainer}
     >
 
-      <DebuggerApp on:criticalWindowEvent={updateUI} />
-      <Email on:criticalWindowEvent={updateUI} />
-      <BudgetPanel on:criticalWindowEvent={updateUI} />
+      {#each apps as app, i}
+
+      {#if app.opened}
+
+      <svelte:component
+        this={app.componentConstructor}
+        bind:this={app.component}
+        {...app.props}
+        on:criticalWindowEvent={(e) => handleCriticalEvent(i, e)}
+      />
+      
+      {/if}
+
+      {/each}
 
     </div>
 
@@ -165,12 +193,7 @@
 
       {#each apps as shortcut, i}
 
-      {#if windowContainer != null && windowContainer.children.length > i}
-
-      {@const appShown = windowContainer.children[i].style.display != 'none'}
-      {@const appMinimized = windowContainer.children[i].dataset['minimized'] == 'true'}
-
-      {#if (appShown && !appMinimized) || (!appShown && appMinimized)}
+      {#if apps[i].opened}
 
       <!-- !! to cast (boolean | undefined) to boolean -->
       <!-- empty on:keydown to supress a warning -->
@@ -182,8 +205,6 @@
       >
         {shortcut.name}
       </span>
-
-      {/if}
 
       {/if}
 
