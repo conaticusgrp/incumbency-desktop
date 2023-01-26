@@ -23,7 +23,7 @@ pub struct GameState {
 
   pub population_counter: f64,
 
-  pub births_in_last_month: SlotArray<usize>,
+  pub births_in_last_month: SlotArray<i32>,
   pub deaths_in_last_month: SlotArray<usize>,
 }
 
@@ -83,9 +83,13 @@ impl GameState {
             per.day_pass(day, &mut self.hospital_current_capacity, &mut self.month_unhospitalised_count, &date, &mut death_queue, &mut self.businesses);
         }
 
+        let population_before_deaths = self.people.len() as i32;
+
         for id in &death_queue {
             let idx = self.people.iter().position(|p| p.id == *id).unwrap();
             self.people.remove(idx);
+            let new_birth_count = 0;
+            self.population_counter -= 1.;
         }
 
         self.deaths_in_last_month.push(death_queue.len());
@@ -96,7 +100,11 @@ impl GameState {
 
         self.population_counter += (self.people.len() as f32 * POPULATION_DAILY_INCREASE_PERCENTAGE) as f64;
 
-        let new_birth_count = self.population_counter.floor() as usize - self.people.len();
+        let mut new_birth_count = self.population_counter.floor() as i32 - population_before_deaths;
+        if new_birth_count < 0 {
+            new_birth_count = 0;
+        }
+
         for _ in 0..new_birth_count {
             let infant = Person::new_infant(self.people.len(), Birthday::from(&date), config);
             self.people.push(infant);
