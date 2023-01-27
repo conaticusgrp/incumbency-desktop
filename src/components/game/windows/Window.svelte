@@ -120,24 +120,16 @@
 
   const handleResizeStart = (e: MouseEvent): void => {
     const classList = (e.target as HTMLElement).classList;
-    if (classList.contains("width-resize-bar-right")) {
-      resizeType = { w: 'r' };
-    } else if (classList.contains("width-resize-bar-left")) {
-      resizeType = { w: 'l' };
-    } else if (classList.contains("height-resize-bar-bottom")) {
-      resizeType = { h: 'b' };
-    } else if (classList.contains("height-resize-bar-top")) {
-      resizeType = { h: 't' };
-    } else if (classList.contains("width-height-resize-bar-bottom-right")) {
-      resizeType = { w: 'r', h: 'b' };
-    } else if (classList.contains("width-height-resize-bar-top-left")) {
-      resizeType = { w: 'l', h: 't' };
-    } else if (classList.contains("width-height-resize-bar-top-right")) {
-      resizeType = { w: 'r', h: 't' };
-    } else if (classList.contains("width-height-resize-bar-bottom-left")) {
-      resizeType = { w: 'l', h: 'b'};
-    } else {
-      return;
+    resizeType = {};
+    if (classList.contains("resize-bar-right")) {
+      resizeType.w = 'r';
+    } else if (classList.contains("resize-bar-left")) {
+      resizeType.w = 'l';
+    }
+    if (classList.contains("resize-bar-bottom")) {
+      resizeType.h = 'b';
+    } else if (classList.contains("resize-bar-top")) {
+      resizeType.h = 't';
     }
 
     document.addEventListener("mousemove", handleResize);
@@ -241,43 +233,43 @@
     <slot />
 
     <div
-      class="width-resize-bar-left"
+      class="resize-bar-left"
       style="width: {RESIZE_BAR_SIZE}px; height: calc(100% - {RESIZE_BAR_SIZE}px * 2);"
       on:mousedown={handleResizeStart}
     />
     <div
-      class="width-resize-bar-right"
+      class="resize-bar-right"
       style="width: {RESIZE_BAR_SIZE}px; height: calc(100% - {RESIZE_BAR_SIZE}px);"
       on:mousedown={handleResizeStart}
     />
     <div
-      class="height-resize-bar-top"
+      class="resize-bar-top"
       style="width: calc(100% - {RESIZE_BAR_SIZE}px * 2); height: {RESIZE_BAR_SIZE}px;"
       on:mousedown={handleResizeStart}
     />
     <div
-      class="height-resize-bar-bottom"
+      class="resize-bar-bottom"
       style="width: calc(100% - {RESIZE_BAR_SIZE}px); height: {RESIZE_BAR_SIZE}px;"
       on:mousedown={handleResizeStart}
     />
       
     <div
-      class="width-height-resize-bar-top-left"
+      class="resize-bar-top resize-bar-left"
       style="width: {RESIZE_BAR_SIZE}px; height: {RESIZE_BAR_SIZE}px;"
       on:mousedown={handleResizeStart}
     />
     <div
-      class="width-height-resize-bar-bottom-right"
+      class="resize-bar-bottom resize-bar-right"
       style="width: {RESIZE_BAR_SIZE}px; height: {RESIZE_BAR_SIZE}px;"
       on:mousedown={handleResizeStart}
     />
     <div
-      class="width-height-resize-bar-bottom-left"
+      class="resize-bar-bottom resize-bar-left"
       style="width: {RESIZE_BAR_SIZE}px; height: {RESIZE_BAR_SIZE}px;"
       on:mousedown={handleResizeStart}
     />
     <div
-      class="width-height-resize-bar-top-right"
+      class="resize-bar-top resize-bar-right"
       style="width: {RESIZE_BAR_SIZE}px; height: {RESIZE_BAR_SIZE}px;"
       on:mousedown={handleResizeStart}
     />
@@ -327,74 +319,90 @@
 
   /* Resize bars */
 
-  .width-resize-bar-right {
+  .resize-bar-right {
     cursor: ew-resize;
     position: absolute;
-    right: 0;
     top: 0;
+    right: 0;
+    bottom: initial;
+    left: initial;
     z-index: 9999;
     /* background-color: white; */
   }
 
-  .width-resize-bar-left {
+  .resize-bar-left {
     cursor: ew-resize;
     position: absolute;
-    left: 0;
     top: 0;
+    right: initial;
+    bottom: initial;
+    left: 0;
     z-index: 9999;
     /* background-color: white; */
   }
 
-  .height-resize-bar-bottom {
+  .resize-bar-bottom {
     cursor: ns-resize;
     position: absolute;
-    left: 0;
+    top: initial;
+    right: initial;
     bottom: 0;
+    left: 0;
     z-index: 9999;
     /* background-color: white; */
   }
 
-  .height-resize-bar-top {
+  .resize-bar-top {
     cursor: ns-resize;
     position: absolute;
-    left: 0;
     top: 0;
+    right: initial;
+    bottom: initial;
+    left: 0;
     z-index: 9999;
     /* background-color: white; */
   }
 
-  .width-height-resize-bar-bottom-right {
+  .resize-bar-bottom.resize-bar-right {
     cursor: nwse-resize;
     position: absolute;
+    top: initial;
     right: 0;
     bottom: 0;
+    left: initial;
     z-index: 9999;
     /* background-color: white; */
   }
 
-  .width-height-resize-bar-top-left {
+  .resize-bar-top.resize-bar-left {
     cursor: nwse-resize;
     position: absolute;
-    left: 0;
     top: 0;
+    right: initial;
+    bottom: initial;
+    left: 0;
     z-index: 9999;
     /* background-color: white; */
   }
 
-  .width-height-resize-bar-top-right {
+  .resize-bar-top.resize-bar-right {
     cursor: nesw-resize;
     position: absolute;
+    top: 0;
     right: 0;
-    top: 0;
+    bottom: initial;
+    left: initial;
     z-index: 9999;
     /* background-color: white; */
   }
 
-  .width-height-resize-bar-bottom-left {
+  .resize-bar-bottom.resize-bar-left {
     cursor: nesw-resize;
     position: absolute;
-    left: 0;
+    top: initial;
+    right: initial;
     bottom: 0;
+    left: 0;
     z-index: 9999;
     /* background-color: white; */
   }
