@@ -101,7 +101,7 @@ impl Default for Date {
         Self {
             day: 1,
             month: 1,
-            year: 1,
+            year: 0,
             on_new_month: false,
         }
     }
@@ -165,6 +165,10 @@ pub fn length(n: u32) -> i32 {
 pub fn percentage_chance(percent: f32) -> bool {
     let maximum = (100. / percent) as i32;
     rand::thread_rng().gen_range(0..=maximum) == maximum
+}
+
+pub fn chance_one_in(amount: i32) -> bool {
+    rand::thread_rng().gen_range(0..=amount) == amount
 }
 
 #[derive(Default, Debug, Clone)]
