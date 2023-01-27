@@ -1,7 +1,7 @@
 use std::{ops::Range, collections::HashMap};
 use maplit::hashmap;
 use rand::{Rng};
-use crate::{common::util::{float_range, percentage_based_output_int, Date, percentage_chance}, common::config::Config, game::{generation::{generate_education_level, get_expected_salary_range}}, entities::business::{ProductType, Business}, percentage_of};
+use crate::{common::util::{float_range, percentage_based_output_int, Date, percentage_chance, chance_one_in}, common::config::Config, game::{generation::{generate_education_level, get_expected_salary_range}}, entities::business::{ProductType, Business}, percentage_of};
 use EducationLevel::*;
 
 use super::{debt::{Debt}, welfare::{WelfareMachine, WELFARE_IMPACT_FOUR, WELFARE_IMPACT_FIVE, WELFARE_IMPACT_THREE, WELFARE_IMPACT_TWO}};
@@ -55,6 +55,7 @@ pub struct Person {
     pub expected_salary_range: Range<i32>, // Range of the expected salary for the person based on their education level
     pub salary: i32,
 
+    pub saving_percentage_range: Range<i32>, // Range of how much the individual wishes to save of their balance - varied by spending behaviour
     pub spending_behaviour: SpendingBehaviour,
     pub daily_food_spending: i32,
 
@@ -102,7 +103,7 @@ impl Person {
             person.daily_food_spending = 0;
         }
 
-        person.generate_demand(expected_salary, Some(product_demand));
+        person.calculate_demand(expected_salary, Some(product_demand));
         person.generate_health();
 
         person
@@ -124,7 +125,7 @@ impl Person {
         infant.expected_salary_range = get_expected_salary_range(config, &infant.education_level);
 
         infant.generate_spending_behaviour();
-        infant.generate_demand(0., None);
+        infant.calculate_demand(0., None);
 
         infant
     }
@@ -153,47 +154,54 @@ impl Person {
 
 // Dynamic methods
 impl Person {
-        fn generate_spending_behaviour(&mut self) {
-            if matches!(self.job, Job::BusinessOwner(_)) {
+    fn generate_spending_behaviour(&mut self) {
+        if matches!(self.job, Job::BusinessOwner(_)) {
             self.spending_behaviour = percentage_based_output_int::<SpendingBehaviour>(hashmap! {
-                    SpendingBehaviour::One => 1,
-                    SpendingBehaviour::Two => 4,
-                    SpendingBehaviour::Three => 25,
-                    SpendingBehaviour::Four => 70,
-                });
+                SpendingBehaviour::One => 1,
+                SpendingBehaviour::Two => 4,
+                SpendingBehaviour::Three => 25,
+                SpendingBehaviour::Four => 70,
+            });
 
-                return;
-            }
+            return;
+        }
 
-            self.spending_behaviour = match self.education_level {
-                NoFormalEducation => percentage_based_output_int::<SpendingBehaviour>(hashmap! {
-                    SpendingBehaviour::One => 75,
-                    SpendingBehaviour::Two => 20,
-                    SpendingBehaviour::Three => 4,
-                    SpendingBehaviour::Four => 1,
-                }),
+        self.spending_behaviour = match self.education_level {
+            NoFormalEducation => percentage_based_output_int::<SpendingBehaviour>(hashmap! {
+                SpendingBehaviour::One => 75,
+                SpendingBehaviour::Two => 20,
+                SpendingBehaviour::Three => 4,
+                SpendingBehaviour::Four => 1,
+            }),
 
-                HighSchoolDiploma => percentage_based_output_int::<SpendingBehaviour>(hashmap! {
-                    SpendingBehaviour::One => 20,
-                    SpendingBehaviour::Two => 70,
-                    SpendingBehaviour::Three => 9,
-                    SpendingBehaviour::Four => 1,
-                }),
+            HighSchoolDiploma => percentage_based_output_int::<SpendingBehaviour>(hashmap! {
+                SpendingBehaviour::One => 20,
+                SpendingBehaviour::Two => 70,
+                SpendingBehaviour::Three => 9,
+                SpendingBehaviour::Four => 1,
+            }),
 
-                College | AssociateDegree => percentage_based_output_int::<SpendingBehaviour>(hashmap! {
-                    SpendingBehaviour::One => 3,
-                    SpendingBehaviour::Two => 10,
-                    SpendingBehaviour::Three => 82,
-                    SpendingBehaviour::Four => 5,
-                }),
+            College | AssociateDegree => percentage_based_output_int::<SpendingBehaviour>(hashmap! {
+                SpendingBehaviour::One => 3,
+                SpendingBehaviour::Two => 10,
+                SpendingBehaviour::Three => 82,
+                SpendingBehaviour::Four => 5,
+            }),
 
-                Bachelors | AdvancedDegree => percentage_based_output_int::<SpendingBehaviour>(hashmap! {
-                    SpendingBehaviour::One => 1,
-                    SpendingBehaviour::Two => 4,
-                    SpendingBehaviour::Three => 77,
-                    SpendingBehaviour::Four => 18,
-                })
-            }
+            Bachelors | AdvancedDegree => percentage_based_output_int::<SpendingBehaviour>(hashmap! {
+                SpendingBehaviour::One => 1,
+                SpendingBehaviour::Two => 4,
+                SpendingBehaviour::Three => 77,
+                SpendingBehaviour::Four => 18,
+            })
+        };
+
+        self.saving_percentage_range = match self.spending_behaviour {
+            SpendingBehaviour::One => 5..10,
+            SpendingBehaviour::Two => 8..14,
+            SpendingBehaviour::Three => 15..20,
+            SpendingBehaviour::Four => 20..28,
+        }
     }
 
     fn generate_balance(&mut self, salary: f32) {
@@ -215,24 +223,14 @@ impl Person {
         self.balance = float_range(4., 90., 1);
     }
 
-    fn generate_demand(&mut self, salary: f32, product_demand: Option<&mut HashMap<ProductType, f32>>) {
-        self.demand.insert(ProductType::Leisure, 0.);
-
-        let product_demand = match product_demand {
-            Some(dm) => dm,
-            None => return,
-        };
-
+    pub fn calculate_demand(&mut self, salary: f32, product_demand: Option<&mut HashMap<ProductType, f32>>) {
         // TODO: generate based on more factors rather than just salary
-        let mut rng = rand::thread_rng();
-
-        if self.age < 18 {
-            let demand = rng.gen_range(8..40) as f32;
-            self.demand.insert(ProductType::Leisure, demand);
-            *product_demand.get_mut(&ProductType::Leisure).unwrap() += demand;
-
+        if salary == 0. {
+            *self.demand.entry(ProductType::Leisure).or_insert(0.) = 0.;
             return;
         }
+
+        let mut rng = rand::thread_rng();
 
         // The percentage of balance that will be added to demand
         let (balance_percentage, salary_percentage) = match self.spending_behaviour {
@@ -245,9 +243,11 @@ impl Person {
         let mut total_demand = self.balance * (balance_percentage / 100.);
         
         total_demand += (salary / 12.) * (salary_percentage / 100.);
+        *self.demand.entry(ProductType::Leisure).or_insert(total_demand) += total_demand;
 
-        self.demand.insert(ProductType::Leisure, total_demand);
-        *product_demand.get_mut(&ProductType::Leisure).unwrap() += total_demand;
+        if let Some(prod_dem) = product_demand {
+            *prod_dem.get_mut(&ProductType::Leisure).unwrap() += total_demand; 
+        }
     }
 
     pub fn calculate_daily_food_spending(&self) -> i32 {
@@ -297,7 +297,10 @@ impl Person {
     }
 
     pub fn can_afford(&self, price: f32) -> bool {
-        let mut cut_balance: f32 = self.balance - (self.balance * 0.1) - ((self.salary as f32 / 12.) * 0.1);
+        let mut rng = rand::thread_rng();
+        let saving_percent = rng.gen_range(self.saving_percentage_range.clone()) as f32 / 100.;
+
+        let mut cut_balance: f32 = self.balance - (self.balance * saving_percent) - ((self.salary as f32 / 12.) * saving_percent);
         cut_balance -= self.get_monthly_debt_cost();
 
         cut_balance -= self.daily_food_spending as f32 * 30.;
@@ -330,14 +333,12 @@ impl Person {
 
         let mut rng = rand::thread_rng();
 
-        let minor_accident_max = 7300; // roughly 1 accident every 20 years (365 * 20)
-        let has_minor_accident = rng.gen_range(0..=minor_accident_max) == minor_accident_max;
-        if has_minor_accident {
+        if chance_one_in(7300) { // Average person has minor accident every 20 years
             self.remove_health(rng.gen_range(15..=25), hospital_current_capacity, month_unhospitalised_count);
         }
 
         if self.homeless {
-            self.balance += rng.gen_range(1..=3) as f32;
+            self.balance += rng.gen_range(1..=2) as f32;
         }
 
 

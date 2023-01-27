@@ -121,6 +121,8 @@ impl GameState {
 
     pub fn month_pass(&mut self, tax_rate: f32, app_handle: Option<&tauri::AppHandle>) {
         for person in self.people.iter_mut() {
+            person.calculate_demand(person.salary as f32, None);
+
             let income = person.salary as f32;
             person.balance += income;
 

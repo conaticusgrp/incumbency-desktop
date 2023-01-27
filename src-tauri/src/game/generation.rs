@@ -2,7 +2,7 @@ use std::{collections::{HashMap}, ops::Range};
 use maplit::hashmap;
 use rand::Rng;
 
-use crate::{common::{config::{load_config, Config}, util::percentage_based_output_int}, entities::{person::person::{EducationLevel::{*, self}, Person, Job}, business::{ProductType, Business}}};
+use crate::{common::{config::{Config}, util::percentage_based_output_int}, entities::{person::person::{EducationLevel::{*, self}, Person, Job}, business::{ProductType, Business}}};
 
 use super::state_manager::GameStateSafe;
 
