@@ -1,7 +1,7 @@
 use std::{sync::{Mutex, Arc}};
 use maplit::hashmap;
 use serde_json::json;
-use crate::{entities::{business::{Business, ProductType}, person::{person::{Person, Job, Birthday}, debt::{Debt, DebtType}, self}}, as_decimal_percent, common::{util::{Date, SlotArray, set_decimal_count}, config::Config}};
+use crate::{entities::{business::{Business, ProductType}, person::{person::{Person, Job, Birthday}, debt::{Debt, DebtType}, self}}, as_decimal_percent, common::{util::{Date, SlotArray, set_decimal_count, percentage_chance, chance_one_in}, config::Config}};
 use tauri::Manager;
 
 #[derive(Clone)]
@@ -81,6 +81,12 @@ impl GameState {
         let date = self.date.clone();
         for per in self.people.iter_mut() {
             per.day_pass(day, &mut self.hospital_current_capacity, &mut self.month_unhospitalised_count, &date, &mut death_queue, &mut self.businesses);
+            if per.age >= 18 && per.job == Job::Unemployed {
+                // TODO: make this be affected by other factors
+                if !per.homeless && chance_one_in(2000 * 365) { // 1 in 2000 chance every year
+                    per.homeless = true;
+                }
+            }
         }
 
         let population_before_deaths = self.people.len() as i32;
@@ -149,7 +155,6 @@ impl GameState {
                 if debt.owed < debt.minimum_monthly_payoff {
                     person.balance -= debt.owed;
                     person.debts.remove(i);
-                    person.calculate_daily_food_spending();
 
                     continue;
                 }
@@ -159,8 +164,6 @@ impl GameState {
                  // Add functionality to welfare if they can't afford debts
                  person.balance -= debt.minimum_monthly_payoff;
             }
-
-            person.calculate_daily_food_spending();
         }
 
         let mut reinvestment_budgets: Vec<(usize, f32)> = Vec::new();
@@ -220,18 +223,29 @@ impl GameState {
             }
 
             let mut total_welfare_percentage = 0;
+            let mut unemployed_count = 0; // Does not include the homeless
+            let mut homeless_count = 0;
+
             for person in self.people.iter() {
                 total_welfare_percentage += person.get_welfare();
+                if person.homeless { homeless_count += 1; continue }
+
+                if person.job == Job::Unemployed {
+                    unemployed_count += 1;
+                }
             }
 
             let average_welfare = total_welfare_percentage as f32 / self.people.len() as f32;
             let average_welfare = set_decimal_count(average_welfare, 2);
 
+            // TODO - send me daily
             app.emit_all("debug_payload",  json! ({
                 "Average Welfare": average_welfare,
                 "Government Balance": self.government_balance,
                 "Monthly Births": births_total,
                 "Monthly Deaths": deaths_total,
+                "Homeless Count": homeless_count,
+                "Unemployed Count": unemployed_count,
             })).unwrap();
         }
 

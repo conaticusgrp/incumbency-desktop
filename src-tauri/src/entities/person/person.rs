@@ -46,6 +46,7 @@ pub struct Person {
     pub years_in_higher_education: i32, // Amount of years the individual spent in college or university (TODO: use this)
     pub job: Job,
     pub debts: Vec<Debt>,
+    pub years_in_unemployment: i32,
 
     pub age: i32,
     pub birthday: Birthday,
@@ -286,19 +287,13 @@ impl Person {
     /// This should be done every time the individual's salary changes, and every month.
     pub fn generate_daily_food_spending(&mut self) {
         // TODO: change me
-        if let Job::BusinessOwner(_) = self.job { self.daily_food_spending = 4; return }
+        if let Job::BusinessOwner(_) = self.job { return self.daily_food_spending = 4 }
 
         if self.job == Job::Unemployed {
-            // 5% chance of an unemployed person being homeless (roughly 0.17% chance in total)
-            if self.age > 20 && percentage_chance(5.) {
-                self.homeless = true;
-                return;
-            }
-
-            self.salary = rand::thread_rng().gen_range(300..=1100); // TODO: make me more dynamic
+            self.salary = rand::thread_rng().gen_range(300..=1100); // TODO: make me more dynamic & move me
         }
         
-        self.daily_food_spending = self.calculate_daily_food_spending();
+        self.daily_food_spending = self.calculate_daily_food_spending()
     }
 
     pub fn can_afford(&self, price: f32) -> bool {
@@ -335,18 +330,19 @@ impl Person {
 
         let mut rng = rand::thread_rng();
 
-        let minor_accident_max = 5475; // roughly 1 accident every 15 years (365 * 15)
+        let minor_accident_max = 7300; // roughly 1 accident every 20 years (365 * 20)
         let has_minor_accident = rng.gen_range(0..=minor_accident_max) == minor_accident_max;
         if has_minor_accident {
             self.remove_health(rng.gen_range(15..=25), hospital_current_capacity, month_unhospitalised_count);
         }
 
         if self.homeless {
-            self.balance += rng.gen_range(1..=2) as f32;
-            self.daily_food_spending = self.calculate_daily_food_spending();
+            self.balance += rng.gen_range(1..=3) as f32;
         }
 
-        if self.age >= 18 {
+
+        if self.age >= 18 && !matches!(self.job, Job::BusinessOwner(_)) {
+            self.daily_food_spending = self.calculate_daily_food_spending();
             self.balance -= self.daily_food_spending as f32;
 
             let (health_loss_chance, welfare_loss) = match self.daily_food_spending { // Chance that the individual will lose 1% of their health

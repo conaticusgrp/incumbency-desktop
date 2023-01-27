@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@tauri-apps/api": "^1.2.0",
+    "@tauri-apps/cli": "^1.2.3",
     "svelte-ionicons": "^0.2.3"
   }
 }

@@ -104,7 +104,7 @@ impl Person {
 
     pub fn generate_health(&mut self) {
         let (health_range, hospitalisation_percentage_range, hospitalisation_count_range, maximum_health_range) = match self.age {
-            a if a <= 20 => (75..95, 8..15, 0..3, 97..100),
+           a if a <= 20 => (75..95, 8..15, 0..3, 97..100),
             a if a <= 35 => (65..85, 12..20, 1..6, 85..97),
             a if a <= 55 => (55..80, 15..25, 1..12, 72..88),
             a if a <= 75 => (30..55, 35..50, 5..25, 45..60),
