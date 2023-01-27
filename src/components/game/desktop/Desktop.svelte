@@ -34,27 +34,9 @@
   }
   */
 
-  const getWindow = (index: number): HTMLElement | null => {
-    if (windowContainer == null) return null;
-
-    for (let i = 0; i < windowContainer.children.length; i++) {
-      if (apps[i].opened) {
-        index--;
-      }
-
-      if (index === 0) {
-        return windowContainer.children[i] as HTMLElement;
-      }
-    }
-
-    return null;
-  }
-
   const handleOpenApp = (e: CustomEvent): void => {
     const index = e.detail.index;
     if (index < 0 || index >= apps.length) return;
-
-    console.log("open app");
 
     apps[index].opened = true;
     updateUI();
@@ -180,16 +162,15 @@
 
       {#each apps as app, i}
 
-      {#if app.opened && !app.minimized}
+      <!-- app.opened: boolean | undefined => !!app.opened: boolean -->
 
       <svelte:component
         this={app.componentConstructor}
         bind:this={app.component}
+        opened={!!app.opened && !app.minimized}
         {...app.props}
         on:criticalWindowEvent={(e) => handleCriticalEvent(i, e)}
       />
-      
-      {/if}
 
       {/each}
 

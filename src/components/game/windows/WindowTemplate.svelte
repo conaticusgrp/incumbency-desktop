@@ -9,6 +9,8 @@
   import { createEventDispatcher } from "svelte";
   import Window from "./Window.svelte"
 
+  export let opened: boolean;
+
   let dispatcher = createEventDispatcher();
 
 </script>
@@ -17,6 +19,7 @@
   title="WindowTemplate"
   pos={{ x: 100, y: 50 }}
   size={{ width: 800, height: 600 }}
+  {opened}
   on:criticalWindowEvent={(e) => dispatcher('criticalWindowEvent', e.detail)}
 >
   <p>Window template</p>

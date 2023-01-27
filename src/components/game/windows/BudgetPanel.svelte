@@ -3,6 +3,8 @@
   import { createEventDispatcher } from "svelte";
   import Window from "./Window.svelte"
 
+  export let opened: boolean;
+
   let dispatcher = createEventDispatcher();
 
   let formatter = Intl.NumberFormat('en', { notation: 'compact' });
@@ -18,6 +20,7 @@
   title="Budget Panel"
   pos={{ x: 100, y: 50 }}
   size={{ width: 800, height: 600 }}
+  {opened}
   on:criticalWindowEvent={(e) => dispatcher('criticalWindowEvent', e.detail)}
 >
   <main>

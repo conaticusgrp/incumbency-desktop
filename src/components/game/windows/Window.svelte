@@ -18,6 +18,7 @@
     height: 400,
     maximized: false
   };
+  export let opened: boolean = true;
   
   let thisObj: HTMLElement;
   let dragOffset: { dx: number; dy: number };
@@ -27,8 +28,8 @@
   let focused = false;
   let dispatcher = createEventDispatcher();
 
-  export const unfocus = (): void => {
-    focused = false;
+  export const show = (): void => {
+    thisObj.style.display = 'initial';
   }
 
   const getParentBox = (): { x: number, y: number, width: number, height: number } => {
@@ -182,6 +183,7 @@
 <!-- PARENT COMPONENT -->
 <main
   style="
+    display: {opened ? 'initial' : 'none'};
     left: {pos.x}px;
     top: {pos.y}px;
     width: {size.width}px;
