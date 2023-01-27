@@ -4,7 +4,7 @@ use rand::{Rng};
 use crate::{common::util::{float_range, percentage_based_output_int, Date, percentage_chance, chance_one_in}, common::config::Config, game::{generation::{generate_education_level, get_expected_salary_range}}, entities::business::{ProductType, Business}, percentage_of};
 use EducationLevel::*;
 
-use super::{debt::{Debt}, welfare::{WelfareMachine, WELFARE_IMPACT_FOUR, WELFARE_IMPACT_FIVE, WELFARE_IMPACT_THREE, WELFARE_IMPACT_TWO}};
+use super::{debt::{Debt}, welfare::{WelfareMachine, WELFARE_IMPACT_FOUR, WELFARE_IMPACT_FIVE, WELFARE_IMPACT_THREE, WELFARE_IMPACT_TWO, WELFARE_IMPACT_ONE}};
 
 #[derive(Default, Clone)]
 pub struct Birthday {
@@ -386,19 +386,14 @@ impl Person {
         self.welfare_machine.remove_welfare_if(WELFARE_IMPACT_THREE, day, in_hospital);
         self.replenish_health();
 
-        let business_this_month= match self.business_this_month {
-            Some(idx) => idx,
-            _ => return,
-        };
-
-        let quantity_opt = self.purchase_days.get(&day);
-
+        let quantity_opt = self.purchase_days.remove(&day);
         let mut not_afford_wanted_item = false;
+
         if let Some(quantity) = quantity_opt {
-            let business = businesses.get_mut(business_this_month).unwrap();
+            let business = businesses.get_mut(self.business_this_month.unwrap()).unwrap();
             let item_cost = (business.product_price * quantity) as f32;
 
-            for _ in 0..*quantity {
+            for _ in 0..quantity {
                 if self.can_afford(item_cost) {
                     self.balance -= item_cost;
                     let demand = self.demand.get_mut(&business.product_type).unwrap();
@@ -410,13 +405,16 @@ impl Person {
                 } else {
                     not_afford_wanted_item = true;
                 }
-                // TODO: handle welfare on not affording an item
             }
         }
 
+        let no_business_this_month = match self.business_this_month {
+            Some(_) => false,
+            None => true,
+        };
+
         self.welfare_machine.remove_welfare_if(WELFARE_IMPACT_THREE, day, not_afford_wanted_item);
-        
-        // WARNING: new code here won't run if there is no business for the current month
+        self.welfare_machine.remove_welfare_if(WELFARE_IMPACT_FOUR, day, no_business_this_month);
     }
 
     pub fn get_welfare(&self) -> i32 {
