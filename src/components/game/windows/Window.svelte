@@ -234,43 +234,71 @@
 
     <div
       class="resize-bar-left"
-      style="width: {RESIZE_BAR_SIZE}px; height: calc(100% - {RESIZE_BAR_SIZE}px * 2);"
+      style="
+        width: {RESIZE_BAR_SIZE}px;
+        height: calc(100% - {RESIZE_BAR_SIZE}px * 2);
+        top: {RESIZE_BAR_SIZE}px;
+      "
       on:mousedown={handleResizeStart}
     />
     <div
       class="resize-bar-right"
-      style="width: {RESIZE_BAR_SIZE}px; height: calc(100% - {RESIZE_BAR_SIZE}px);"
+      style="
+        width: {RESIZE_BAR_SIZE}px;
+        height: calc(100% - {RESIZE_BAR_SIZE}px * 2);
+        top: {RESIZE_BAR_SIZE}px;
+      "
       on:mousedown={handleResizeStart}
     />
     <div
       class="resize-bar-top"
-      style="width: calc(100% - {RESIZE_BAR_SIZE}px * 2); height: {RESIZE_BAR_SIZE}px;"
-      on:mousedown={handleResizeStart}
+      style="
+        width: calc(100% - {RESIZE_BAR_SIZE}px * 2);
+        height: {RESIZE_BAR_SIZE}px;
+        left: {RESIZE_BAR_SIZE}px;
+        "
+        on:mousedown={handleResizeStart}
     />
     <div
       class="resize-bar-bottom"
-      style="width: calc(100% - {RESIZE_BAR_SIZE}px); height: {RESIZE_BAR_SIZE}px;"
+      style="
+        width: calc(100% - {RESIZE_BAR_SIZE}px * 2);
+        height: {RESIZE_BAR_SIZE}px;
+        left: {RESIZE_BAR_SIZE}px;
+      "
       on:mousedown={handleResizeStart}
     />
       
     <div
       class="resize-bar-top resize-bar-left"
-      style="width: {RESIZE_BAR_SIZE}px; height: {RESIZE_BAR_SIZE}px;"
+      style="
+        width: {RESIZE_BAR_SIZE}px;
+        height: {RESIZE_BAR_SIZE}px;
+      "
       on:mousedown={handleResizeStart}
     />
     <div
       class="resize-bar-bottom resize-bar-right"
-      style="width: {RESIZE_BAR_SIZE}px; height: {RESIZE_BAR_SIZE}px;"
+      style="
+        width: {RESIZE_BAR_SIZE}px;
+        height: {RESIZE_BAR_SIZE}px;
+      "
       on:mousedown={handleResizeStart}
     />
     <div
       class="resize-bar-bottom resize-bar-left"
-      style="width: {RESIZE_BAR_SIZE}px; height: {RESIZE_BAR_SIZE}px;"
+      style="
+        width: {RESIZE_BAR_SIZE}px;
+        height: {RESIZE_BAR_SIZE}px;
+      "
       on:mousedown={handleResizeStart}
     />
     <div
       class="resize-bar-top resize-bar-right"
-      style="width: {RESIZE_BAR_SIZE}px; height: {RESIZE_BAR_SIZE}px;"
+      style="
+        width: {RESIZE_BAR_SIZE}px;
+        height: {RESIZE_BAR_SIZE}px;
+      "
       on:mousedown={handleResizeStart}
     />
 
@@ -322,7 +350,7 @@
   .resize-bar-right {
     cursor: ew-resize;
     position: absolute;
-    top: 0;
+    /* top: 0; */
     right: 0;
     bottom: initial;
     left: initial;
@@ -333,7 +361,7 @@
   .resize-bar-left {
     cursor: ew-resize;
     position: absolute;
-    top: 0;
+    /* top: 0; */
     right: initial;
     bottom: initial;
     left: 0;
@@ -347,7 +375,7 @@
     top: initial;
     right: initial;
     bottom: 0;
-    left: 0;
+    /* left: 0; */
     z-index: 9999;
     /* background-color: white; */
   }
@@ -358,7 +386,7 @@
     top: 0;
     right: initial;
     bottom: initial;
-    left: 0;
+    /* left: 0; */
     z-index: 9999;
     /* background-color: white; */
   }
