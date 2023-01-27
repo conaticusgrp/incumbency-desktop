@@ -34,8 +34,7 @@
   }
   */
 
-  const handleOpenApp = (e: CustomEvent): void => {
-    const index = e.detail.index;
+  const handleOpenApp = (index: number): void => {
     if (index < 0 || index >= apps.length) return;
 
     apps[index].opened = true;
@@ -92,7 +91,7 @@
 
   listen('open_debugger_app', (e) => {
     //@ts-ignore
-    handleOpenApp({ detail: { index: apps.findIndex((v) => v.name === "DEBUG") } });
+    handleOpenApp(apps.findIndex((v) => v.name === "DEBUG"));
   });
 
   // DEBUG
@@ -125,7 +124,12 @@
 
       {#each apps as shortcut, i}
 
-      <div style="color: var({apps[i].opened ? '--color-highlight' : '--color-shaded'});">
+      <!-- empty on:keydown to supress a warning -->
+      <div
+        style="color: var({apps[i].opened ? '--color-highlight' : '--color-shaded'});"
+        on:click={() => handleOpenApp(i)}
+        on:keydown={() => {}}
+      >
         {shortcut.name}
         
         {#if shortcut.badgeCount != undefined && shortcut.badgeCount > 0}
@@ -162,7 +166,7 @@
 
       {#each apps as app, i}
 
-      <!-- app.opened: boolean | undefined => !!app.opened: boolean -->
+      <!-- !! to cast (boolean | undefined) to boolean -->
 
       <svelte:component
         this={app.componentConstructor}
