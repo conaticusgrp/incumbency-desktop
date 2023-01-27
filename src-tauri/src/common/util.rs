@@ -209,3 +209,7 @@ impl<T> IndexMut<usize> for SlotArray<T> {
         &mut self.array[i]
     }
 }
+
+pub fn generate_unemployed_salary() -> i32 {
+    rand::thread_rng().gen_range(300..=1100)    
+}

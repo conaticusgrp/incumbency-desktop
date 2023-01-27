@@ -1,6 +1,7 @@
-use std::{sync::{Mutex, Arc}};
+use std::{sync::{Mutex, Arc}, ops::Deref};
 use maplit::hashmap;
 use serde_json::json;
+use uuid::Uuid;
 use crate::{entities::{business::{Business, ProductType}, person::{person::{Person, Job, Birthday}, debt::{Debt, DebtType}, self}}, as_decimal_percent, common::{util::{Date, SlotArray, set_decimal_count, percentage_chance, chance_one_in}, config::Config}};
 use tauri::Manager;
 
@@ -13,7 +14,7 @@ pub struct GameState {
   pub gdp: f32,
   pub date: Date,
 
-  pub government_balance: u64, // This is expected to be quite large
+  pub government_balance: i64, // This is expected to be quite large
   pub healthcare_investment: f64,
 
   pub hospital_total_capacity: i32,
@@ -42,7 +43,7 @@ impl Default for GameState {
             gdp: 0.,
             date: Date::default(),
 
-            government_balance: GOVERNMENT_START_BALANCE as u64,
+            government_balance: GOVERNMENT_START_BALANCE as i64,
             healthcare_investment: GOVERNMENT_START_BALANCE as f64 * 0.07, // For now, 7% of the government budget should be spent on hospitals
             
             hospital_total_capacity: 0,
@@ -76,14 +77,15 @@ impl GameState {
     }
 
     pub fn day_pass(&mut self, day: i32, app_handle: Option<&tauri::AppHandle>, config: &Config) {
-        let mut death_queue: Vec<usize> = Vec::new(); // Queue of people who are going to die :) - we need this because rust memory
+        let mut death_queue: Vec<Uuid> = Vec::new(); // Queue of people who are going to die :) - we need this because rust memory
 
         let date = self.date.clone();
+
         for per in self.people.iter_mut() {
             per.day_pass(day, &mut self.hospital_current_capacity, &mut self.month_unhospitalised_count, &date, &mut death_queue, &mut self.businesses);
             if per.age >= 18 && per.job == Job::Unemployed {
                 // TODO: make this be affected by other factors
-                if !per.homeless && chance_one_in(2000 * 365) { // 1 in 2000 chance every year
+                if !per.homeless && chance_one_in(500 * 365) { // 1 in 500 chance every year
                     per.homeless = true;
                 }
             }
@@ -92,9 +94,16 @@ impl GameState {
         let population_before_deaths = self.people.len() as i32;
 
         for id in &death_queue {
+            let per = self.people.iter().find(|p| p.id == *id).unwrap();
+            if let Job::Employee(id) = per.job {
+                let business = self.businesses.iter_mut().find(|b| b.id == id).unwrap();
+                let employee_idx = business.employees.iter().position(|emp_id| id == *emp_id).unwrap();
+                business.employees.remove(employee_idx);
+            }
+
+
             let idx = self.people.iter().position(|p| p.id == *id).unwrap();
             self.people.remove(idx);
-            let new_birth_count = 0;
             self.population_counter -= 1.;
         }
 
@@ -112,7 +121,7 @@ impl GameState {
         }
 
         for _ in 0..new_birth_count {
-            let infant = Person::new_infant(self.people.len(), Birthday::from(&date), config);
+            let infant = Person::new_infant(Birthday::from(&date), config);
             self.people.push(infant);
         }
 
@@ -129,14 +138,14 @@ impl GameState {
             person.pay_tax(&mut self.government_balance, income * tax_rate);
 
             match person.job {
-                Job::BusinessOwner(bus_idx) => {
-                    let business = &mut self.businesses[bus_idx];
+                Job::BusinessOwner(bid) => {
+                    let business = self.businesses.iter_mut().find(|b| b.id == bid).unwrap();
                     business.pay_owner(person);
                 },
 
-                Job::Employee(bus_idx) => {
-                    let business = &mut self.businesses[bus_idx];
-                    person.business_pay(business, business.employee_salary as f32);
+                Job::Employee(bid) => {
+                    let business = self.businesses.iter_mut().find(|b| b.id == bid).unwrap();
+                    person.business_pay(business, business.employee_salary as f64 / 12.);
                 },
 
                 _ => (),
@@ -163,25 +172,31 @@ impl GameState {
 
                 debt.owed -= debt.minimum_monthly_payoff;
 
-                 // Add functionality to welfare if they can't afford debts
-                 person.balance -= debt.minimum_monthly_payoff;
+                // Add functionality to welfare if they can't afford debts
+                person.balance -= debt.minimum_monthly_payoff;
             }
         }
 
-        let mut reinvestment_budgets: Vec<(usize, f32)> = Vec::new();
+        let mut reinvestment_budgets: Vec<(usize, f64)> = Vec::new();
         let mut total_reinvestment_budget = 0.;
 
         for i in 0..self.businesses.len() {
             let business = &mut self.businesses[i];
 
             let month_profits = business.balance - business.last_month_balance;
-            business.pay_tax(&mut self.government_balance, month_profits * tax_rate);
+            let mut tax_loss = month_profits * tax_rate as f64;
+            if tax_loss < 0. {
+                tax_loss = 0.;
+            }
 
-            if month_profits < 0. { continue }
+            business.pay_tax(&mut self.government_balance, tax_loss);
 
-            let reinvesment_budget = business.balance * as_decimal_percent!(business.marketing_cost_percentage);
-            reinvestment_budgets.push((i, reinvesment_budget));
-            total_reinvestment_budget += reinvesment_budget;
+            let reinvesment_budget = business.balance * as_decimal_percent!(business.marketing_cost_percentage) as f64; 
+
+            if reinvesment_budget > 0. {
+                total_reinvestment_budget += reinvesment_budget;
+                reinvestment_budgets.push((i, reinvesment_budget));
+            }
         }
 
         let mut remaining_market_percentage: f32 = 100.;
@@ -193,14 +208,15 @@ impl GameState {
             let maximum_percentage = (budget / total_reinvestment_budget) * 100.;
         
             if i == 0 {
-                cost_per_percent = budget / maximum_percentage;
+                cost_per_percent = (budget / maximum_percentage) as f32;
             }
 
-            let mut assigned_percent = budget / cost_per_percent;
+            let mut assigned_percent = (budget / cost_per_percent as f64) as f32;
 
             if (remaining_market_percentage - assigned_percent) < 0. {
                 assigned_percent = remaining_market_percentage;
             }
+
             let demand = self.get_demand(&self.businesses[*bus_idx].product_type);
             let business = &mut self.businesses[*bus_idx];
 
@@ -210,7 +226,7 @@ impl GameState {
             remaining_market_percentage -= assigned_percent;
         }
 
-        self.government_balance -= self.healthcare_investment as u64;
+        self.government_balance -= self.healthcare_investment as i64;
         
         if let Some(app) = app_handle {
             let mut births_total = 0;
@@ -228,8 +244,10 @@ impl GameState {
             let mut unemployed_count = 0; // Does not include the homeless
             let mut homeless_count = 0;
 
-            for person in self.people.iter() {
-                total_welfare_percentage += person.get_welfare();
+            for person in self.people.iter_mut() {
+                person.get_welfare();
+
+                total_welfare_percentage += person.welfare;
                 if person.homeless { homeless_count += 1; continue }
 
                 if person.job == Job::Unemployed {

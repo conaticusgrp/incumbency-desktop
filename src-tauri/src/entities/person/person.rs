@@ -1,7 +1,8 @@
 use std::{ops::Range, collections::HashMap};
 use maplit::hashmap;
 use rand::{Rng};
-use crate::{common::util::{float_range, percentage_based_output_int, Date, percentage_chance, chance_one_in}, common::config::Config, game::{generation::{generate_education_level, get_expected_salary_range}}, entities::business::{ProductType, Business}, percentage_of};
+use uuid::Uuid;
+use crate::{common::util::{float_range, percentage_based_output_int, Date, percentage_chance, chance_one_in, generate_unemployed_salary}, common::config::Config, game::{generation::{generate_education_level, get_expected_salary_range}}, entities::business::{ProductType, Business}, percentage_of};
 use EducationLevel::*;
 
 use super::{debt::{Debt}, welfare::{WelfareMachine, WELFARE_IMPACT_FOUR, WELFARE_IMPACT_FIVE, WELFARE_IMPACT_THREE, WELFARE_IMPACT_TWO, WELFARE_IMPACT_ONE}};
@@ -40,7 +41,7 @@ pub enum Gender {
 
 #[derive(Default, Clone)]
 pub struct Person {
-    pub id: usize,
+    pub id: Uuid,
 
     pub education_level: EducationLevel,
     pub years_in_higher_education: i32, // Amount of years the individual spent in college or university (TODO: use this)
@@ -75,14 +76,15 @@ pub struct Person {
     pub gender: Gender,
 
     pub welfare_machine: WelfareMachine,
+    pub welfare: i32,
 }
 
 // Static methods
 impl Person {
     /// Generates a randomly aged person based on statistics
-    pub fn new_generate(config: &Config, product_demand: &mut HashMap<ProductType, f32>, id: usize) -> Self {
+    pub fn new_generate(config: &Config, product_demand: &mut HashMap<ProductType, f32>) -> Self {
         let mut person = Self {
-            id,
+            id: Uuid::new_v4(),
             gender: Self::generate_gender(),
             age: Self::generate_age(),
             birthday: Birthday::generate(),
@@ -110,9 +112,9 @@ impl Person {
     }
 
     /// Adds a new baby to the population
-    pub fn new_infant(id: usize, birthday: Birthday, config: &Config) -> Self {
+    pub fn new_infant(birthday: Birthday, config: &Config) -> Self {
         let mut infant = Self {
-            id,
+            id: Uuid::new_v4(),
             birthday,
             health_percentage: 100,
             hospitalisation_percentage: 8,
@@ -290,7 +292,7 @@ impl Person {
         if let Job::BusinessOwner(_) = self.job { return self.daily_food_spending = 4 }
 
         if self.job == Job::Unemployed {
-            self.salary = rand::thread_rng().gen_range(300..=1100); // TODO: make me more dynamic & move me
+            self.salary = generate_unemployed_salary(); // TODO: make me more dynamic & move me
         }
         
         self.daily_food_spending = self.calculate_daily_food_spending()
@@ -311,15 +313,15 @@ impl Person {
         self.balance - price > 0.
     }
 
-    pub fn business_pay(&mut self, payee: &mut Business, amount: f32) {
-        self.balance += amount;
-        payee.balance -= amount;
+    pub fn business_pay(&mut self, payer: &mut Business, amount: f64) {
+        self.balance += amount as f32;
+        payer.balance -= amount;
     }
     
-    pub fn pay_tax(&mut self, government_balance: &mut u64, amount: f32) {
+    pub fn pay_tax(&mut self, government_balance: &mut i64, amount: f32) {
         if amount < 0. { return }
         self.balance -= amount;
-        *government_balance += amount as u64;
+        *government_balance += amount as i64;
     }
 
     pub fn check_birthday(&mut self, date: &Date) {
@@ -328,7 +330,7 @@ impl Person {
         }
     }
 
-    pub fn day_pass(&mut self, day: i32, hospital_current_capacity: &mut i32, month_unhospitalised_count: &mut i32, date: &Date, death_queue: &mut Vec<usize>,businesses: &mut Vec<Business>) {
+    pub fn day_pass(&mut self, day: i32, hospital_current_capacity: &mut i32, month_unhospitalised_count: &mut i32, date: &Date, death_queue: &mut Vec<Uuid>,businesses: &mut Vec<Business>) {
         self.check_birthday(date);
 
         let mut rng = rand::thread_rng();
@@ -400,7 +402,7 @@ impl Person {
                     *demand -= item_cost;
                     if *demand < 0. { *demand = 0. }
 
-                    business.balance += item_cost;
+                    business.balance += item_cost as f64;
                     self.welfare_machine.add_welfare_if(WELFARE_IMPACT_TWO, day, true);
                 } else {
                     not_afford_wanted_item = true;
@@ -417,7 +419,7 @@ impl Person {
         self.welfare_machine.remove_welfare_if(WELFARE_IMPACT_FOUR, day, no_business_this_month);
     }
 
-    pub fn get_welfare(&self) -> i32 {
+    pub fn get_welfare(&mut self) {
         let mut range_total = 0;
         let mut amount_total = 0;
 
@@ -433,10 +435,10 @@ impl Person {
         }
 
         if range_total == 0 {
-            return 100;
+            return self.welfare = 100;
         }
 
-        percentage_of!(amount_total; / range_total)
+        self.welfare = percentage_of!(amount_total; / range_total);
     }
 }
 
@@ -453,8 +455,8 @@ pub enum EducationLevel {
 
 #[derive(Default, Clone, PartialEq)]
 pub enum Job {
-    BusinessOwner(usize), // usize refers to index of the business in the game state
-    Employee(usize),
+    BusinessOwner(Uuid), // usize refers to index of the business in the game state
+    Employee(Uuid),
     #[default]
     Unemployed,
 }
