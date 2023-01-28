@@ -22,8 +22,6 @@
     { componentConstructor: BudgetPanel, name: "Budget Panel", badgeCount: 1 }
   ];
   let focusedApp: number | null = null;
-
-  $: console.log(focusedApp);
   
   //let notifications: NotificationData[] = [];
 
@@ -46,7 +44,7 @@
   const unminimizeApp = (index: number) => {
     if (index < 0 || index >= apps.length) return;
     
-    apps[index].minimized = false;
+    apps[index].minimized = !apps[index].minimized;
     updateUI();
   }
 
