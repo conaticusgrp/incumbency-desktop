@@ -159,8 +159,8 @@ impl Business {
         }).collect(); // TODO: optimise this
 
         for (count, person) in unemployed_people.into_iter().enumerate() {
-            self.employees.push(person.id);
             if count == new_employee_count as usize { break }
+            self.employees.push(person.id);
 
             person.job = Job::Employee(self.id);
             person.salary = self.employee_salary;
