@@ -2,11 +2,8 @@
 
   import { listen } from "@tauri-apps/api/event";
   import type { DesktopAppShortcut } from "../../../scripts/desktopApp";
-  import type { NotificationData } from "../../../scripts/notificationData";
-  import { DEFAULT_NOTIFICATION_DISPLAY_TIME, KEEP_NOTIFICATIONS_DISPLAYED, NOTIFICATIONS_WINDOW_HEIGHT, NOTIFICATIONS_WINDOW_WIDTH } from "../../../scripts/desktopConstants";
-  import DesktopShortcut from "./DesktopShortcut.svelte"
-  import ToolBarItem from "./ToolBarItem.svelte";
-  import Notification from "./Notification.svelte";
+  //import type { NotificationData } from "../../../scripts/notificationData";
+  import { APP_LIST_MIN_WIDTH, APP_LIST_WIDTH_PERCENT, DATE_TIME_HEIGHT, TOOLBAR_HEIGHT } from "../../../scripts/desktopConstants";
 
   import Email from "../windows/Email.svelte";
   import BudgetPanel from "../windows/BudgetPanel.svelte";
@@ -14,68 +11,77 @@
   // DEBUG
   import { onMount } from 'svelte'
   import DebuggerApp from "../windows/DebuggerApp.svelte";
+  import { WINDOW_AQUIRE_FOCUS, WINDOW_CLOSE, WINDOW_MINIMIZE } from "../../../scripts/windowEvent";
 
   let date: string = "undefined date";
   let windowContainer: HTMLElement;
-  let toolbarHeightPercent: number = 7;
-  let desktopPaddingRem = 2;
-  let wallpaperPath: string | null = null;
+  let wallpaperPath: string | null = "./src/assets/Wallpaper.png";
   let apps: DesktopAppShortcut[] = [
-    {
-      name: "DEBUG",
-      iconPath: ""
-    },
-    {
-      name: "Email",
-      iconPath: "https://seeklogo.com/images/M/mail-icon-logo-28FE0635D0-seeklogo.com.png",
-      badgeCount: 2
-    },
-    {
-      name: "Government Spending",
-      iconPath: "https://cdn-icons-png.flaticon.com/512/217/217853.png",
-      badgeCount: 1
-    }
+    { componentConstructor: DebuggerApp, name: "DEBUG" },
+    { componentConstructor: Email,       name: "Email", badgeCount: 2 },
+    { componentConstructor: BudgetPanel, name: "Budget Panel", badgeCount: 1 }
   ];
+  let focusedApp: number | null = null;
   
-  let notifications: NotificationData[] = [];
+  //let notifications: NotificationData[] = [];
 
-  const getWindow = (index: number): HTMLElement => {
-    console.assert(windowContainer != undefined && index >= 0 && index < windowContainer.children.length, "Tried to get a window that doesn't exist");
-    return windowContainer.children[index] as HTMLElement;
-  }
-
+  /*
   $: if (notifications.length > 0 && !KEEP_NOTIFICATIONS_DISPLAYED) {
     setTimeout(() => {
       notifications.splice(0, 1);
       notifications = notifications; // trigger render
     }, (notifications[0].displayTime || DEFAULT_NOTIFICATION_DISPLAY_TIME) * 1_000);
   }
+  */
 
-  const handleOpenApp = (e: CustomEvent): void => {
-    const index = e.detail.index;
-    if (index < 0 || index >= windowContainer.children.length) return;
+  const handleOpenApp = (index: number): void => {
+    if (index < 0 || index >= apps.length) return;
 
-    if (getWindow(index).dataset['minimized'] !== 'true') {
-      getWindow(index).style.display = 'initial';
-      updateUI();
-    } else {
-      unminimizeApp(index);
-    }
+    apps[index].opened = true;
+    updateUI();
   }
 
   const unminimizeApp = (index: number) => {
-    getWindow(index).dataset['minimized'] = 'false';
+    if (index < 0 || index >= apps.length) return;
+    
+    apps[index].minimized = false;
     updateUI();
   }
 
   const updateUI = () => {
-    // console.log("update");
-    // console.assert(apps.length <= windowContainer.children.length);
-    for (let i = 0; i < windowContainer.children.length; i++) {
-      apps[i].minimized = getWindow(i).dataset['minimized'] === 'true';
-    }
-
     apps = apps;
+  }
+
+  const handleCriticalEvent = (index: number, e: CustomEvent): void => {
+    if (index < 0 || index >= apps.length) return;
+
+    switch (e.detail.type) {
+      case WINDOW_CLOSE:
+        {
+          apps[index].opened = false;
+          updateUI();
+        }
+        break;
+
+      case WINDOW_AQUIRE_FOCUS:
+        {
+          focusedApp = index;
+          apps.forEach((e, i) => {
+            if (i !== index && e.component != null) e.component.unfocus();
+          });
+          updateUI();
+        }
+        break;
+
+      case WINDOW_MINIMIZE:
+        {
+          apps[index].minimized = true;
+          updateUI();
+        }
+        break;
+
+      default: break;
+    }
   }
 
   listen('new_day', (d) => {
@@ -85,11 +91,12 @@
 
   listen('open_debugger_app', (e) => {
     //@ts-ignore
-    handleOpenApp({ detail: { index: apps.findIndex((v) => v.name === "DEBUG") } });
+    handleOpenApp(apps.findIndex((v) => v.name === "DEBUG"));
   });
 
   // DEBUG
   onMount(() => {
+    /*
     setTimeout(() => {
       notifications = [
         {
@@ -99,87 +106,104 @@
         }
       ];
     }, 2000);
+    */
   });
 
 </script>
 
-<main style="background-image: {(wallpaperPath != null) ? `url(${wallpaperPath})` : "none"};">
-  
-  <div class="content" style="padding: {desktopPaddingRem}rem; height: calc({100 - toolbarHeightPercent}% - {desktopPaddingRem * 2}rem);">
+<main>
 
-    {#each apps as shortcut, i}
+  <div
+    class="app-list-section"
+    style="width: {APP_LIST_WIDTH_PERCENT}%; min-width: {APP_LIST_MIN_WIDTH}px;"
+  >
 
-    {#if shortcut.name !== "DEBUG"}
+    <h2>Installed Software</h2>
 
-    <DesktopShortcut
-      name={shortcut.name}
-      icon={shortcut.iconPath}
-      badgeCount={shortcut.badgeCount}
-      gridRow={`${i} / ${i + 1}`}
-      index={i}
-      on:openApp={handleOpenApp}
-    />
+    <div class="app-list">
 
-    {/if}
+      {#each apps as shortcut, i}
 
-    {/each}
+      <!-- empty on:keydown to supress a warning -->
+      <div
+        style="color: var({apps[i].opened ? '--color-highlight' : '--color-shaded'});"
+        on:click={() => handleOpenApp(i)}
+        on:keydown={() => {}}
+      >
+        {shortcut.name}
+        
+        {#if shortcut.badgeCount != undefined && shortcut.badgeCount > 0}
+        <span>({shortcut.badgeCount})</span>
+        {/if}
+      </div>
 
-    <div class="windows" bind:this={windowContainer}>
-      <DebuggerApp iconPath={apps[0].iconPath} on:windowClose={updateUI} on:windowMinimizeStateChange={updateUI} />
-      <Email iconPath={apps[1].iconPath} on:windowClose={updateUI} on:windowMinimizeStateChange={updateUI} />
-      <BudgetPanel iconPath={apps[2].iconPath} on:windowClose={updateUI} on:windowMinimizeStateChange={updateUI} />
-    </div>
-
-    <div class="notifications" style="width: {NOTIFICATIONS_WINDOW_WIDTH}px; height: {NOTIFICATIONS_WINDOW_HEIGHT}px;">
-      
-      {#if notifications.length > 0}
-
-      <Notification
-        iconPath={notifications[0].iconPath}
-        header={notifications[0].header}
-        content={notifications[0].content}
-      />
-
-      {/if}
+      {/each}
 
     </div>
 
   </div>
 
-  <div class="toolbar" style="height: {toolbarHeightPercent}%;">
+  <div
+    class="content"
+    style="width: calc({100 - APP_LIST_WIDTH_PERCENT}%);"
+  >
 
-    <div class="items">
+    <div
+      class="date-time"
+      style="height: {DATE_TIME_HEIGHT}em;"
+    >
+      {date}
+    </div>
 
-      <ToolBarItem name="logo" iconPath={undefined} />
-      <ToolBarItem name="Search" iconPath={undefined} />
+    <div
+      class="windows"
+      style="
+        height: calc(100% - {DATE_TIME_HEIGHT}em - {TOOLBAR_HEIGHT}em);
+        background-image: {(wallpaperPath != null) ? `url(${wallpaperPath})` : "none"};
+      "
+      bind:this={windowContainer}
+    >
+
+      {#each apps as app, i}
+
+      <!-- !! to cast (boolean | undefined) to boolean -->
+
+      <svelte:component
+        this={app.componentConstructor}
+        bind:this={app.component}
+        opened={!!app.opened && !app.minimized}
+        {...app.props}
+        on:criticalWindowEvent={(e) => handleCriticalEvent(i, e)}
+      />
+
+      {/each}
+
+    </div>
+
+    <div
+      class="toolbar"
+      style="height: {TOOLBAR_HEIGHT}em;"
+    >
 
       {#each apps as shortcut, i}
 
-      {#if windowContainer != null && windowContainer.children.length > i && apps[i].name !== "DEBUG" &&
-          ((windowContainer.children[i].style.display != 'none' && windowContainer.children[i].dataset['minimized'] == 'false') ||
-          (windowContainer.children[i].style.display == 'none' && windowContainer.children[i].dataset['minimized'] == 'true'))}
+      {#if apps[i].opened}
 
       <!-- !! to cast (boolean | undefined) to boolean -->
       <!-- empty on:keydown to supress a warning -->
       <span
         data-minimized={!!apps[i].minimized}
-        style="background-image: url('{shortcut.iconPath}');"
         title={shortcut.name}
         on:click={() => unminimizeApp(i)}
         on:keydown={() => {}}
       >
-        {#if shortcut.iconPath == null}
-        {shortcut.iconPath} {shortcut.name}
-        {/if}
+        {shortcut.name}
       </span>
 
       {/if}
 
       {/each}
-    </div>
-
-    <div class="date-time">
-      {date}
+    
     </div>
 
   </div>
@@ -189,84 +213,88 @@
 <style>
 
   main {
+    display: flex;
+    flex-direction: row;
     position: relative;
     width: 100%;
     height: 100%;
-    background-repeat: no-repeat;
-    background-position: center;
+    color: var(--color-highlight);
+    background-color: black;
   }
 
-  .content {
-    position: relative;
-    display: grid;
-    grid-template-columns: repeat(16, 1fr);
-    grid-template-rows: repeat(7, 1fr);
-    background-color: #171717;
-  }
-
-  .toolbar {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
+  .app-list-section {
     display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    background-color: #A0A0A0;
-  }
-  
-  .toolbar > .items {
-    display: flex;
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
+    border-right: 1px solid green;
+  }
+
+  .app-list-section > h2 {
+    margin: 2em;
+    font-size: 14px;
+    font-weight: bold;
+  }
+
+  .app-list {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: calc(100% - 1em * 2);
+    margin: 0 1em 0 1em;
+  }
+
+  .app-list > div {
+    margin: 0.5em 0 0.5em 0;
+  }
+
+  .app-list > div > span {
+    color: var(--color-critical);
+    font-weight: bold;
   }
   
-  .toolbar > .items > span {
-    position: relative;
-    width: 50px;
-    height: 50px;
-    margin: 0.5rem;
-    background-position: center;
-    background-size: cover;
-    background-repeat: no-repeat;
+  .content {
+    display: flex;
+    flex-direction: column;
   }
 
-  .toolbar > .items > span[data-minimized="true"]:after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+  .date-time {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: min-content;
+    border-bottom: 1px solid green;
   }
-
-  .toolbar > .date-time {
-    width: 150px;
-    margin: 0.5em;
-    box-sizing: border-box;
-    text-align: center;
-    border: 1px solid black;
-    color: black;
-  }
-
+  
   .windows {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    position: relative;
     z-index: 100;
     isolation: isolate;
     pointer-events: none;
+    background-repeat: no-repeat;
+    background-position: center;
+  }
+  
+  .toolbar {
+    /* width: 100%; */
+    display: flex;
+    flex-direction: row;
+    min-height: min-content;
+    border-top: 1px solid green;
+  }
+  
+  .toolbar > span {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0 2em 0 2em;
+    border: 1px solid green;
   }
 
-  .notifications {
-    position: absolute;
-    top: 0;
-    right: 0;
-    /* background-color: #4A4A4A; */
-    z-index: 200;
-    pointer-events: none;
+  .toolbar > span[data-minimized="true"] {
+    background-color: var(--color-accent);
+    color: var(--color-bg);
+    font-weight: bold;
   }
 
 </style>

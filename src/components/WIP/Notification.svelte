@@ -1,6 +1,6 @@
 <script lang="ts">
   
-  import { NOTIFICATIONS_WINDOW_HEIGHT, NOTIFICATION_HEADER_HEIGHT, NOTIFICATION_PADDING } from "../../../scripts/desktopConstants";
+  import { NOTIFICATIONS_WINDOW_HEIGHT, NOTIFICATION_HEADER_HEIGHT, NOTIFICATION_PADDING } from "../../scripts/desktopConstants";
 
   export let iconPath: string | undefined = undefined;
   export let header: string = "!";

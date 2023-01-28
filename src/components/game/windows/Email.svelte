@@ -3,7 +3,7 @@
   import { createEventDispatcher } from "svelte";
   import Window from "./Window.svelte"
 
-  export let iconPath: string | undefined = undefined;
+  export let opened: boolean;
 
   const EMAIL_LIST_WIDTH = 25; // %
   const EMAIL_LIST_MIN_WIDTH = 200; // px
@@ -42,11 +42,10 @@
 
 <Window
   title="Email"
-  {iconPath}
   pos={{ x: 100, y: 50 }}
   size={{ width: 800, height: 600 }}
-  on:windowClose={() => dispatcher('windowClose')}
-  on:windowMinimize={() => dispatcher('windowMinimizeStateChange')}
+  {opened}
+  on:criticalWindowEvent={(e) => dispatcher('criticalWindowEvent', e.detail)}
 >
   <main class="content">
 

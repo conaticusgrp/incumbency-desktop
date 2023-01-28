@@ -23,8 +23,6 @@
     "vite": "^3.2.3"
   },
   "dependencies": {
-    "@tauri-apps/api": "^1.2.0",
-    "@tauri-apps/cli": "^1.2.3",
-    "svelte-ionicons": "^0.2.3"
+    "@tauri-apps/api": "^1.2.0"
   }
 }
