@@ -6,6 +6,7 @@
   import DebugValueDisplay from "../debug/DebugValueDisplay.svelte";
 
   export let opened: boolean;
+  export let focused: boolean;
 
   let dispatcher = createEventDispatcher();
 
@@ -27,6 +28,7 @@
   pos={{ x: 100, y: 50 }}
   size={{ width: 800, height: 600 }}
   {opened}
+  {focused}
   on:criticalWindowEvent={(e) => dispatcher('criticalWindowEvent', e.detail)}
 >
   <main>
