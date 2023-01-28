@@ -96,9 +96,12 @@ impl GameState {
         for id in &death_queue {
             let per = self.people.get(&id).unwrap();
             if let Job::Employee(bid) = per.job {
-                let business = self.businesses.get_mut(&bid).unwrap();
-                let employee_idx = business.employees.iter().position(|emp_id| per.id == *emp_id).unwrap();
-                business.employees.remove(employee_idx);
+                let business = self.businesses.get_mut(&bid);
+                if business.is_some() {
+                    let business = business.unwrap();
+                    let employee_idx = business.employees.iter().position(|emp_id| per.id == *emp_id).unwrap();
+                    business.employees.remove(employee_idx);
+                }
             }
 
             self.people.remove(&id);

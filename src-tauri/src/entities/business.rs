@@ -38,8 +38,6 @@ pub struct Business {
 
     pub expected_income: i64, // Expected income for the current month
     pub last_month_balance: f64, // Used to calculate the income for this month
-
-    pub removal_queue: Vec<usize>,
 }
 
 impl Business {
