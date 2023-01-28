@@ -130,6 +130,7 @@ impl GameState {
 
     pub fn month_pass(&mut self, tax_rate: f32, app_handle: Option<&tauri::AppHandle>) {
         for person in self.people.iter_mut() {
+            person.business_this_month = None;
             person.calculate_demand(person.salary as f32, None);
 
             let income = person.salary as f32;
@@ -184,14 +185,16 @@ impl GameState {
             let business = &mut self.businesses[i];
 
             let month_profits = business.balance - business.last_month_balance;
+
             let mut tax_loss = month_profits * tax_rate as f64;
             if tax_loss < 0. {
                 tax_loss = 0.;
             }
 
+
             business.pay_tax(&mut self.government_balance, tax_loss);
 
-            let reinvesment_budget = business.balance * as_decimal_percent!(business.marketing_cost_percentage) as f64; 
+            let reinvesment_budget = business.balance * as_decimal_percent!(business.marketing_cost_percentage) as f64;
 
             if reinvesment_budget > 0. {
                 total_reinvestment_budget += reinvesment_budget;
@@ -254,7 +257,7 @@ impl GameState {
                 total_welfare_percentage += person.welfare;
                 if person.homeless { homeless_count += 1; continue }
 
-                if person.job == Job::Unemployed {
+                if person.job == Job::Unemployed && person.age >= 18 {
                     unemployed_count += 1;
                 }
             }

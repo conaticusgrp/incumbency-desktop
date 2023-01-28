@@ -49,14 +49,13 @@ impl Business {
         self.minimum_education_level = generate_education_level(config);
         self.marketing_cost_percentage = rng.gen_range(5..12);
         self.product_price = rng.gen_range(2..100); // TODO: determine this price more accurately?
-        self.production_cost_per_product = self.product_price as f32 * float_range(0.15, 0.2, 3);
+        self.production_cost_per_product = self.product_price as f32 * float_range(0.15, 0.25, 3);
 
         let (sufficient_businesses, marketing_reach_percentage) = self.generate_marketing_reach(remaining_market_percentage);
         if sufficient_businesses { return sufficient_businesses }
 
-        self.assign_to_people(marketing_reach_percentage, people);
-
-        self.expected_income = (product_demand * marketing_reach_percentage) as i64;
+        let exp_purchases = self.assign_to_people(marketing_reach_percentage, people) as i64;
+        self.expected_income = exp_purchases * self.product_price as i64;
 
         // TODO: make this more varied & accurate, influence it by external factors
         let production_cost = self.get_production_cost();
@@ -65,10 +64,9 @@ impl Business {
         let mut loss_percentage = percentage_of!(marketing_cost + production_cost as f32; / self.expected_income) + (tax_rate * 100.) as i32;
 
         self.employee_salary = self.generate_employee_salary(config, loss_percentage);
-        self.employee_budget_allocation = float_range(0.15, 0.2, 3);
+        self.employee_budget_allocation = float_range(0.15, 0.3, 3);
 
         let expected_employee_count = self.calculate_expected_employee_count();
-
         self.assign_employees(people, expected_employee_count);
         
         loss_percentage += percentage_of!(self.employees.len() * (self.employee_salary as usize / 12); / self.expected_income);
@@ -130,12 +128,13 @@ impl Business {
         (false, marketing_reach_percentage)
     }
 
-    pub fn assign_to_people(&self, market_percentage: f32, people: &mut Vec<Person>) {
+    pub fn assign_to_people(&self, market_percentage: f32, people: &mut Vec<Person>) -> i32 {
         let mut rng = rand::thread_rng();
-        let reach = (market_percentage * people.len() as f32) as i32;
+        let reach = ((market_percentage / 100.) * people.len() as f32) as i32;
 
         // People who have not yet picked a business to buy from
         let unassigned_people: Vec<&mut Person> = people.iter_mut().filter(|p| p.business_this_month.is_none()).collect(); // TODO: optimise this
+        let mut expected_purchases = 0; 
 
         for (count, person) in unassigned_people.into_iter().enumerate() {
             if count == reach as usize { break }
@@ -143,12 +142,15 @@ impl Business {
             person.business_this_month = Some(self.id);
             let person_demand = person.demand[&self.product_type];
             let purchase_capacity = person_demand as i32 / self.product_price;
+            expected_purchases += purchase_capacity;
 
             for _ in 0..purchase_capacity {
                 let day = rng.gen_range(1..=30);
                 *person.purchase_days.entry(day).or_insert(1) += 1;
             }
         }
+
+        (expected_purchases as f32 * 0.95) as i32 // Expect roughly 5% of people not afford items
     }
 
     fn assign_employees(&mut self, people: &mut [Person], new_employee_count: i32) {
@@ -187,9 +189,7 @@ impl Business {
 
     /// This function assigns the business to a new market with a new market percentage. This runs monthly.
     pub fn get_new_market(&mut self, market_percentage: f32, cost_per_percent: f32, people: &mut Vec<Person>, demand: f32) {
-        self.expected_income = (demand * market_percentage) as i64;
-        self.assign_to_people(market_percentage, people);
-
+        self.expected_income = self.assign_to_people(market_percentage, people) as i64 * self.product_price as i64;
         let employee_diff = self.calculate_expected_employee_count() - self.employees.len() as i32;
 
         if employee_diff > 0 {
