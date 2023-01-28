@@ -54,7 +54,7 @@ impl Business {
         let (sufficient_businesses, marketing_reach_percentage) = self.generate_marketing_reach(remaining_market_percentage);
         if sufficient_businesses { return sufficient_businesses }
 
-        self.assign_to_people(marketing_reach_percentage, people, idx);
+        self.assign_to_people(marketing_reach_percentage, people);
 
         self.expected_income = (product_demand * marketing_reach_percentage) as i64;
 
@@ -69,7 +69,6 @@ impl Business {
 
         let expected_employee_count = self.calculate_expected_employee_count();
 
-        // TODO: balance the amount of people who get employment
         self.assign_employees(people, expected_employee_count);
         
         loss_percentage += percentage_of!(self.employees.len() * (self.employee_salary as usize / 12); / self.expected_income);
@@ -131,7 +130,7 @@ impl Business {
         (false, marketing_reach_percentage)
     }
 
-    pub fn assign_to_people(&self, market_percentage: f32, people: &mut Vec<Person>, idx: usize) {
+    pub fn assign_to_people(&self, market_percentage: f32, people: &mut Vec<Person>) {
         let mut rng = rand::thread_rng();
         let reach = (market_percentage * people.len() as f32) as i32;
 
@@ -141,7 +140,7 @@ impl Business {
         for (count, person) in unassigned_people.into_iter().enumerate() {
             if count == reach as usize { break }
 
-            person.business_this_month = Some(idx);
+            person.business_this_month = Some(self.id);
             let person_demand = person.demand[&self.product_type];
             let purchase_capacity = person_demand as i32 / self.product_price;
 
@@ -187,9 +186,9 @@ impl Business {
     }
 
     /// This function assigns the business to a new market with a new market percentage. This runs monthly.
-    pub fn get_new_market(&mut self, market_percentage: f32, cost_per_percent: f32, people: &mut Vec<Person>, demand: f32, idx: usize) {
+    pub fn get_new_market(&mut self, market_percentage: f32, cost_per_percent: f32, people: &mut Vec<Person>, demand: f32) {
         self.expected_income = (demand * market_percentage) as i64;
-        self.assign_to_people(market_percentage, people, idx);
+        self.assign_to_people(market_percentage, people);
 
         let employee_diff = self.calculate_expected_employee_count() - self.employees.len() as i32;
 
@@ -197,7 +196,6 @@ impl Business {
             self.assign_employees(people, employee_diff);
         } else if employee_diff < 0 {
             self.remove_employees(employee_diff, people);
-            // TODO: remove unwanted employees
         }
 
         self.balance -= (self.get_production_cost() + (market_percentage * cost_per_percent)) as f64;
@@ -230,7 +228,6 @@ impl Business {
     pub fn pay_owner(&mut self, owner: &mut Person) {
         let month_profits = self.balance - self.last_month_balance; // The profit percentage earned in the current month
 
-        // TODO: Vary this on spending behaviour
         let owner_expected_income = month_profits / 2.;
         if owner_expected_income < (self.employee_salary as f64 / 12.) {
             owner.business_pay(self, self.employee_salary as f64);

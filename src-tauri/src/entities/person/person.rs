@@ -61,7 +61,7 @@ pub struct Person {
     pub daily_food_spending: i32,
 
     pub demand: HashMap<ProductType, f32>,
-    pub business_this_month: Option<usize>,  // The business the individual will buy from this month, until marketing is re-evaluated
+    pub business_this_month: Option<Uuid>,  // The business the individual will buy from this month, until marketing is re-evaluated
     pub purchase_days: HashMap<i32, i32>, // The days of the month that they will make a purchase - <day, quantity>
 
     pub health_percentage: i32, // The percentage of their health that they have remaining
@@ -226,7 +226,6 @@ impl Person {
     }
 
     pub fn calculate_demand(&mut self, salary: f32, product_demand: Option<&mut HashMap<ProductType, f32>>) {
-        // TODO: generate based on more factors rather than just salary
         if salary == 0. {
             *self.demand.entry(ProductType::Leisure).or_insert(0.) = 0.;
             return;
@@ -392,7 +391,7 @@ impl Person {
         let mut not_afford_wanted_item = false;
 
         if let Some(quantity) = quantity_opt {
-            let business = businesses.get_mut(self.business_this_month.unwrap()).unwrap();
+            let business = businesses.iter_mut().find(|b| b.id == self.business_this_month.unwrap()).unwrap();
             let item_cost = (business.product_price * quantity) as f32;
 
             for _ in 0..quantity {

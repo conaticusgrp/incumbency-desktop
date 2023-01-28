@@ -177,7 +177,7 @@ impl GameState {
             }
         }
 
-        let mut reinvestment_budgets: Vec<(usize, f64)> = Vec::new();
+        let mut reinvestment_budgets: Vec<(Uuid, f64)> = Vec::new();
         let mut total_reinvestment_budget = 0.;
 
         for i in 0..self.businesses.len() {
@@ -195,7 +195,7 @@ impl GameState {
 
             if reinvesment_budget > 0. {
                 total_reinvestment_budget += reinvesment_budget;
-                reinvestment_budgets.push((i, reinvesment_budget));
+                reinvestment_budgets.push((business.id, reinvesment_budget));
             }
         }
 
@@ -203,7 +203,7 @@ impl GameState {
         let mut cost_per_percent = 0.;
 
         for i in 0..reinvestment_budgets.len() {
-            let (bus_idx, budget) = &reinvestment_budgets[i];
+            let (bus_id, budget) = &reinvestment_budgets[i];
 
             let maximum_percentage = (budget / total_reinvestment_budget) * 100.;
         
@@ -217,10 +217,14 @@ impl GameState {
                 assigned_percent = remaining_market_percentage;
             }
 
-            let demand = self.get_demand(&self.businesses[*bus_idx].product_type);
-            let business = &mut self.businesses[*bus_idx];
+            let business = self.businesses.iter_mut().find(|b| b.id == *bus_id).unwrap();
+            let mut demand: f32 = 0.;
 
-            business.get_new_market(assigned_percent, cost_per_percent, &mut self.people, demand, *bus_idx);
+            for person in self.people.iter() {
+                demand += person.demand[&business.product_type];
+            }
+
+            business.get_new_market(assigned_percent, cost_per_percent, &mut self.people, demand);
             business.last_month_balance = business.balance;
 
             remaining_market_percentage -= assigned_percent;
@@ -270,15 +274,5 @@ impl GameState {
         }
 
         self.month_unhospitalised_count = 0;
-    }
-
-    fn get_demand(&self, product_type: &ProductType) -> f32 {
-        let mut total: f32 = 0.;
-
-        for person in self.people.iter() {
-            total += person.demand[product_type];
-        }
-
-        total
     }
 }

@@ -26,7 +26,6 @@ pub fn generate_percentage() -> i32 {
     rng.gen_range(0..100)
 }
 
-// TODO: Use something other than a hashmap
 /// Takes in an input of percentages and then an output is generated based on the chances provided
 pub fn percentage_based_output_int<ValueType>(chances: HashMap<ValueType, i32>) -> ValueType {
     let mut remaining_percentage = 100;

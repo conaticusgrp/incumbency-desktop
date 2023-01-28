@@ -99,7 +99,7 @@ impl Person {
 
     pub fn die(&mut self, days_until_death: i32) {
         self.days_until_death = Some(days_until_death);
-        // TODO: inherit family
+        // TODO: inheritance of money
     }
 
     pub fn generate_health(&mut self) {

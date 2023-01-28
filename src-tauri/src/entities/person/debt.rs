@@ -57,7 +57,6 @@ impl Debt {
            owed -= (person.age - education_finished_age) as f32 * salary_percentage as f32 * salary as f32;
         }
 
-        // TODO: make these values random
         owed -= match person.spending_behaviour {
             SpendingBehaviour::One => Debt::get_education_prepaid_amount(3, 50..150),
             SpendingBehaviour::Two => Debt::get_education_prepaid_amount(15, 100..300),
