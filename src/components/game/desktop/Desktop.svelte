@@ -59,6 +59,9 @@
       case WINDOW_CLOSE:
         {
           apps[index].opened = false;
+          if (focusedApp === index) {
+            focusedApp = null;
+          }
           updateUI();
         }
         break;
@@ -89,6 +92,16 @@
   listen('open_debugger_app', (e) => {
     //@ts-ignore
     handleOpenApp(apps.findIndex((v) => v.name === "DEBUG"));
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.altKey && e.key == "F4") {
+      if (focusedApp != null) {
+        apps[focusedApp].opened = false;
+        focusedApp = null;
+      }
+      e.preventDefault();
+    }
   });
 
   // DEBUG
