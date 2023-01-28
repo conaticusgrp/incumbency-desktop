@@ -6,10 +6,10 @@
   export let opened: boolean;
   export let focused: boolean;
 
-  const EMAIL_LIST_WIDTH = 25; // %
-  const EMAIL_LIST_MIN_WIDTH = 200; // px
-  const EMAIL_MARGIN = 1; // em
-  const EMAIL_HEIGHT = 100; // px
+  const EMAIL_LIST_WIDTH = 35;        // %
+  const EMAIL_LIST_MIN_WIDTH = 250;   // px
+  const EMAIL_MARGIN = 0.5;           // em
+  const EMAIL_HEIGHT = 6;            // em
 
   let dispatcher = createEventDispatcher();
 
@@ -66,11 +66,13 @@
         class="email-list-entry"
         style="
           margin: {EMAIL_MARGIN}em;
-          height: {EMAIL_HEIGHT}px;
+          height: {EMAIL_HEIGHT}em;
         "
+        data-selected={i === selectedEmailIndex}
         on:click={() => selectEmail(i)}
         on:keydown={() => {}}
       >
+          <h2>{email.sender ?? "Unknown sender"}</h2>
           <h3>{email.title}</h3>
           <p>{email.content}</p>
       </div>
@@ -109,7 +111,7 @@
   .email-list {
     display: flex;
     flex-direction: column;
-    border-right: 1px solid var(--color-secondary);
+    border-right: 1px solid var(--color-accent);
     overflow-y: scroll;
   }
 
@@ -120,8 +122,31 @@
   .email-list-entry {
     text-align: left;
     text-overflow: ellipsis;
-    color: black;
-    background-color: gainsboro;
+    padding: 0.5em;
+    color: var(--color-highlight);
+    background-color: var(--color-bg);
+    border: 1px solid var(--color-accent);
+  }
+  
+  .email-list-entry[data-selected="true"] {
+    color: var(--color-bg);
+    background-color: var(--color-accent);
+  }
+
+  .email-list-entry > h2 {
+    font-size: 14px;
+    font-weight: bold;
+  }
+
+  .email-list-entry > h3 {
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  .email-list-entry > p {
+    font-size: 12px;
+    font-weight: 400;
+    opacity: 0.35;
   }
 
   .email-content {
