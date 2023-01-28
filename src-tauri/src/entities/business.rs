@@ -136,11 +136,11 @@ impl Business {
         let reach = ((market_percentage / 100.) * people.len() as f32) as i32;
 
         // People who have not yet picked a business to buy from
-        let unassigned_people: Vec<&mut Person> = people.values_mut().filter(|p| p.business_this_month.is_none()).collect(); // TODO: optimise this
         let mut expected_purchases = 0; 
 
-        for (count, person) in unassigned_people.into_iter().enumerate() {
+        for (count, person) in people.values_mut().enumerate() {
             if count == reach as usize { break }
+            if person.business_this_month.is_some() { continue }
 
             person.business_this_month = Some(self.id);
             let person_demand = person.demand[&self.product_type];
@@ -158,12 +158,12 @@ impl Business {
 
     fn assign_employees(&mut self, people: &mut HashMap<Uuid, Person>, new_employee_count: i32) {
         let minimum_education_level = self.minimum_education_level.clone();
-        let unemployed_people: Vec<&mut Person> = people.values_mut().filter(|p| {
-            p.job == Job::Unemployed && p.education_level == minimum_education_level && p.age >= 18
-        }).collect(); // TODO: optimise this
 
-        for (count, person) in unemployed_people.into_iter().enumerate() {
+        for (count, person) in people.values_mut().enumerate() {
             if count == new_employee_count as usize { break }
+            let is_valid_employee = person.job == Job::Unemployed && person.education_level == minimum_education_level && person.age >= 18;
+            if !is_valid_employee { continue }
+
             self.employees.push(person.id);
 
             person.job = Job::Employee(self.id);
