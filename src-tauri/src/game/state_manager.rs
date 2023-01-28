@@ -1,4 +1,4 @@
-use std::{sync::{Mutex, Arc}, ops::Deref};
+use std::{sync::{Mutex, Arc}, ops::Deref, collections::HashMap};
 use maplit::hashmap;
 use serde_json::json;
 use uuid::Uuid;
@@ -9,8 +9,8 @@ use tauri::Manager;
 pub struct GameState {
   pub tax_rate: f32,
   pub business_tax_rate: f32,
-  pub businesses: Vec<Business>,
-  pub people: Vec<Person>,
+  pub businesses: HashMap<Uuid, Business>,
+  pub people: HashMap<Uuid, Person>,
   pub gdp: f32,
   pub date: Date,
 
@@ -38,8 +38,8 @@ impl Default for GameState {
         Self {
             tax_rate: 0.24, // 24% default
             business_tax_rate: 0.22, // 22% default - TODO: emit warning if the tax is raised above 30% - this is the maximum tax rate businesses will tolerate
-            businesses: Vec::new(),
-            people: Vec::new(),
+            businesses: HashMap::new(),
+            people: HashMap::new(),
             gdp: 0.,
             date: Date::default(),
 
@@ -81,7 +81,7 @@ impl GameState {
 
         let date = self.date.clone();
 
-        for per in self.people.iter_mut() {
+        for per in self.people.values_mut() {
             per.day_pass(day, &mut self.hospital_current_capacity, &mut self.month_unhospitalised_count, &date, &mut death_queue, &mut self.businesses);
             if per.age >= 18 && per.job == Job::Unemployed {
                 // TODO: make this be affected by other factors
@@ -94,16 +94,14 @@ impl GameState {
         let population_before_deaths = self.people.len() as i32;
 
         for id in &death_queue {
-            let per = self.people.iter().find(|p| p.id == *id).unwrap();
+            let per = self.people.get(&id).unwrap();
             if let Job::Employee(bid) = per.job {
-                let business = self.businesses.iter_mut().find(|b| b.id == bid).unwrap();
+                let business = self.businesses.get_mut(&bid).unwrap();
                 let employee_idx = business.employees.iter().position(|emp_id| per.id == *emp_id).unwrap();
                 business.employees.remove(employee_idx);
             }
 
-
-            let idx = self.people.iter().position(|p| p.id == *id).unwrap();
-            self.people.remove(idx);
+            self.people.remove(&id);
             self.population_counter -= 1.;
         }
 
@@ -122,33 +120,76 @@ impl GameState {
 
         for _ in 0..new_birth_count {
             let infant = Person::new_infant(Birthday::from(&date), config, self.tax_rate);
-            self.people.push(infant);
+            self.people.insert(infant.id, infant);
         }
 
         self.births_in_last_month.push(new_birth_count);
+
+        if let Some(app) = app_handle {
+            let mut births_total = 0;
+            let mut deaths_total = 0;
+
+            for day_amount in &self.births_in_last_month.array {
+                births_total += day_amount; 
+            }
+
+            for day_amount in &self.deaths_in_last_month.array {
+                deaths_total += day_amount;
+            }
+
+            let mut total_welfare_percentage = 0;
+            let mut unemployed_count = 0; // Does not include the homeless
+            let mut homeless_count = 0;
+
+            for person in self.people.values_mut() {
+                person.get_welfare();
+
+                total_welfare_percentage += person.welfare;
+                if person.homeless { homeless_count += 1; continue }
+
+                if person.job == Job::Unemployed && person.age >= 18 {
+                    unemployed_count += 1;
+                }
+            }
+
+            let average_welfare = total_welfare_percentage as f32 / self.people.len() as f32;
+            let average_welfare = set_decimal_count(average_welfare, 2);
+
+            // TODO - send me daily
+            app.emit_all("debug_payload",  json! ({
+                "Average Welfare": average_welfare,
+                "Government Balance": self.government_balance,
+                "Monthly Births": births_total,
+                "Monthly Deaths": deaths_total,
+                "Homeless Count": homeless_count,
+                "Unemployed Count": unemployed_count,
+            })).unwrap();
+        }
     }
 
-    pub fn month_pass(&mut self, tax_rate: f32, app_handle: Option<&tauri::AppHandle>) {
-        for person in self.people.iter_mut() {
+    pub fn month_pass(&mut self, tax_rate: f32) {
+        for person in self.people.values_mut() {
             person.business_this_month = None;
-
-            let income = person.salary as f32;
-            person.balance += income;
-            person.pay_tax(&mut self.government_balance, income * tax_rate);
 
             person.calculate_demand(person.salary as f32, None);
 
             match person.job {
-                Job::BusinessOwner(bid) => {
-                    let business = self.businesses.iter_mut().find(|b| b.id == bid).unwrap();
+                Job::BusinessOwner(bid) | Job::Employee(bid) => {
+                    let business = self.businesses.get_mut(&bid);
+                    if business.is_some() {
+                        let business = business.unwrap();
+
+                        let income = person.salary as f32;
+                        person.pay_tax(&mut self.government_balance, income * tax_rate);
+                        person.business_pay(business, business.employee_salary as f64 / 12.);
+
+                    } else {
+                        person.job = Job::Unemployed;
+                        person.salary = 0;
+                    }
+
                     // business.pay_owner(person);
                 },
-
-                Job::Employee(bid) => {
-                    let business = self.businesses.iter_mut().find(|b| b.id == bid).unwrap();
-                    person.business_pay(business, business.employee_salary as f64 / 12.);
-                },
-
                 _ => (),
             };
 
@@ -184,21 +225,11 @@ impl GameState {
 
         let mut bus_removal_queue: Vec<Uuid> = Vec::new();
 
-        for i in 0..self.businesses.len() {
-            let business = &mut self.businesses[i];
+        for business in self.businesses.values_mut() {
             let month_profits = business.balance - business.last_month_balance;
 
             // TODO: make me more varied
             if business.balance < 0. {
-                for emp_id in &business.employees {
-                    let employee = self.people.iter_mut().find(|p| p.id == *emp_id).unwrap();
-                    employee.job = Job::Unemployed;
-                    employee.salary = 0;
-                }
-
-                let owner = self.people.iter_mut().find(|p| p.id == business.owner_id).unwrap();
-                owner.job = Job::Unemployed;
-
                 bus_removal_queue.push(business.id);
             }
 
@@ -218,16 +249,11 @@ impl GameState {
             }
         }
 
-        for id in bus_removal_queue {
-            let idx = self.businesses.iter().position(|b| b.id == id).unwrap();
-            self.businesses.remove(idx);
-        }
-
         let mut remaining_market_percentage: f32 = 100.;
         let mut cost_per_percent = 0.;
 
         for i in 0..reinvestment_budgets.len() {
-            let (bus_id, budget) = &reinvestment_budgets[i];
+            let (bid, budget) = &reinvestment_budgets[i];
 
             let maximum_percentage = (budget / total_reinvestment_budget) * 100.;
         
@@ -241,10 +267,11 @@ impl GameState {
                 assigned_percent = remaining_market_percentage;
             }
 
-            let business = self.businesses.iter_mut().find(|b| b.id == *bus_id).unwrap();
             let mut demand: f32 = 0.;
 
-            for person in self.people.iter() {
+            let business = self.businesses.get_mut(&bid).unwrap();
+
+            for person in self.people.values() {
                 demand += person.demand[&business.product_type];
             }
 
@@ -254,49 +281,11 @@ impl GameState {
             remaining_market_percentage -= assigned_percent;
         }
 
-        self.government_balance -= self.healthcare_investment as i64;
-        
-        if let Some(app) = app_handle {
-            let mut births_total = 0;
-            let mut deaths_total = 0;
-
-            for day_amount in &self.births_in_last_month.array {
-                births_total += day_amount; 
-            }
-
-            for day_amount in &self.deaths_in_last_month.array {
-                deaths_total += day_amount;
-            }
-
-            let mut total_welfare_percentage = 0;
-            let mut unemployed_count = 0; // Does not include the homeless
-            let mut homeless_count = 0;
-
-            for person in self.people.iter_mut() {
-                person.get_welfare();
-
-                total_welfare_percentage += person.welfare;
-                if person.homeless { homeless_count += 1; continue }
-
-                if person.job == Job::Unemployed && person.age >= 18 {
-                    unemployed_count += 1;
-                }
-            }
-
-            let average_welfare = total_welfare_percentage as f32 / self.people.len() as f32;
-            let average_welfare = set_decimal_count(average_welfare, 2);
-
-            // TODO - send me daily
-            app.emit_all("debug_payload",  json! ({
-                "Average Welfare": average_welfare,
-                "Government Balance": self.government_balance,
-                "Monthly Births": births_total,
-                "Monthly Deaths": deaths_total,
-                "Homeless Count": homeless_count,
-                "Unemployed Count": unemployed_count,
-            })).unwrap();
+        for id in bus_removal_queue {
+            self.businesses.remove(&id);
         }
 
+        self.government_balance -= self.healthcare_investment as i64;
         self.month_unhospitalised_count = 0;
     }
 }

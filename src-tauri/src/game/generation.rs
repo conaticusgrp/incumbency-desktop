@@ -36,7 +36,7 @@ pub fn generate_game(state_mux: &GameStateSafe, config: &Config) {
 
     for _ in 0..config.starting_population {
         let person = Person::new_generate(&config, &mut product_demand);
-        state.people.push(person);
+        state.people.insert(person.id, person);
     }
 
     let mut remaning_market_percentage: f32 = 100.;
@@ -52,8 +52,8 @@ pub fn generate_game(state_mux: &GameStateSafe, config: &Config) {
         let owner = Person { job: Job::BusinessOwner(business.id), age: rand::thread_rng().gen_range(20..70), ..Person::new_generate(&config, &mut product_demand) };
         business.owner_id = owner.id;
 
-        state.people.push(owner);
-        state.businesses.push(business);
+        state.people.insert(owner.id, owner);
+        state.businesses.insert(business.id, business);
 
         if sufficient_businesses {
             break;
@@ -61,7 +61,7 @@ pub fn generate_game(state_mux: &GameStateSafe, config: &Config) {
     }
 
     // This of course cannot be calculated until after the businesses are generated
-    for per in state.people.iter_mut() {
+    for per in state.people.values_mut() {
         per.generate_daily_food_spending();
     }
 
@@ -81,5 +81,5 @@ pub fn stabilize_game(state_mux: &GameStateSafe, config: &Config) {
     state.set_healthcare_investment(starting_investment);
 
     let tax_rate = state.tax_rate;
-    state.month_pass(tax_rate, None);
+    state.month_pass(tax_rate);
 }

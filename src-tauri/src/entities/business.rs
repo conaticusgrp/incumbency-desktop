@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use maplit::hashmap;
 use rand::Rng;
 use uuid::Uuid;
@@ -42,7 +44,7 @@ pub struct Business {
 
 impl Business {
     /// Generates a business based on demand
-    pub fn generate(&mut self, config: &Config, product_type: ProductType, product_demand: f32, remaining_market_percentage: &mut f32, people: &mut Vec<Person>, idx: usize, tax_rate: f32) -> bool {
+    pub fn generate(&mut self, config: &Config, product_type: ProductType, product_demand: f32, remaining_market_percentage: &mut f32, people: &mut HashMap<Uuid, Person>, idx: usize, tax_rate: f32) -> bool {
         self.id = Uuid::new_v4();
         let mut rng = rand::thread_rng();
 
@@ -129,12 +131,12 @@ impl Business {
         (false, marketing_reach_percentage)
     }
 
-    pub fn assign_to_people(&self, market_percentage: f32, people: &mut Vec<Person>) -> i32 {
+    pub fn assign_to_people(&self, market_percentage: f32, people: &mut HashMap<Uuid, Person>) -> i32 {
         let mut rng = rand::thread_rng();
         let reach = ((market_percentage / 100.) * people.len() as f32) as i32;
 
         // People who have not yet picked a business to buy from
-        let unassigned_people: Vec<&mut Person> = people.iter_mut().filter(|p| p.business_this_month.is_none()).collect(); // TODO: optimise this
+        let unassigned_people: Vec<&mut Person> = people.values_mut().filter(|p| p.business_this_month.is_none()).collect(); // TODO: optimise this
         let mut expected_purchases = 0; 
 
         for (count, person) in unassigned_people.into_iter().enumerate() {
@@ -154,9 +156,9 @@ impl Business {
         (expected_purchases as f32 * 0.95) as i32 // Expect roughly 5% of people not afford items
     }
 
-    fn assign_employees(&mut self, people: &mut [Person], new_employee_count: i32) {
+    fn assign_employees(&mut self, people: &mut HashMap<Uuid, Person>, new_employee_count: i32) {
         let minimum_education_level = self.minimum_education_level.clone();
-        let unemployed_people: Vec<&mut Person> = people.iter_mut().filter(|p| {
+        let unemployed_people: Vec<&mut Person> = people.values_mut().filter(|p| {
             p.job == Job::Unemployed && p.education_level == minimum_education_level && p.age >= 18
         }).collect(); // TODO: optimise this
 
@@ -189,7 +191,7 @@ impl Business {
     }
 
     /// This function assigns the business to a new market with a new market percentage. This runs monthly.
-    pub fn get_new_market(&mut self, market_percentage: f32, cost_per_percent: f32, people: &mut Vec<Person>, demand: f32) {
+    pub fn get_new_market(&mut self, market_percentage: f32, cost_per_percent: f32, people: &mut HashMap<Uuid, Person>, demand: f32) {
         self.expected_income = self.assign_to_people(market_percentage, people) as i64 * self.product_price as i64;
         let employee_diff = self.calculate_expected_employee_count() - self.employees.len() as i32;
 
@@ -202,13 +204,13 @@ impl Business {
         self.balance -= (self.get_production_cost() + (market_percentage * cost_per_percent)) as f64;
     }
 
-    pub fn remove_employees(&mut self, amount: i32, people: &mut Vec<Person>) {
+    pub fn remove_employees(&mut self, amount: i32, people: &mut HashMap<Uuid, Person>) {
         // Sort employees by lowest welfare to highest
 
-        let mut sorted_employees: Vec<_> = self.employees.clone().into_iter().collect();
+        let mut sorted_employees: Vec<_> = self.employees.clone();
         sorted_employees.sort_by(|a, b| {
-            let per_a = people.iter().find(|p| p.id == *a).unwrap();
-            let per_b = people.iter().find(|p| p.id == *b).unwrap();
+            let per_a = people.values().find(|p| p.id == *a).unwrap();
+            let per_b = people.values().find(|p| p.id == *b).unwrap();
 
             per_a.welfare.cmp(&per_b.welfare)
         });
@@ -219,7 +221,7 @@ impl Business {
             let emp_idx = self.employees.iter().position(|emp_id| *emp_id == per_id).unwrap();
             self.employees.remove(emp_idx);
 
-            let per = people.iter_mut().find(|p| p.id == per_id).unwrap();
+            let per = people.get_mut(&per_id).unwrap();
             per.job = Job::Unemployed;
             per.salary = generate_unemployed_salary();
         }

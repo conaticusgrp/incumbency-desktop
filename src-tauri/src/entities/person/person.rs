@@ -335,7 +335,7 @@ impl Person {
         }
     }
 
-    pub fn day_pass(&mut self, day: i32, hospital_current_capacity: &mut i32, month_unhospitalised_count: &mut i32, date: &Date, death_queue: &mut Vec<Uuid>,businesses: &mut Vec<Business>) {
+    pub fn day_pass(&mut self, day: i32, hospital_current_capacity: &mut i32, month_unhospitalised_count: &mut i32, date: &Date, death_queue: &mut Vec<Uuid>, businesses: &mut HashMap<Uuid, Business>) {
         self.check_birthday(date);
 
         let mut rng = rand::thread_rng();
@@ -397,7 +397,7 @@ impl Person {
         let mut not_afford_wanted_item = false;
 
         if let Some(quantity) = quantity_opt {
-            let business = businesses.iter_mut().find(|b| b.id == self.business_this_month.unwrap()).unwrap();
+            let business = businesses.get_mut(&self.business_this_month.unwrap()).unwrap();
             let item_cost = (business.product_price * quantity) as f32;
 
             for _ in 0..quantity {

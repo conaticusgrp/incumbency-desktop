@@ -61,7 +61,7 @@ pub async fn start_game_loop(state_mux: &GameStateSafe, app_handle: &tauri::AppH
 
         if state.date.on_new_month {
             let tax_rate = state.tax_rate; // Dont need to .clone on basic types like f32
-            state.month_pass(tax_rate, Some(app_handle));
+            state.month_pass(tax_rate);
         }
     }
 }
