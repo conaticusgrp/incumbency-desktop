@@ -19,18 +19,14 @@
     maximized: false
   };
   export let opened: boolean = true;
+  export let focused: boolean = false;
   
   let thisObj: HTMLElement;
   let dragOffset: { dx: number; dy: number };
   let resizeType: { w?: 'r' | 'l', h?: 't' | 'b' };
   let boundsBeforeMaximizing: { x: number, y: number, width: number, height: number };
   
-  let focused = false;
   let dispatcher = createEventDispatcher();
-
-  export const show = (): void => {
-    thisObj.style.display = 'initial';
-  }
 
   const getParentBox = (): { x: number, y: number, width: number, height: number } => {
     const box = thisObj.parentElement?.getBoundingClientRect();
@@ -200,7 +196,11 @@
     on:mousedown={handleDragStart}
   >
 
-    <button class="close-button" title="Close" on:click={handleClose}>
+    <button
+      class="close-button"
+      title="Close"
+      on:click={handleClose}
+    >
       Close
     </button>
 

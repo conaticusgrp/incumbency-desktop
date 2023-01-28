@@ -22,6 +22,8 @@
     { componentConstructor: BudgetPanel, name: "Budget Panel", badgeCount: 1 }
   ];
   let focusedApp: number | null = null;
+
+  $: console.log(focusedApp);
   
   //let notifications: NotificationData[] = [];
 
@@ -66,9 +68,6 @@
       case WINDOW_AQUIRE_FOCUS:
         {
           focusedApp = index;
-          apps.forEach((e, i) => {
-            if (i !== index && e.component != null) e.component.unfocus();
-          });
           updateUI();
         }
         break;
@@ -172,6 +171,7 @@
         this={app.componentConstructor}
         bind:this={app.component}
         opened={!!app.opened && !app.minimized}
+        focused={i === focusedApp}
         {...app.props}
         on:criticalWindowEvent={(e) => handleCriticalEvent(i, e)}
       />
@@ -244,7 +244,10 @@
   }
 
   .app-list > div {
+    width: 100%;
     margin: 0.5em 0 0.5em 0;
+    text-align: left;
+    cursor: pointer;
   }
 
   .app-list > div > span {
@@ -267,7 +270,7 @@
   
   .windows {
     position: relative;
-    z-index: 100;
+    /* z-index: 100; */
     isolation: isolate;
     pointer-events: none;
     background-repeat: no-repeat;
@@ -289,12 +292,16 @@
     align-items: center;
     padding: 0 2em 0 2em;
     border: 1px solid green;
-  }
 
-  .toolbar > span[data-minimized="true"] {
     background-color: var(--color-accent);
     color: var(--color-bg);
     font-weight: bold;
+  }
+
+  .toolbar > span[data-minimized="true"] {
+    background-color: unset;
+    color: unset;
+    font-weight: unset;
   }
 
 </style>
