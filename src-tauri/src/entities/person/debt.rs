@@ -10,7 +10,7 @@ const US_DEBT_REPAYMENT_THRESHOLD: f32 = 32_000.; // Minimum salary required to 
 
 
 impl Person {
-    pub fn get_monthly_debt_cost(&self) -> f32 {
+    pub fn get_monthly_debt_cost(&mut self) {
         let mut total = 0.;
 
         for debt in self.debts.iter() {
@@ -19,7 +19,7 @@ impl Person {
             }
         }
 
-        total
+        self.monthly_debt_cost = total;
     }
 }
 

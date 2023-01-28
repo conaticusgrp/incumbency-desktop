@@ -19,6 +19,7 @@ pub enum ProductType {
 #[derive(Default, Clone)]
 pub struct Business {
     pub id: Uuid,
+    pub owner_id: Uuid,
 
     pub balance: f64,
 
@@ -47,9 +48,9 @@ impl Business {
 
         self.product_type = product_type;
         self.minimum_education_level = generate_education_level(config);
-        self.marketing_cost_percentage = rng.gen_range(5..12);
+        self.marketing_cost_percentage = rng.gen_range(1..=2);
         self.product_price = rng.gen_range(2..100); // TODO: determine this price more accurately?
-        self.production_cost_per_product = self.product_price as f32 * float_range(0.15, 0.25, 3);
+        self.production_cost_per_product = self.product_price as f32 * float_range(0.03, 0.05, 3);
 
         let (sufficient_businesses, marketing_reach_percentage) = self.generate_marketing_reach(remaining_market_percentage);
         if sufficient_businesses { return sufficient_businesses }
@@ -64,7 +65,7 @@ impl Business {
         let mut loss_percentage = percentage_of!(marketing_cost + production_cost as f32; / self.expected_income) + (tax_rate * 100.) as i32;
 
         self.employee_salary = self.generate_employee_salary(config, loss_percentage);
-        self.employee_budget_allocation = float_range(0.15, 0.3, 3);
+        self.employee_budget_allocation = float_range(0.53, 0.63, 3);
 
         let expected_employee_count = self.calculate_expected_employee_count();
         self.assign_employees(people, expected_employee_count);
@@ -78,7 +79,7 @@ impl Business {
     fn set_starting_balance(&mut self, loss_percentage: i32) {
         let expected_income = self.expected_income as f64;
 
-        self.balance = expected_income * float_range(0.15, 3., 3) as f64; // A range of 0% - 300% of the expected profit is the business balance
+        self.balance = expected_income * float_range(0.15, 3., 3) as f64; // A range of 150% - 300% of the expected profit is the business balance
         self.balance -= expected_income * as_decimal_percent!(loss_percentage) as f64;
         self.last_month_balance = self.balance;
     }

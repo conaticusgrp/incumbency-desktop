@@ -50,6 +50,7 @@ pub fn generate_game(state_mux: &GameStateSafe, config: &Config) {
 
         let sufficient_businesses = business.generate(&config, ProductType::Leisure, product_demand[&ProductType::Leisure], &mut remaning_market_percentage, &mut state.people, idx, tax_rate);
         let owner = Person { job: Job::BusinessOwner(business.id), age: rand::thread_rng().gen_range(20..70), ..Person::new_generate(&config, &mut product_demand) };
+        business.owner_id = owner.id;
 
         state.people.push(owner);
         state.businesses.push(business);

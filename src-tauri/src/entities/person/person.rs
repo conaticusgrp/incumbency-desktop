@@ -2,7 +2,7 @@ use std::{ops::Range, collections::HashMap};
 use maplit::hashmap;
 use rand::{Rng};
 use uuid::Uuid;
-use crate::{common::util::{float_range, percentage_based_output_int, Date, percentage_chance, chance_one_in, generate_unemployed_salary}, common::config::Config, game::{generation::{generate_education_level, get_expected_salary_range}}, entities::business::{ProductType, Business}, percentage_of};
+use crate::{common::util::{float_range, percentage_based_output_int, Date, percentage_chance, chance_one_in, generate_unemployed_salary}, common::config::Config, game::{generation::{generate_education_level, get_expected_salary_range}}, entities::business::{ProductType, Business}, percentage_of, as_decimal_percent};
 use EducationLevel::*;
 
 use super::{debt::{Debt}, welfare::{WelfareMachine, WELFARE_IMPACT_FOUR, WELFARE_IMPACT_FIVE, WELFARE_IMPACT_THREE, WELFARE_IMPACT_TWO, WELFARE_IMPACT_ONE}};
@@ -47,6 +47,7 @@ pub struct Person {
     pub years_in_higher_education: i32, // Amount of years the individual spent in college or university (TODO: use this)
     pub job: Job,
     pub debts: Vec<Debt>,
+    pub monthly_debt_cost: f32,
     pub years_in_unemployment: i32,
 
     pub age: i32,
@@ -77,6 +78,7 @@ pub struct Person {
 
     pub welfare_machine: WelfareMachine,
     pub welfare: i32,
+
 }
 
 // Static methods
@@ -101,6 +103,7 @@ impl Person {
         if person.age >= 18 {
             person.generate_daily_food_spending();
             person.debts = Debt::generate(&mut person, expected_salary as i32);
+            person.get_monthly_debt_cost();
         } else {
             person.daily_food_spending = 0;
         }
@@ -112,7 +115,7 @@ impl Person {
     }
 
     /// Adds a new baby to the population
-    pub fn new_infant(birthday: Birthday, config: &Config) -> Self {
+    pub fn new_infant(birthday: Birthday, config: &Config, tax_rate: f32) -> Self {
         let mut infant = Self {
             id: Uuid::new_v4(),
             birthday,
@@ -141,15 +144,16 @@ impl Person {
     }
 
     fn generate_age() -> i32 {
+        // This is not entirely accurate in order to avoid massive decrease at start of game
         let mut rng = rand::thread_rng();
 
         percentage_based_output_int::<i32>(hashmap! {
-            (rng.gen_range(0..=18)) => 24,
-            (rng.gen_range(19..=25)) => 9,
-            (rng.gen_range(26..=34)) => 12,
-            (rng.gen_range(35..=54)) => 25,
-            (rng.gen_range(55..=64)) => 13,
-            (rng.gen_range(65..=90)) => 17,
+            (rng.gen_range(0..=18)) => 33,
+            (rng.gen_range(19..=25)) => 12,
+            (rng.gen_range(26..=34)) => 16,
+            (rng.gen_range(35..=54)) => 35,
+            (rng.gen_range(55..=64)) => 2,
+            (rng.gen_range(65..=90)) => 2,
         })
     }
 }
@@ -233,17 +237,19 @@ impl Person {
 
         let mut rng = rand::thread_rng();
 
-        // The percentage of balance that will be added to demand
-        let (balance_percentage, salary_percentage) = match self.spending_behaviour {
-            SpendingBehaviour::One => (float_range(0.4, 1., 2), rng.gen_range(1..5) as f32),
-            SpendingBehaviour::Two => (float_range(0.08, 0.3, 3), rng.gen_range(1..=3) as f32),
-            SpendingBehaviour::Three =>  (float_range(0.02, 0.25, 3), float_range(0.01, 0.05, 2)),
-            SpendingBehaviour::Four => (float_range(0.005, 0.058, 4), 0.),
+        let balance_percentage = match self.spending_behaviour {
+            SpendingBehaviour::One => rng.gen_range(25..50),
+            SpendingBehaviour::Two => rng.gen_range(10..30),
+            SpendingBehaviour::Three => rng.gen_range(2..8),
+            SpendingBehaviour::Four => rng.gen_range(1..3),
         };
 
-        let mut total_demand = self.balance * (balance_percentage / 100.);
+        let remaining_balance = self.balance - (4. * 30.) - self.monthly_debt_cost;
+        let mut total_demand = remaining_balance * as_decimal_percent!(balance_percentage);
+        if total_demand < 0. {
+            total_demand = 0.; 
+        }
         
-        total_demand += (salary / 12.) * (salary_percentage / 100.);
         *self.demand.entry(ProductType::Leisure).or_insert(total_demand) += total_demand;
 
         if let Some(prod_dem) = product_demand {
@@ -252,7 +258,7 @@ impl Person {
     }
 
     pub fn calculate_daily_food_spending(&self) -> i32 {
-        let debt_cost = self.get_monthly_debt_cost();
+        let debt_cost = self.monthly_debt_cost;
 
         let healthy_cost = debt_cost + (4 * 30) as f32;
         let survivable_cost = debt_cost + (3 * 30) as f32;
@@ -302,7 +308,7 @@ impl Person {
         let saving_percent = rng.gen_range(self.saving_percentage_range.clone()) as f32 / 100.;
 
         let mut cut_balance: f32 = self.balance - (self.balance * saving_percent) - ((self.salary as f32 / 12.) * saving_percent);
-        cut_balance -= self.get_monthly_debt_cost();
+        cut_balance -= self.monthly_debt_cost;
 
         cut_balance -= self.daily_food_spending as f32 * 30.;
         cut_balance - price > 0.

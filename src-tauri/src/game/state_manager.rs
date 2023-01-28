@@ -121,7 +121,7 @@ impl GameState {
         }
 
         for _ in 0..new_birth_count {
-            let infant = Person::new_infant(Birthday::from(&date), config);
+            let infant = Person::new_infant(Birthday::from(&date), config, self.tax_rate);
             self.people.push(infant);
         }
 
@@ -131,17 +131,17 @@ impl GameState {
     pub fn month_pass(&mut self, tax_rate: f32, app_handle: Option<&tauri::AppHandle>) {
         for person in self.people.iter_mut() {
             person.business_this_month = None;
-            person.calculate_demand(person.salary as f32, None);
 
             let income = person.salary as f32;
             person.balance += income;
-
             person.pay_tax(&mut self.government_balance, income * tax_rate);
+
+            person.calculate_demand(person.salary as f32, None);
 
             match person.job {
                 Job::BusinessOwner(bid) => {
                     let business = self.businesses.iter_mut().find(|b| b.id == bid).unwrap();
-                    business.pay_owner(person);
+                    // business.pay_owner(person);
                 },
 
                 Job::Employee(bid) => {
@@ -167,6 +167,7 @@ impl GameState {
                 if debt.owed < debt.minimum_monthly_payoff {
                     person.balance -= debt.owed;
                     person.debts.remove(i);
+                    person.get_monthly_debt_cost();
 
                     continue;
                 }
@@ -181,10 +182,25 @@ impl GameState {
         let mut reinvestment_budgets: Vec<(Uuid, f64)> = Vec::new();
         let mut total_reinvestment_budget = 0.;
 
+        let mut bus_removal_queue: Vec<Uuid> = Vec::new();
+
         for i in 0..self.businesses.len() {
             let business = &mut self.businesses[i];
-
             let month_profits = business.balance - business.last_month_balance;
+
+            // TODO: make me more varied
+            if business.balance < 0. {
+                for emp_id in &business.employees {
+                    let employee = self.people.iter_mut().find(|p| p.id == *emp_id).unwrap();
+                    employee.job = Job::Unemployed;
+                    employee.salary = 0;
+                }
+
+                let owner = self.people.iter_mut().find(|p| p.id == business.owner_id).unwrap();
+                owner.job = Job::Unemployed;
+
+                bus_removal_queue.push(business.id);
+            }
 
             let mut tax_loss = month_profits * tax_rate as f64;
             if tax_loss < 0. {
@@ -200,6 +216,11 @@ impl GameState {
                 total_reinvestment_budget += reinvesment_budget;
                 reinvestment_budgets.push((business.id, reinvesment_budget));
             }
+        }
+
+        for id in bus_removal_queue {
+            let idx = self.businesses.iter().position(|b| b.id == id).unwrap();
+            self.businesses.remove(idx);
         }
 
         let mut remaining_market_percentage: f32 = 100.;
