@@ -2,10 +2,11 @@
 
   import { listen } from "@tauri-apps/api/event";
   import { appState } from "../../stores/appState";
+  import { invoke } from "@tauri-apps/api/tauri";
 
+  invoke("create_game");
 
   listen('game_generated', () => {
-    console.log("loaded");
     appState.set('Singleplayer');
   });
 
