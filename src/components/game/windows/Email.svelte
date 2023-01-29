@@ -59,7 +59,13 @@
 
   const handleContentScroll = (): void => {
     contentScrollY = emailContent?.scrollTop ?? 0;
-    selectedEmailTopmostLine = Math.floor(contentScrollY / getLineHeight(emailContent));
+    selectedEmailTopmostLine = Math.max(
+      Math.min(
+        Math.floor(contentScrollY / getLineHeight(emailContent)),
+        selectedEmailTotalLines
+      ),
+      0
+    );
     selectedEmailScrollPercentage = Math.floor(selectedEmailTopmostLine / selectedEmailTotalLines * 100);
   }
 
