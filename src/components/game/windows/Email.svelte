@@ -345,7 +345,9 @@
     right: 0;
     bottom: 0;
     padding-left: 2px;
+    width: 100%;
     height: 2em;
+    text-align: right;
     font-size: 12px;
     color: var(--color-accent);
     background-color: var(--color-bg);
