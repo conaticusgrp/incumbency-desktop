@@ -259,11 +259,9 @@ impl Person {
     }
 
     pub fn calculate_daily_food_spending(&self) -> i32 {
-        let debt_cost = self.monthly_debt_cost;
-
-        let healthy_cost = debt_cost + (4 * 30) as f32;
-        let survivable_cost = debt_cost + (3 * 30) as f32;
-        let unhealthy_cost = debt_cost + (2 * 30) as f32;
+        let healthy_cost = self.monthly_debt_cost + (4 * 30) as f32;
+        let survivable_cost = self.monthly_debt_cost + (3 * 30) as f32;
+        let unhealthy_cost = self.monthly_debt_cost + (2 * 30) as f32;
 
         if self.can_afford_bare(healthy_cost) {
             return 4;
