@@ -111,7 +111,7 @@
   });
 
   // DEBUG
-  onMount(async () => {
+  onMount(() => {
     /*
     setTimeout(() => {
       notifications = [
