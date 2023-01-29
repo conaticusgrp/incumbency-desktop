@@ -40,6 +40,7 @@
 
     if (!apps[index].opened) {
       apps[index].opened = true;
+      apps[index].badgeCount = 0;
       focusedApp = index;
       updateUI();
     } else {
