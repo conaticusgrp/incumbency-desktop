@@ -88,6 +88,8 @@
     )
       return;
 
+    document.body.style.cursor = "move";
+    
     if (size.maximized) {
       // cursorPos(max)/width(max) = cursorPos(min)/width(min)
       const cursorWindowPercentageXMax = e.clientX / size.width;
@@ -99,13 +101,13 @@
 
     document.addEventListener("mousemove", handleDrag);
     document.addEventListener("mouseup", handleDragEnd);
-
+    
     dragOffset = {
       dx: e.clientX - pos.x,
       dy: e.clientY - pos.y,
     };
   }
-
+  
   const handleDrag = (e: MouseEvent): void => {
     pos.x = Math.max(
       Math.min(e.clientX - dragOffset.dx, getParentBox().width - size.width - 2),
@@ -114,14 +116,15 @@
     pos.y = Math.max(
       Math.min(e.clientY - dragOffset.dy, getParentBox().height - size.height),
       0
-    );
-  }
-
-  const handleDragEnd = (e: MouseEvent): void => {
-    handleDrag(e);
-    document.removeEventListener("mousemove", handleDrag);
-    document.removeEventListener("mouseup", handleDragEnd);
-  }
+      );
+    }
+    
+    const handleDragEnd = (e: MouseEvent): void => {
+      document.body.style.cursor = "initial";
+      handleDrag(e);
+      document.removeEventListener("mousemove", handleDrag);
+      document.removeEventListener("mouseup", handleDragEnd);
+    }
 
   const handleResizeStart = (e: MouseEvent): void => {
     const classList = (e.target as HTMLElement).classList;
