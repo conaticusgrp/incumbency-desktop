@@ -14,6 +14,7 @@
     WINDOW_CLOSE,
     WINDOW_MAXIMIZE,
     WINDOW_MINIMIZE,
+    WINDOW_OPENED,
     WINDOW_RESIZE
   } from "../../../scripts/windowEvent";
 
@@ -31,6 +32,8 @@
   let dragOffset: { dx: number; dy: number };
   let resizeType: { w?: 'r' | 'l', h?: 't' | 'b' };
   let boundsBeforeMaximizing: { x: number, y: number, width: number, height: number };
+
+  $: if (opened) dispatcher('windowEvent', { type: WINDOW_OPENED });
   
   let dispatcher = createEventDispatcher();
 
@@ -88,6 +91,8 @@
     )
       return;
 
+    document.body.style.cursor = "move";
+    
     if (size.maximized) {
       // cursorPos(max)/width(max) = cursorPos(min)/width(min)
       const cursorWindowPercentageXMax = e.clientX / size.width;
@@ -99,29 +104,33 @@
 
     document.addEventListener("mousemove", handleDrag);
     document.addEventListener("mouseup", handleDragEnd);
-
+    
     dragOffset = {
       dx: e.clientX - pos.x,
       dy: e.clientY - pos.y,
     };
   }
-
+  
   const handleDrag = (e: MouseEvent): void => {
     pos.x = Math.max(
-      Math.min(e.clientX - dragOffset.dx, getParentBox().width - size.width),
+      Math.min(e.clientX - dragOffset.dx, getParentBox().width - size.width - 2),
       0
     );
     pos.y = Math.max(
       Math.min(e.clientY - dragOffset.dy, getParentBox().height - size.height),
       0
-    );
-  }
-
-  const handleDragEnd = (e: MouseEvent): void => {
-    handleDrag(e);
-    document.removeEventListener("mousemove", handleDrag);
-    document.removeEventListener("mouseup", handleDragEnd);
-  }
+      );
+    }
+    
+    const handleDragEnd = (e: MouseEvent): void => {
+      document.body.style.cursor = "initial";
+      handleDrag(e);
+      if (pos.y === 0) {
+        maximize();
+      }
+      document.removeEventListener("mousemove", handleDrag);
+      document.removeEventListener("mouseup", handleDragEnd);
+    }
 
   const handleResizeStart = (e: MouseEvent): void => {
     const classList = (e.target as HTMLElement).classList;
@@ -146,13 +155,13 @@
 
       const untilRightBorder = getParentBox().width - pos.x;
       const x = e.clientX - getParentBox().x - pos.x;
-      size.width = Math.max(Math.min(x, untilRightBorder), MIN_WINDOW_WIDTH);
+      size.width = Math.max(Math.min(x, untilRightBorder - 2), MIN_WINDOW_WIDTH);
 
     } else if (resizeType.w === 'l') {
 
       const x = e.clientX - getParentBox().x;
       const untilMinWidth = pos.x + size.width - MIN_WINDOW_WIDTH;
-      const newX = Math.max(Math.min(x, untilMinWidth), 0);
+      const newX = Math.max(Math.min(x, untilMinWidth - 2), 0);
       size.width = size.width + (pos.x - newX);
       pos.x = newX;
 

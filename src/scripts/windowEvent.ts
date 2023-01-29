@@ -11,3 +11,4 @@ export const WINDOW_AQUIRE_FOCUS = 'windowAquireFocus';
 // Non-critical
 export const WINDOW_MAXIMIZE = 'windowMaximize';
 export const WINDOW_RESIZE = 'windowResize';
+export const WINDOW_OPENED = 'windowOpened';

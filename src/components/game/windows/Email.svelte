@@ -5,7 +5,7 @@
   import type { EmailData } from "../../../scripts/email";
   import Window from "./Window.svelte"
   import { countLines, getLineHeight } from "../../../scripts/text";
-  import { WINDOW_MAXIMIZE, WINDOW_RESIZE } from "../../../scripts/windowEvent";
+  import { WINDOW_MAXIMIZE, WINDOW_OPENED, WINDOW_RESIZE } from "../../../scripts/windowEvent";
 
   export let opened: boolean;
   export let focused: boolean;
@@ -45,11 +45,6 @@
     generateEmail({ title: "Test 6", content: "Lorem ipsum", sender: "system" }),
   ];
 
-  $: if (opened) {
-    lastCheckedDate = currentDate;
-    emailHeaderHeight = emailHeader?.clientHeight ?? 0;
-  }
-
   const selectEmail = async (i: number) => {
     if (i < 0 || i >= emails.length) return;
     selectedEmailIndex = i;
@@ -70,13 +65,19 @@
     selectedEmailScrollPercentage = Math.floor(selectedEmailTopmostLine / selectedEmailTotalLines * 100);
   }
 
-  const handleWindowEvents = (e: CustomEvent): void => {
-    if (selectedEmailIndex == null) return;
-
+  const handleWindowEvents = async (e: CustomEvent) => {
     switch (e.detail.type) {
       case WINDOW_MAXIMIZE:
       case WINDOW_RESIZE:
-        selectEmail(selectedEmailIndex);
+        if (selectedEmailIndex != null) selectEmail(selectedEmailIndex);
+        break;
+
+      case WINDOW_OPENED:
+        await tick();
+        lastCheckedDate = currentDate;
+        emailHeaderHeight = emailHeader?.clientHeight ?? 0;
+        break;
+
       default:
         break;
     }
@@ -345,7 +346,9 @@
     right: 0;
     bottom: 0;
     padding-left: 2px;
+    width: 100%;
     height: 2em;
+    text-align: right;
     font-size: 12px;
     color: var(--color-accent);
     background-color: var(--color-bg);
