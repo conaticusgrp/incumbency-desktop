@@ -5,6 +5,7 @@
   import type { EmailData } from "../../../scripts/email";
   import Window from "./Window.svelte"
   import { countLines, getLineHeight } from "../../../scripts/text";
+  import { WINDOW_MAXIMIZE, WINDOW_RESIZE } from "../../../scripts/windowEvent";
 
   export let opened: boolean;
   export let focused: boolean;
@@ -69,6 +70,23 @@
     selectedEmailScrollPercentage = Math.floor(selectedEmailTopmostLine / selectedEmailTotalLines * 100);
   }
 
+  const handleWindowEvents = (e: CustomEvent): void => {
+    if (selectedEmailIndex == null) return;
+
+    switch (e.detail.type) {
+      case WINDOW_MAXIMIZE:
+      case WINDOW_RESIZE:
+        selectEmail(selectedEmailIndex);
+      default:
+        break;
+    }
+  }
+
+  listen('new_day', (d) => {
+    //@ts-ignore
+    currentDate = d.payload.date as string;
+  });
+
   // DEBUG
   function generateEmail(data: { title: string, content: string, sender: string }): EmailData {
     return {
@@ -79,11 +97,6 @@
     };
   }
 
-  listen('new_day', (d) => {
-    //@ts-ignore
-    currentDate = d.payload.date as string;
-  });
-
 </script>
 
 <Window
@@ -92,6 +105,7 @@
   size={{ width: 800, height: 600 }}
   {opened}
   {focused}
+  on:windowEvent={handleWindowEvents}
   on:criticalWindowEvent={(e) => dispatcher('criticalWindowEvent', e.detail)}
 >
   <main class="content">
