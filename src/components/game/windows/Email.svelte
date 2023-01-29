@@ -4,7 +4,7 @@
   import { createEventDispatcher, tick } from "svelte";
   import type { EmailData } from "../../../scripts/email";
   import Window from "./Window.svelte"
-  import { countLines, getLineHeight, getContentHeight } from "../../../scripts/text";
+  import { countLines, getLineHeight } from "../../../scripts/text";
 
   export let opened: boolean;
   export let focused: boolean;
@@ -196,7 +196,7 @@
         
         <div
           class="line-counter"
-          style="bottom: {-contentScrollY ?? 0}px;"
+          style="bottom: {-contentScrollY - 2}px;"
         >
           - line: {selectedEmailTopmostLine} / {selectedEmailTotalLines} - {selectedEmailScrollPercentage}% -
         </div>
@@ -321,15 +321,16 @@
   }
 
   .email-content > .space-filler {
-    height: 100%;
+    height: calc(100% - 1em);
   }
 
   .line-counter {
     position: absolute;
     right: 0;
     bottom: 0;
+    padding-left: 2px;
     height: 2em;
-    font-size: 10px;
+    font-size: 12px;
     color: var(--color-accent);
     background-color: var(--color-bg);
   }
