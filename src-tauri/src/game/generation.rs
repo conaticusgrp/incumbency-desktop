@@ -35,7 +35,7 @@ pub fn generate_game(state_mux: &GameStateSafe, config: &Config) {
     product_demand.insert(ProductType::Leisure, 0.);
 
     for _ in 0..config.starting_population {
-        let person = Person::new_generate(&config, &mut product_demand);
+        let person = Person::new_generate(&config, &mut product_demand, state.tax_rate);
         state.people.insert(person.id, person);
     }
 
@@ -49,7 +49,7 @@ pub fn generate_game(state_mux: &GameStateSafe, config: &Config) {
         let tax_rate = state.tax_rate;
 
         let sufficient_businesses = business.generate(&config, ProductType::Leisure, product_demand[&ProductType::Leisure], &mut remaning_market_percentage, &mut state.people, idx, tax_rate);
-        let owner = Person { job: Job::BusinessOwner(business.id), age: rand::thread_rng().gen_range(20..70), ..Person::new_generate(&config, &mut product_demand) };
+        let owner = Person { job: Job::BusinessOwner(business.id), age: rand::thread_rng().gen_range(20..70), ..Person::new_generate(&config, &mut product_demand, tax_rate) };
         business.owner_id = owner.id;
 
         state.people.insert(owner.id, owner);

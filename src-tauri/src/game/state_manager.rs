@@ -2,7 +2,7 @@ use std::{sync::{Mutex, Arc}, ops::Deref, collections::HashMap};
 use maplit::hashmap;
 use serde_json::json;
 use uuid::Uuid;
-use crate::{entities::{business::{Business, ProductType}, person::{person::{Person, Job, Birthday}, debt::{Debt, DebtType}, self}}, as_decimal_percent, common::{util::{Date, SlotArray, set_decimal_count, percentage_chance, chance_one_in}, config::Config}};
+use crate::{entities::{business::{Business, ProductType}, person::{person::{Person, Job, Birthday}, debt::{Debt, DebtType}, self}}, as_decimal_percent, common::{util::{Date, SlotArray, set_decimal_count, percentage_chance, chance_one_in, generate_unemployed_salary}, config::Config}};
 use tauri::Manager;
 
 #[derive(Clone)]
@@ -174,7 +174,7 @@ impl GameState {
         for person in self.people.values_mut() {
             person.business_this_month = None;
 
-            person.calculate_demand(person.salary as f32, None);
+            person.calculate_demand(person.salary as f32, None, self.tax_rate);
 
             match person.job {
                 Job::BusinessOwner(bid) | Job::Employee(bid) => {
@@ -182,13 +182,12 @@ impl GameState {
                     if business.is_some() {
                         let business = business.unwrap();
 
-                        let income = person.salary as f32;
-                        person.pay_tax(&mut self.government_balance, income * tax_rate);
+                        person.pay_tax(&mut self.government_balance, (person.salary as f32 / 12.) * tax_rate);
                         person.business_pay(business, business.employee_salary as f64 / 12.);
 
                     } else {
                         person.job = Job::Unemployed;
-                        person.salary = 0;
+                        person.set_salary(generate_unemployed_salary());
                     }
 
                     // business.pay_owner(person);

@@ -165,7 +165,7 @@ impl Business {
             self.employees.push(person.id);
 
             person.job = Job::Employee(self.id);
-            person.salary = self.employee_salary;
+            person.set_salary(self.employee_salary);
         }
     }
 
@@ -221,7 +221,7 @@ impl Business {
 
             let per = people.get_mut(&per_id).unwrap();
             per.job = Job::Unemployed;
-            per.salary = generate_unemployed_salary();
+            per.set_salary(generate_unemployed_salary());
         }
     }
 

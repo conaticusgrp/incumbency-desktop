@@ -84,7 +84,7 @@ pub struct Person {
 // Static methods
 impl Person {
     /// Generates a randomly aged person based on statistics
-    pub fn new_generate(config: &Config, product_demand: &mut HashMap<ProductType, f32>) -> Self {
+    pub fn new_generate(config: &Config, product_demand: &mut HashMap<ProductType, f32>, tax_rate: f32) -> Self {
         let mut person = Self {
             id: Uuid::new_v4(),
             gender: Self::generate_gender(),
@@ -108,7 +108,7 @@ impl Person {
             person.daily_food_spending = 0;
         }
 
-        person.calculate_demand(expected_salary, Some(product_demand));
+        person.calculate_demand(expected_salary, Some(product_demand), tax_rate);
         person.generate_health();
 
         person
@@ -130,7 +130,7 @@ impl Person {
         infant.expected_salary_range = get_expected_salary_range(config, &infant.education_level);
 
         infant.generate_spending_behaviour();
-        infant.calculate_demand(0., None);
+        infant.calculate_demand(0., None, tax_rate);
 
         infant
     }
@@ -203,9 +203,9 @@ impl Person {
         };
 
         self.saving_percentage_range = match self.spending_behaviour {
-            SpendingBehaviour::One => 5..10,
-            SpendingBehaviour::Two => 8..14,
-            SpendingBehaviour::Three => 15..20,
+            SpendingBehaviour::One => 5..8,
+            SpendingBehaviour::Two => 8..12,
+            SpendingBehaviour::Three => 10..20,
             SpendingBehaviour::Four => 20..28,
         }
     }
@@ -229,7 +229,7 @@ impl Person {
         self.balance = float_range(4., 90., 1);
     }
 
-    pub fn calculate_demand(&mut self, salary: f32, product_demand: Option<&mut HashMap<ProductType, f32>>) {
+    pub fn calculate_demand(&mut self, salary: f32, product_demand: Option<&mut HashMap<ProductType, f32>>, tax_rate: f32) {
         if salary == 0. {
             *self.demand.entry(ProductType::Leisure).or_insert(0.) = 0.;
             return;
@@ -246,6 +246,7 @@ impl Person {
 
         let remaining_balance = self.balance - (4. * 30.) - self.monthly_debt_cost;
         let mut total_demand = remaining_balance * as_decimal_percent!(balance_percentage);
+        total_demand -= (salary / 12.) * tax_rate;
         if total_demand < 0. {
             total_demand = 0.; 
         }
@@ -297,7 +298,7 @@ impl Person {
         if let Job::BusinessOwner(_) = self.job { return self.daily_food_spending = 4 }
 
         if self.job == Job::Unemployed {
-            self.salary = generate_unemployed_salary(); // TODO: make me more dynamic & move me
+            self.set_salary(generate_unemployed_salary()); // TODO: make me more dynamic & move me
         }
         
         self.daily_food_spending = self.calculate_daily_food_spending()
@@ -309,8 +310,8 @@ impl Person {
 
         let mut cut_balance: f32 = self.balance - (self.balance * saving_percent) - ((self.salary as f32 / 12.) * saving_percent);
         cut_balance -= self.monthly_debt_cost;
-
         cut_balance -= self.daily_food_spending as f32 * 30.;
+
         cut_balance - price > 0.
     }
 
@@ -347,7 +348,6 @@ impl Person {
         if self.homeless {
             self.balance += rng.gen_range(1..=2) as f32;
         }
-
 
         if self.age >= 18 && !matches!(self.job, Job::BusinessOwner(_)) {
             self.daily_food_spending = self.calculate_daily_food_spending();
@@ -444,6 +444,11 @@ impl Person {
         }
 
         self.welfare = percentage_of!(amount_total; / range_total);
+    }
+
+    pub fn set_salary(&mut self, salary: i32) {
+        self.salary = salary;
+        self.get_monthly_debt_cost();
     }
 }
 
