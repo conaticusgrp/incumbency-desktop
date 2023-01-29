@@ -447,7 +447,8 @@ impl Person {
     }
 }
 
-#[derive(Default, Clone, PartialEq, Eq, Hash)]
+// MUST be ordered from lowest to highest
+#[derive(Default, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum EducationLevel {
     #[default]
     NoFormalEducation,

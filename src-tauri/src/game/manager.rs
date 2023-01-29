@@ -10,7 +10,7 @@ pub async fn create_game(state_mux: State<'_, GameStateSafe>, app_handle: tauri:
 
     generate_game(&state_mux, &config);
     stabilize_game(&state_mux, &config);
-
+    
     app_handle.emit_all("open_debugger_app", ()).unwrap();
 
     {
@@ -51,13 +51,11 @@ pub async fn start_game_loop(state_mux: &GameStateSafe, app_handle: &tauri::AppH
         let state = &mut state_mux.lock().unwrap();
 
         state.date.new_day();
+        let date_string = state.date.get_date_string();
+        app_handle.emit_all("new_day", PayloadNewDay { date: date_string }).unwrap();
 
         let day = state.date.day;
-        let date_string = state.date.get_date_string();
-
         state.day_pass(day, Some(app_handle), config);
-
-        app_handle.emit_all("new_day", PayloadNewDay { date: date_string }).unwrap();
 
         if state.date.on_new_month {
             let tax_rate = state.tax_rate; // Dont need to .clone on basic types like f32

@@ -55,7 +55,7 @@ impl Business {
         let (sufficient_businesses, marketing_reach_percentage) = self.generate_marketing_reach(remaining_market_percentage);
         if sufficient_businesses { return sufficient_businesses }
 
-        let exp_purchases = self.assign_to_people(marketing_reach_percentage, people) as i64;
+        let exp_purchases = self.assign_to_people(as_decimal_percent!(marketing_reach_percentage) * product_demand, people) as i64;
         self.expected_income = exp_purchases * self.product_price as i64;
 
         // TODO: make this more varied & accurate, influence it by external factors
@@ -129,21 +129,20 @@ impl Business {
         (false, marketing_reach_percentage)
     }
 
-    pub fn assign_to_people(&self, market_percentage: f32, people: &mut HashMap<Uuid, Person>) -> i32 {
+    pub fn assign_to_people(&self, demand: f32, people: &mut HashMap<Uuid, Person>) -> i32 {
         let mut rng = rand::thread_rng();
-        let reach = ((market_percentage / 100.) * people.len() as f32) as i32;
 
         // People who have not yet picked a business to buy from
-        let mut expected_purchases = 0; 
+        let mut met_demand = 0.;
 
-        for (count, person) in people.values_mut().enumerate() {
-            if count == reach as usize { break }
+        for person in people.values_mut() {
+            if met_demand >= demand { break }
             if person.business_this_month.is_some() { continue }
 
             person.business_this_month = Some(self.id);
             let person_demand = person.demand[&self.product_type];
             let purchase_capacity = person_demand as i32 / self.product_price;
-            expected_purchases += purchase_capacity;
+            met_demand += (purchase_capacity * self.product_price) as f32;
 
             for _ in 0..purchase_capacity {
                 let day = rng.gen_range(1..=30);
@@ -151,7 +150,7 @@ impl Business {
             }
         }
 
-        (expected_purchases as f32 * 0.95) as i32 // Expect roughly 5% of people not afford items
+        (met_demand as f32 * 0.95) as i32 // Expect roughly 5% of people not afford items
     }
 
     fn assign_employees(&mut self, people: &mut HashMap<Uuid, Person>, new_employee_count: i32) {
@@ -159,7 +158,8 @@ impl Business {
 
         for (count, person) in people.values_mut().enumerate() {
             if count == new_employee_count as usize { break }
-            let is_valid_employee = person.job == Job::Unemployed && person.education_level == minimum_education_level && person.age >= 18;
+
+            let is_valid_employee = person.job == Job::Unemployed && (person.education_level.clone() as u8) >= (minimum_education_level.clone() as u8) && person.age >= 18;
             if !is_valid_employee { continue }
 
             self.employees.push(person.id);
@@ -190,7 +190,7 @@ impl Business {
 
     /// This function assigns the business to a new market with a new market percentage. This runs monthly.
     pub fn get_new_market(&mut self, market_percentage: f32, cost_per_percent: f32, people: &mut HashMap<Uuid, Person>, demand: f32) {
-        self.expected_income = self.assign_to_people(market_percentage, people) as i64 * self.product_price as i64;
+        self.expected_income = self.assign_to_people(as_decimal_percent!(market_percentage) * demand, people) as i64 * self.product_price as i64;
         let employee_diff = self.calculate_expected_employee_count() - self.employees.len() as i32;
 
         if employee_diff > 0 {
