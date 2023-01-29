@@ -43,7 +43,7 @@ pub fn get_healthcare_cost(state_mux: State<'_, GameStateSafe>) -> f64 {
 }
 
 pub async fn start_game_loop(state_mux: &GameStateSafe, app_handle: &tauri::AppHandle, config: &Config) {
-    let mut interval = tokio::time::interval(Duration::from_secs(1));
+    let mut interval = tokio::time::interval(Duration::from_micros(1));
 
     loop {
         interval.tick().await;

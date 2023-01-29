@@ -152,35 +152,27 @@ impl Business {
     }
 
     fn assign_employees(&mut self, people: &mut HashMap<Uuid, Person>, new_employee_count: i32) {
-        let minimum_education_level = self.minimum_education_level.clone();
+        let minimum_education_level = &self.minimum_education_level;
+        
+        let mut educated_people: Vec<&mut Person> = people
+            .values_mut()
+            .into_iter()
+            .filter(|p| {
+                p.job == Job::Unemployed && p.age >= 18 && (&p.education_level == minimum_education_level || ((p.education_level.clone() as u8) > (minimum_education_level.clone() as u8)))
+            })
+            .take(new_employee_count as usize)
+            .collect();
 
-        let mut count = 0;
+        educated_people.sort_by_cached_key(|p| p.education_level as u8);
 
-        for person in people.values_mut() {
-            if count == new_employee_count as usize { break }
+        let people_ids = educated_people.iter().map(|p| p.id.clone());
 
-            let is_valid_employee = person.job == Job::Unemployed && person.education_level == minimum_education_level && person.age >= 18;
-            if !is_valid_employee { continue }
+        self.employees.extend(people_ids);
 
-            count += 1;
-            self.employees.push(person.id);
-
-            person.job = Job::Employee(self.id);
-            person.set_salary(self.employee_salary);
-        }
-
-        for person in people.values_mut() {
-            if count == new_employee_count as usize { break }
-
-            let is_valid_employee = person.job == Job::Unemployed && (person.education_level.clone() as u8) > (minimum_education_level.clone() as u8) && person.age >= 18;
-            if !is_valid_employee { continue }
-
-            count += 1;
-            self.employees.push(person.id);
-
-            person.job = Job::Employee(self.id);
-            person.set_salary(self.employee_salary);
-        }
+        educated_people.into_iter().for_each(|p| {
+            p.job = Job::Employee(self.id);
+            p.set_salary(self.employee_salary);
+        });
     }
 
     /// Multiplies the percentage target audience for the market based on educated odds 
