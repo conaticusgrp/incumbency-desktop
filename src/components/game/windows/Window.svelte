@@ -14,6 +14,7 @@
     WINDOW_CLOSE,
     WINDOW_MAXIMIZE,
     WINDOW_MINIMIZE,
+    WINDOW_OPENED,
     WINDOW_RESIZE
   } from "../../../scripts/windowEvent";
 
@@ -31,6 +32,8 @@
   let dragOffset: { dx: number; dy: number };
   let resizeType: { w?: 'r' | 'l', h?: 't' | 'b' };
   let boundsBeforeMaximizing: { x: number, y: number, width: number, height: number };
+
+  $: if (opened) dispatcher('windowEvent', { type: WINDOW_OPENED });
   
   let dispatcher = createEventDispatcher();
 
