@@ -1,10 +1,10 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, vec};
 
 use maplit::hashmap;
 use rand::Rng;
 use uuid::Uuid;
 
-use crate::{common::config::Config, common::util::{percentage_based_output_int, float_range, generate_unemployed_salary}, game::{generation::{generate_education_level, get_expected_salary_range}}, as_decimal_percent, percentage_of};
+use crate::{common::config::Config, common::util::{percentage_based_output_int, float_range, generate_unemployed_salary, SlotArray}, game::{generation::{generate_education_level, get_expected_salary_range}}, as_decimal_percent, percentage_of};
 
 use super::person::person::{EducationLevel::{*, self}, Person, Job};
 
@@ -38,6 +38,9 @@ pub struct Business {
 
     pub expected_income: i64, // Expected income for the current month
     pub last_month_balance: f64, // Used to calculate the income for this month
+
+    pub loss_percentage: i32, // Business funds that is spent on resources
+    pub average_profit_accuracy: SlotArray<f32>, // Percentage of expected profits that was lost last month 
 }
 
 impl Business {
@@ -46,6 +49,7 @@ impl Business {
         self.id = Uuid::new_v4();
         let mut rng = rand::thread_rng();
 
+        self.average_profit_accuracy = SlotArray::new(3);
         self.product_type = product_type;
         self.minimum_education_level = generate_education_level(config);
         self.marketing_cost_percentage = rng.gen_range(1..=2);
@@ -62,25 +66,25 @@ impl Business {
         let production_cost = self.get_production_cost();
         let marketing_cost = as_decimal_percent!(self.marketing_cost_percentage) * self.expected_income as f32;
         // This can only be a maximum of 67%, leaving roughly 30% capacity for employees, the minimum (with tax no lower than 20%) is 40%
-        let mut loss_percentage = percentage_of!(marketing_cost + production_cost as f32; / self.expected_income) + (tax_rate * 100.) as i32;
+        self.loss_percentage = percentage_of!(marketing_cost + production_cost as f32; / self.expected_income) + (tax_rate * 100.) as i32;
 
-        self.employee_salary = self.generate_employee_salary(config, loss_percentage);
+        self.employee_salary = self.generate_employee_salary(config, self.loss_percentage);
         self.employee_budget_allocation = float_range(0.53, 0.63, 3);
 
         let expected_employee_count = self.calculate_expected_employee_count();
         self.assign_employees(people, expected_employee_count);
         
-        loss_percentage += percentage_of!(self.employees.len() * (self.employee_salary as usize / 12); / self.expected_income);
-        self.set_starting_balance(loss_percentage);
+        self.loss_percentage += percentage_of!(self.employees.len() * (self.employee_salary as usize / 12); / self.expected_income);
+        self.set_starting_balance();
 
         false
     }
 
-    fn set_starting_balance(&mut self, loss_percentage: i32) {
+    fn set_starting_balance(&mut self) {
         let expected_income = self.expected_income as f64;
 
         self.balance = expected_income * float_range(0.15, 3., 3) as f64; // A range of 150% - 300% of the expected profit is the business balance
-        self.balance -= expected_income * as_decimal_percent!(loss_percentage) as f64;
+        self.balance -= expected_income * as_decimal_percent!(self.loss_percentage) as f64;
         self.last_month_balance = self.balance;
     }
 
@@ -113,12 +117,8 @@ impl Business {
 
     fn generate_marketing_reach(&self, remaining_market_percentage: &mut f32) -> (bool, f32) {
         let marketing_reach_percentage = match self.minimum_education_level {
-            NoFormalEducation => self.random_marketing_percentage_multiplyer(0.3, 0.5),
-            HighSchoolDiploma => self.random_marketing_percentage_multiplyer(0.5, 0.9),
-            College => self.random_marketing_percentage_multiplyer(0.6, 1.1),
-            AssociateDegree => self.random_marketing_percentage_multiplyer(0.8, 1.4),
-            Bachelors => self.random_marketing_percentage_multiplyer(1., 2.1),
-            AdvancedDegree => self.random_marketing_percentage_multiplyer(0.5, 4.),
+            NoFormalEducation | HighSchoolDiploma | College => self.random_marketing_percentage_multiplyer(0.05, 0.22),
+            AssociateDegree | Bachelors | AdvancedDegree => self.random_marketing_percentage_multiplyer(0.1, 0.5),
         };
 
         if (*remaining_market_percentage - marketing_reach_percentage) < 0. {
@@ -150,7 +150,24 @@ impl Business {
             }
         }
 
-        (met_demand as f32 * 0.95) as i32 // Expect roughly 5% of people not afford items
+        let mut total_profit_accuracy = 0.;
+        let mut valid_accuracy_count = 0.;
+
+        for accuracy in &self.average_profit_accuracy.array {
+            if *accuracy != 0. {
+                total_profit_accuracy += accuracy;
+                valid_accuracy_count += 1.;
+            }
+        }
+
+        let profit_accuracy;
+        if valid_accuracy_count == 0. {
+            profit_accuracy = 0.9;
+        } else {
+            profit_accuracy = (valid_accuracy_count / total_profit_accuracy) / 100.;
+        }
+
+        (met_demand as f32 * profit_accuracy) as i32 // Expect roughly 5% of people not afford items
     }
 
     fn assign_employees(&mut self, people: &mut HashMap<Uuid, Person>, new_employee_count: i32) {
@@ -159,7 +176,7 @@ impl Business {
         for (count, person) in people.values_mut().enumerate() {
             if count == new_employee_count as usize { break }
 
-            let is_valid_employee = person.job == Job::Unemployed && (person.education_level.clone() as u8) >= (minimum_education_level.clone() as u8) && person.age >= 18;
+            let is_valid_employee = person.job == Job::Unemployed && person.education_level == minimum_education_level && person.age >= 18;
             if !is_valid_employee { continue }
 
             self.employees.push(person.id);

@@ -287,6 +287,8 @@
     font-size: 12px;
     font-weight: 400;
     opacity: 0.35;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
   }
 

@@ -2,7 +2,7 @@ use std::{sync::{Mutex, Arc}, ops::Deref, collections::HashMap};
 use maplit::hashmap;
 use serde_json::json;
 use uuid::Uuid;
-use crate::{entities::{business::{Business, ProductType}, person::{person::{Person, Job, Birthday}, debt::{Debt, DebtType}, self}}, as_decimal_percent, common::{util::{Date, SlotArray, set_decimal_count, percentage_chance, chance_one_in, generate_unemployed_salary}, config::Config}};
+use crate::{entities::{business::{Business, ProductType}, person::{person::{Person, Job, Birthday}, debt::{Debt, DebtType}, self}}, as_decimal_percent, common::{util::{Date, SlotArray, set_decimal_count, percentage_chance, chance_one_in, generate_unemployed_salary}, config::Config}, percentage_of};
 use tauri::Manager;
 
 #[derive(Clone)]
@@ -11,7 +11,6 @@ pub struct GameState {
   pub business_tax_rate: f32,
   pub businesses: HashMap<Uuid, Business>,
   pub people: HashMap<Uuid, Person>,
-  pub gdp: f32,
   pub date: Date,
 
   pub government_balance: i64, // This is expected to be quite large
@@ -40,7 +39,6 @@ impl Default for GameState {
             business_tax_rate: 0.22, // 22% default - TODO: emit warning if the tax is raised above 30% - this is the maximum tax rate businesses will tolerate
             businesses: HashMap::new(),
             people: HashMap::new(),
-            gdp: 0.,
             date: Date::default(),
 
             government_balance: GOVERNMENT_START_BALANCE as i64,
@@ -184,7 +182,6 @@ impl GameState {
 
                         person.pay_tax(&mut self.government_balance, (person.salary as f32 / 12.) * tax_rate);
                         person.business_pay(business, business.employee_salary as f64 / 12.);
-
                     } else {
                         person.job = Job::Unemployed;
                         person.set_salary(generate_unemployed_salary());
@@ -228,20 +225,17 @@ impl GameState {
         let mut bus_removal_queue: Vec<Uuid> = Vec::new();
 
         for business in self.businesses.values_mut() {
+            let expected_profits = business.expected_income as f64 - (business.expected_income as f64 * (business.loss_percentage as f64 / 100.));
             let month_profits = business.balance - business.last_month_balance;
 
+            business.average_profit_accuracy.push(((month_profits / expected_profits)) as f32);
+            
             // TODO: make me more varied
             if business.balance < 0. {
                 bus_removal_queue.push(business.id);
             }
 
-            let mut tax_loss = month_profits * tax_rate as f64;
-            if tax_loss < 0. {
-                tax_loss = 0.;
-            }
-
-
-            business.pay_tax(&mut self.government_balance, tax_loss);
+            business.pay_tax(&mut self.government_balance, month_profits * tax_rate as f64);
 
             let reinvesment_budget = business.balance * as_decimal_percent!(business.marketing_cost_percentage) as f64;
 
