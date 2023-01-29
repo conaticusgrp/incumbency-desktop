@@ -5,7 +5,8 @@
 
 
   listen('game_generated', () => {
-    appState.set('Loading');
+    console.log("loaded");
+    appState.set('Singleplayer');
   });
 
 </script>
