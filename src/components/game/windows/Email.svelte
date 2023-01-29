@@ -13,11 +13,12 @@
   const EMAIL_MARGIN = 0.5;           // em
   const EMAIL_HEIGHT = 6;             // em
   const USERNAME_HEIGHT = 3.5;        // em
-  const EMAIL_HEADER_HEIGHT = 3.5;      // em
 
   const USERNAME = "Joe";
 
   let dispatcher = createEventDispatcher();
+  let emailHeader: HTMLElement;
+  let emailHeaderHeight: number;
   let currentDate: string;
   let lastCheckedDate: string = "undefined";
   let selectedEmailIndex: number | null = null;
@@ -32,8 +33,10 @@
     generateEmail({ title: "Test 6", content: "Lorem ipsum", sender: "system" }),
   ];
 
+
   $: if (opened) {
     lastCheckedDate = currentDate;
+    emailHeaderHeight = emailHeader?.clientHeight ?? 0;
   }
 
   const selectEmail = (i: number): void => {
@@ -122,7 +125,7 @@
 
       <div
         class="email-header"
-        style="height: {EMAIL_HEADER_HEIGHT}em;"
+        bind:this={emailHeader}
       >
         
         {#if selectedEmailIndex != null && selectedEmailIndex >= 0 && selectedEmailIndex < emails.length}
@@ -137,13 +140,19 @@
           &lt;{emails[selectedEmailIndex].cc?.address ?? "unknown"}&gt;
         </div>
 
+        {:else}
+
+        <!-- Space fillers (to compute the height) -->
+        <div><pre> </pre></div>
+        <div><pre> </pre></div>
+
         {/if}
         
       </div>
 
       <div
         class="email-content"
-        style="margin-top: {EMAIL_HEADER_HEIGHT + 1}em;"
+        style="margin-top: calc(2em + {emailHeaderHeight}px);"
       >
 
         {#if selectedEmailIndex != null && selectedEmailIndex >= 0 && selectedEmailIndex < emails.length}
