@@ -125,6 +125,9 @@
     const handleDragEnd = (e: MouseEvent): void => {
       document.body.style.cursor = "initial";
       handleDrag(e);
+      if (pos.y === 0) {
+        maximize();
+      }
       document.removeEventListener("mousemove", handleDrag);
       document.removeEventListener("mouseup", handleDragEnd);
     }
