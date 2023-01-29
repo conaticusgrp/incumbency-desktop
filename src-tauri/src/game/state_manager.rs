@@ -226,12 +226,15 @@ impl GameState {
 
         for business in self.businesses.values_mut() {
             let expected_profits = business.expected_income as f64 - (business.expected_income as f64 * (business.loss_percentage as f64 / 100.));
-            let month_profits = business.balance - business.last_month_balance;
+            let mut month_profits = business.balance - business.last_month_balance;
+            if month_profits < 0. {
+                month_profits = 0.;
+            }
 
             business.average_profit_accuracy.push(((month_profits / expected_profits)) as f32);
             
             // TODO: make me more varied
-            if business.balance < 0. {
+            if business.balance <= 0. {
                 bus_removal_queue.push(business.id);
             }
 

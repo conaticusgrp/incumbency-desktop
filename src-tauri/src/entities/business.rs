@@ -49,7 +49,7 @@ impl Business {
         self.id = Uuid::new_v4();
         let mut rng = rand::thread_rng();
 
-        self.average_profit_accuracy = SlotArray::new(3);
+        self.average_profit_accuracy = SlotArray::from(vec![0.85; 6]);
         self.product_type = product_type;
         self.minimum_education_level = generate_education_level(config);
         self.marketing_cost_percentage = rng.gen_range(1..=2);
@@ -151,34 +151,40 @@ impl Business {
         }
 
         let mut total_profit_accuracy = 0.;
-        let mut valid_accuracy_count = 0.;
 
         for accuracy in &self.average_profit_accuracy.array {
-            if *accuracy != 0. {
-                total_profit_accuracy += accuracy;
-                valid_accuracy_count += 1.;
-            }
+            total_profit_accuracy += accuracy;
         }
 
-        let profit_accuracy;
-        if valid_accuracy_count == 0. {
-            profit_accuracy = 0.9;
-        } else {
-            profit_accuracy = (valid_accuracy_count / total_profit_accuracy) / 100.;
-        }
-
+        let profit_accuracy = (self.average_profit_accuracy.len() as f32 / total_profit_accuracy) / 100.;
         (met_demand as f32 * profit_accuracy) as i32 // Expect roughly 5% of people not afford items
     }
 
     fn assign_employees(&mut self, people: &mut HashMap<Uuid, Person>, new_employee_count: i32) {
         let minimum_education_level = self.minimum_education_level.clone();
 
-        for (count, person) in people.values_mut().enumerate() {
+        let mut count = 0;
+
+        for person in people.values_mut() {
             if count == new_employee_count as usize { break }
 
             let is_valid_employee = person.job == Job::Unemployed && person.education_level == minimum_education_level && person.age >= 18;
             if !is_valid_employee { continue }
 
+            count += 1;
+            self.employees.push(person.id);
+
+            person.job = Job::Employee(self.id);
+            person.set_salary(self.employee_salary);
+        }
+
+        for person in people.values_mut() {
+            if count == new_employee_count as usize { break }
+
+            let is_valid_employee = person.job == Job::Unemployed && (person.education_level.clone() as u8) > (minimum_education_level.clone() as u8) && person.age >= 18;
+            if !is_valid_employee { continue }
+
+            count += 1;
             self.employees.push(person.id);
 
             person.job = Job::Employee(self.id);
@@ -256,7 +262,7 @@ impl Business {
     }
 
     pub fn pay_tax(&mut self, government_balance: &mut i64, amount: f64) {
-        if amount < 0. { return }
+        if amount <= 0. { return }
         self.balance -= amount as f64;
         *government_balance += amount as i64;
     }
