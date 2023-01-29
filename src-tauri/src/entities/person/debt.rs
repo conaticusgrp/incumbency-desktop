@@ -15,7 +15,7 @@ impl Person {
 
         for debt in self.debts.iter() {
             if Debt::required_to_pay(self) {
-                total += (self.salary / 12) as f32 * debt.minimum_monthly_payoff;
+                total += (self.salary / 12) as f32 * (debt.minimum_monthly_payoff / 100.);
             }
         }
 

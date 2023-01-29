@@ -1,6 +1,6 @@
 <script lang="ts">
   
-  import { createEventDispatcher, onMount } from "svelte";
+  import { createEventDispatcher } from "svelte";
 
   import {
     MIN_WINDOW_HEIGHT,
@@ -9,7 +9,14 @@
     WINDOW_HEADER_HEIGHT,
   } from "../../../scripts/desktopConstants";
 
-  import { WINDOW_AQUIRE_FOCUS, WINDOW_CLOSE, WINDOW_MINIMIZE } from "../../../scripts/windowEvent";
+  import {
+    WINDOW_AQUIRE_FOCUS,
+    WINDOW_CLOSE,
+    WINDOW_MAXIMIZE,
+    WINDOW_MINIMIZE,
+    WINDOW_OPENED,
+    WINDOW_RESIZE
+  } from "../../../scripts/windowEvent";
 
   export let title: string = "?";
   export let pos: { x: number; y: number } = { x: 0, y: 0 };
@@ -19,18 +26,16 @@
     maximized: false
   };
   export let opened: boolean = true;
+  export let focused: boolean = false;
   
   let thisObj: HTMLElement;
   let dragOffset: { dx: number; dy: number };
   let resizeType: { w?: 'r' | 'l', h?: 't' | 'b' };
   let boundsBeforeMaximizing: { x: number, y: number, width: number, height: number };
-  
-  let focused = false;
-  let dispatcher = createEventDispatcher();
 
-  export const show = (): void => {
-    thisObj.style.display = 'initial';
-  }
+  $: if (opened) dispatcher('windowEvent', { type: WINDOW_OPENED });
+  
+  let dispatcher = createEventDispatcher();
 
   const getParentBox = (): { x: number, y: number, width: number, height: number } => {
     const box = thisObj.parentElement?.getBoundingClientRect();
@@ -53,11 +58,13 @@
     boundsBeforeMaximizing = { ...pos, ...size }
     pos = { x: 0, y: 0 }
     size = { width: thisObj.parentElement?.clientWidth ?? 0, height: thisObj.parentElement?.clientHeight ?? 0, maximized: true }
+    dispatcher('windowEvent', { type: WINDOW_MAXIMIZE, status: true });
   }
-
+  
   const unmaximize = (): void => {
     pos = { x: boundsBeforeMaximizing.x, y: boundsBeforeMaximizing.y }
     size = { width: boundsBeforeMaximizing.width, height: boundsBeforeMaximizing.height, maximized: false }
+    dispatcher('windowEvent', { type: WINDOW_MAXIMIZE, status: false });
   }
 
   const handleClose = (): void => {
@@ -84,6 +91,8 @@
     )
       return;
 
+    document.body.style.cursor = "move";
+    
     if (size.maximized) {
       // cursorPos(max)/width(max) = cursorPos(min)/width(min)
       const cursorWindowPercentageXMax = e.clientX / size.width;
@@ -95,29 +104,33 @@
 
     document.addEventListener("mousemove", handleDrag);
     document.addEventListener("mouseup", handleDragEnd);
-
+    
     dragOffset = {
       dx: e.clientX - pos.x,
       dy: e.clientY - pos.y,
     };
   }
-
+  
   const handleDrag = (e: MouseEvent): void => {
     pos.x = Math.max(
-      Math.min(e.clientX - dragOffset.dx, getParentBox().width - size.width),
+      Math.min(e.clientX - dragOffset.dx, getParentBox().width - size.width - 2),
       0
     );
     pos.y = Math.max(
       Math.min(e.clientY - dragOffset.dy, getParentBox().height - size.height),
       0
-    );
-  }
-
-  const handleDragEnd = (e: MouseEvent): void => {
-    handleDrag(e);
-    document.removeEventListener("mousemove", handleDrag);
-    document.removeEventListener("mouseup", handleDragEnd);
-  }
+      );
+    }
+    
+    const handleDragEnd = (e: MouseEvent): void => {
+      document.body.style.cursor = "initial";
+      handleDrag(e);
+      if (pos.y === 0) {
+        maximize();
+      }
+      document.removeEventListener("mousemove", handleDrag);
+      document.removeEventListener("mouseup", handleDragEnd);
+    }
 
   const handleResizeStart = (e: MouseEvent): void => {
     const classList = (e.target as HTMLElement).classList;
@@ -142,13 +155,13 @@
 
       const untilRightBorder = getParentBox().width - pos.x;
       const x = e.clientX - getParentBox().x - pos.x;
-      size.width = Math.max(Math.min(x, untilRightBorder), MIN_WINDOW_WIDTH);
+      size.width = Math.max(Math.min(x, untilRightBorder - 2), MIN_WINDOW_WIDTH);
 
     } else if (resizeType.w === 'l') {
 
       const x = e.clientX - getParentBox().x;
       const untilMinWidth = pos.x + size.width - MIN_WINDOW_WIDTH;
-      const newX = Math.max(Math.min(x, untilMinWidth), 0);
+      const newX = Math.max(Math.min(x, untilMinWidth - 2), 0);
       size.width = size.width + (pos.x - newX);
       pos.x = newX;
 
@@ -169,6 +182,8 @@
       pos.y = newY;
       
     }
+
+    dispatcher('windowEvent', { type: WINDOW_RESIZE });
     
   }
 
@@ -200,7 +215,11 @@
     on:mousedown={handleDragStart}
   >
 
-    <button class="close-button" title="Close" on:click={handleClose}>
+    <button
+      class="close-button"
+      title="Close"
+      on:click={handleClose}
+    >
       Close
     </button>
 

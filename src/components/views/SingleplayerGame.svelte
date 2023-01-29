@@ -1,13 +1,11 @@
 <script lang="ts">
 
   import Desktop from "../game/desktop/Desktop.svelte"
-  import { invoke } from "@tauri-apps/api/tauri";
-
-  invoke("create_game");
 
 </script>
 
 <main>
+  
   <Desktop />
 
 </main>

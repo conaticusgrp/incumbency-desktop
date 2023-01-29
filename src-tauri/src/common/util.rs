@@ -184,6 +184,13 @@ impl<T: Default + Clone> SlotArray<T> {
         }
     }
 
+    pub fn from(vector: Vec<T>) -> Self {
+        Self {
+            array: vector,
+            current_idx: 0,
+        }
+    }
+
     pub fn push(&mut self, item: T) {
         self.array[self.current_idx] = item;
 

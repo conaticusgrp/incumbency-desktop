@@ -2,7 +2,7 @@ use std::{sync::{Mutex, Arc}, ops::Deref, collections::HashMap};
 use maplit::hashmap;
 use serde_json::json;
 use uuid::Uuid;
-use crate::{entities::{business::{Business, ProductType}, person::{person::{Person, Job, Birthday}, debt::{Debt, DebtType}, self}}, as_decimal_percent, common::{util::{Date, SlotArray, set_decimal_count, percentage_chance, chance_one_in}, config::Config}};
+use crate::{entities::{business::{Business, ProductType}, person::{person::{Person, Job, Birthday}, debt::{Debt, DebtType}, self}}, as_decimal_percent, common::{util::{Date, SlotArray, set_decimal_count, percentage_chance, chance_one_in, generate_unemployed_salary}, config::Config}, percentage_of};
 use tauri::Manager;
 
 #[derive(Clone)]
@@ -11,7 +11,6 @@ pub struct GameState {
   pub business_tax_rate: f32,
   pub businesses: HashMap<Uuid, Business>,
   pub people: HashMap<Uuid, Person>,
-  pub gdp: f32,
   pub date: Date,
 
   pub government_balance: i64, // This is expected to be quite large
@@ -26,6 +25,9 @@ pub struct GameState {
 
   pub births_in_last_month: SlotArray<i32>,
   pub deaths_in_last_month: SlotArray<usize>,
+
+  pub total_possible_purchases: u32,
+  pub purchases: u32,
 }
 
 const GOVERNMENT_START_BALANCE: u32 = 12000000; // TODO: changeme
@@ -40,7 +42,6 @@ impl Default for GameState {
             business_tax_rate: 0.22, // 22% default - TODO: emit warning if the tax is raised above 30% - this is the maximum tax rate businesses will tolerate
             businesses: HashMap::new(),
             people: HashMap::new(),
-            gdp: 0.,
             date: Date::default(),
 
             government_balance: GOVERNMENT_START_BALANCE as i64,
@@ -55,6 +56,9 @@ impl Default for GameState {
 
             births_in_last_month: SlotArray::new(30),
             deaths_in_last_month: SlotArray::new(30),
+
+            total_possible_purchases: 0,
+            purchases: 0,
         }
     }
 }
@@ -82,7 +86,7 @@ impl GameState {
         let date = self.date.clone();
 
         for per in self.people.values_mut() {
-            per.day_pass(day, &mut self.hospital_current_capacity, &mut self.month_unhospitalised_count, &date, &mut death_queue, &mut self.businesses);
+            per.day_pass(day, &mut self.hospital_current_capacity, &mut self.month_unhospitalised_count, &date, &mut death_queue, &mut self.businesses, &mut self.purchases, &mut self.total_possible_purchases);
             if per.age >= 18 && per.job == Job::Unemployed {
                 // TODO: make this be affected by other factors
                 if !per.homeless && chance_one_in(500 * 365) { // 1 in 500 chance every year
@@ -96,9 +100,12 @@ impl GameState {
         for id in &death_queue {
             let per = self.people.get(&id).unwrap();
             if let Job::Employee(bid) = per.job {
-                let business = self.businesses.get_mut(&bid).unwrap();
-                let employee_idx = business.employees.iter().position(|emp_id| per.id == *emp_id).unwrap();
-                business.employees.remove(employee_idx);
+                let business = self.businesses.get_mut(&bid);
+                if business.is_some() {
+                    let business = business.unwrap();
+                    let employee_idx = business.employees.iter().position(|emp_id| per.id == *emp_id).unwrap();
+                    business.employees.remove(employee_idx);
+                }
             }
 
             self.people.remove(&id);
@@ -171,7 +178,7 @@ impl GameState {
         for person in self.people.values_mut() {
             person.business_this_month = None;
 
-            person.calculate_demand(person.salary as f32, None);
+            person.calculate_demand(person.salary as f32, None, self.tax_rate);
 
             match person.job {
                 Job::BusinessOwner(bid) | Job::Employee(bid) => {
@@ -179,13 +186,11 @@ impl GameState {
                     if business.is_some() {
                         let business = business.unwrap();
 
-                        let income = person.salary as f32;
-                        person.pay_tax(&mut self.government_balance, income * tax_rate);
+                        person.pay_tax(&mut self.government_balance, (person.salary as f32 / 12.) * tax_rate);
                         person.business_pay(business, business.employee_salary as f64 / 12.);
-
                     } else {
                         person.job = Job::Unemployed;
-                        person.salary = 0;
+                        person.set_salary(generate_unemployed_salary());
                     }
 
                     // business.pay_owner(person);
@@ -226,21 +231,14 @@ impl GameState {
         let mut bus_removal_queue: Vec<Uuid> = Vec::new();
 
         for business in self.businesses.values_mut() {
-            let month_profits = business.balance - business.last_month_balance;
-
+            let mut month_profits = business.balance - business.last_month_balance;
+            
             // TODO: make me more varied
-            if business.balance < 0. {
+            if business.balance <= 0. {
                 bus_removal_queue.push(business.id);
             }
 
-            let mut tax_loss = month_profits * tax_rate as f64;
-            if tax_loss < 0. {
-                tax_loss = 0.;
-            }
-
-
-            business.pay_tax(&mut self.government_balance, tax_loss);
-
+            business.pay_tax(&mut self.government_balance, month_profits * tax_rate as f64);
             let reinvesment_budget = business.balance * as_decimal_percent!(business.marketing_cost_percentage) as f64;
 
             if reinvesment_budget > 0. {
@@ -251,6 +249,8 @@ impl GameState {
 
         let mut remaining_market_percentage: f32 = 100.;
         let mut cost_per_percent = 0.;
+
+        let purchase_rate = self.purchases as f32 / self.total_possible_purchases as f32;
 
         for i in 0..reinvestment_budgets.len() {
             let (bid, budget) = &reinvestment_budgets[i];
@@ -275,7 +275,7 @@ impl GameState {
                 demand += person.demand[&business.product_type];
             }
 
-            business.get_new_market(assigned_percent, cost_per_percent, &mut self.people, demand);
+            business.get_new_market(assigned_percent, cost_per_percent, &mut self.people, demand, purchase_rate);
             business.last_month_balance = business.balance;
 
             remaining_market_percentage -= assigned_percent;
@@ -287,5 +287,7 @@ impl GameState {
 
         self.government_balance -= self.healthcare_investment as i64;
         self.month_unhospitalised_count = 0;
+        self.total_possible_purchases = 0;
+        self.purchases = 0;
     }
 }

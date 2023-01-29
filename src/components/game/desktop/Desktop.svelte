@@ -1,9 +1,11 @@
 <script lang="ts">
 
   import { listen } from "@tauri-apps/api/event";
+  import { invoke } from "@tauri-apps/api/tauri";
   import type { DesktopAppShortcut } from "../../../scripts/desktopApp";
   //import type { NotificationData } from "../../../scripts/notificationData";
   import { APP_LIST_MIN_WIDTH, APP_LIST_WIDTH_PERCENT, DATE_TIME_HEIGHT, TOOLBAR_HEIGHT } from "../../../scripts/desktopConstants";
+  import { WINDOW_AQUIRE_FOCUS, WINDOW_CLOSE, WINDOW_MINIMIZE } from "../../../scripts/windowEvent";
 
   import Email from "../windows/Email.svelte";
   import BudgetPanel from "../windows/BudgetPanel.svelte";
@@ -11,7 +13,6 @@
   // DEBUG
   import { onMount } from 'svelte'
   import DebuggerApp from "../windows/DebuggerApp.svelte";
-  import { WINDOW_AQUIRE_FOCUS, WINDOW_CLOSE, WINDOW_MINIMIZE } from "../../../scripts/windowEvent";
 
   let date: string = "undefined date";
   let windowContainer: HTMLElement;
@@ -37,14 +38,20 @@
   const handleOpenApp = (index: number): void => {
     if (index < 0 || index >= apps.length) return;
 
-    apps[index].opened = true;
-    updateUI();
+    if (!apps[index].opened) {
+      apps[index].opened = true;
+      apps[index].badgeCount = 0;
+      focusedApp = index;
+      updateUI();
+    } else {
+      unminimizeApp(index);
+    }
   }
 
   const unminimizeApp = (index: number) => {
     if (index < 0 || index >= apps.length) return;
     
-    apps[index].minimized = false;
+    apps[index].minimized = !apps[index].minimized;
     updateUI();
   }
 
@@ -59,6 +66,9 @@
       case WINDOW_CLOSE:
         {
           apps[index].opened = false;
+          if (focusedApp === index) {
+            focusedApp = null;
+          }
           updateUI();
         }
         break;
@@ -66,9 +76,6 @@
       case WINDOW_AQUIRE_FOCUS:
         {
           focusedApp = index;
-          apps.forEach((e, i) => {
-            if (i !== index && e.component != null) e.component.unfocus();
-          });
           updateUI();
         }
         break;
@@ -94,6 +101,16 @@
     handleOpenApp(apps.findIndex((v) => v.name === "DEBUG"));
   });
 
+  document.addEventListener("keydown", (e) => {
+    if (e.altKey && e.key == "F4") {
+      if (focusedApp != null) {
+        apps[focusedApp].opened = false;
+        focusedApp = null;
+      }
+      e.preventDefault();
+    }
+  });
+
   // DEBUG
   onMount(() => {
     /*
@@ -107,6 +124,8 @@
       ];
     }, 2000);
     */
+
+   invoke("frontend_ready");
   });
 
 </script>
@@ -172,6 +191,7 @@
         this={app.componentConstructor}
         bind:this={app.component}
         opened={!!app.opened && !app.minimized}
+        focused={i === focusedApp}
         {...app.props}
         on:criticalWindowEvent={(e) => handleCriticalEvent(i, e)}
       />
@@ -244,7 +264,10 @@
   }
 
   .app-list > div {
+    width: 100%;
     margin: 0.5em 0 0.5em 0;
+    text-align: left;
+    cursor: pointer;
   }
 
   .app-list > div > span {
@@ -267,7 +290,7 @@
   
   .windows {
     position: relative;
-    z-index: 100;
+    /* z-index: 100; */
     isolation: isolate;
     pointer-events: none;
     background-repeat: no-repeat;
@@ -289,12 +312,16 @@
     align-items: center;
     padding: 0 2em 0 2em;
     border: 1px solid green;
-  }
 
-  .toolbar > span[data-minimized="true"] {
     background-color: var(--color-accent);
     color: var(--color-bg);
     font-weight: bold;
+  }
+
+  .toolbar > span[data-minimized="true"] {
+    background-color: unset;
+    color: unset;
+    font-weight: unset;
   }
 
 </style>
