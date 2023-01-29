@@ -37,9 +37,13 @@
   const handleOpenApp = (index: number): void => {
     if (index < 0 || index >= apps.length) return;
 
-    apps[index].opened = true;
-    focusedApp = index;
-    updateUI();
+    if (!apps[index].opened) {
+      apps[index].opened = true;
+      focusedApp = index;
+      updateUI();
+    } else {
+      unminimizeApp(index);
+    }
   }
 
   const unminimizeApp = (index: number) => {
