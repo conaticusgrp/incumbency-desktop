@@ -1,8 +1,13 @@
 use std::{time::Duration};
-use crate::{common::{payloads::{PayloadNewDay, NewGame}, config::{load_config, Config}}};
+use crate::{common::{payloads::{PayloadNewDay}, config::{load_config, Config}}};
 use tauri::{State, Manager};
 
 use super::{generation::{generate_game, stabilize_game}, state_manager::GameStateSafe};
+
+#[tauri::command]
+pub fn frontend_ready(app_handle: tauri::AppHandle) {
+    app_handle.emit_all("open_debugger_app", ()).unwrap(); // Only in debug mode
+}
 
 #[tauri::command] // TODO: Take in game name as argument and call "create_save(name)"
 pub async fn create_game(state_mux: State<'_, GameStateSafe>, app_handle: tauri::AppHandle) -> Result<(), ()> {
@@ -12,7 +17,6 @@ pub async fn create_game(state_mux: State<'_, GameStateSafe>, app_handle: tauri:
     stabilize_game(&state_mux, &config);
     
     app_handle.emit_all("game_generated", ()).unwrap();
-    app_handle.emit_all("open_debugger_app", ()).unwrap();
 
     start_game_loop(&state_mux, &app_handle, &config).await;
     Ok(())
