@@ -108,7 +108,7 @@
 
   const handleDrag = (e: MouseEvent): void => {
     pos.x = Math.max(
-      Math.min(e.clientX - dragOffset.dx, getParentBox().width - size.width),
+      Math.min(e.clientX - dragOffset.dx, getParentBox().width - size.width - 2),
       0
     );
     pos.y = Math.max(
@@ -146,13 +146,13 @@
 
       const untilRightBorder = getParentBox().width - pos.x;
       const x = e.clientX - getParentBox().x - pos.x;
-      size.width = Math.max(Math.min(x, untilRightBorder), MIN_WINDOW_WIDTH);
+      size.width = Math.max(Math.min(x, untilRightBorder - 2), MIN_WINDOW_WIDTH);
 
     } else if (resizeType.w === 'l') {
 
       const x = e.clientX - getParentBox().x;
       const untilMinWidth = pos.x + size.width - MIN_WINDOW_WIDTH;
-      const newX = Math.max(Math.min(x, untilMinWidth), 0);
+      const newX = Math.max(Math.min(x, untilMinWidth - 2), 0);
       size.width = size.width + (pos.x - newX);
       pos.x = newX;
 
