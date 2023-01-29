@@ -25,6 +25,9 @@ pub struct GameState {
 
   pub births_in_last_month: SlotArray<i32>,
   pub deaths_in_last_month: SlotArray<usize>,
+
+  pub total_possible_purchases: u32,
+  pub purchases: u32,
 }
 
 const GOVERNMENT_START_BALANCE: u32 = 12000000; // TODO: changeme
@@ -53,6 +56,9 @@ impl Default for GameState {
 
             births_in_last_month: SlotArray::new(30),
             deaths_in_last_month: SlotArray::new(30),
+
+            total_possible_purchases: 0,
+            purchases: 0,
         }
     }
 }
@@ -80,7 +86,7 @@ impl GameState {
         let date = self.date.clone();
 
         for per in self.people.values_mut() {
-            per.day_pass(day, &mut self.hospital_current_capacity, &mut self.month_unhospitalised_count, &date, &mut death_queue, &mut self.businesses);
+            per.day_pass(day, &mut self.hospital_current_capacity, &mut self.month_unhospitalised_count, &date, &mut death_queue, &mut self.businesses, &mut self.purchases, &mut self.total_possible_purchases);
             if per.age >= 18 && per.job == Job::Unemployed {
                 // TODO: make this be affected by other factors
                 if !per.homeless && chance_one_in(500 * 365) { // 1 in 500 chance every year
@@ -225,13 +231,7 @@ impl GameState {
         let mut bus_removal_queue: Vec<Uuid> = Vec::new();
 
         for business in self.businesses.values_mut() {
-            let expected_profits = business.expected_income as f64 - (business.expected_income as f64 * (business.loss_percentage as f64 / 100.));
             let mut month_profits = business.balance - business.last_month_balance;
-            if month_profits < 0. {
-                month_profits = 0.;
-            }
-
-            business.average_profit_accuracy.push(((month_profits / expected_profits)) as f32);
             
             // TODO: make me more varied
             if business.balance <= 0. {
@@ -239,7 +239,6 @@ impl GameState {
             }
 
             business.pay_tax(&mut self.government_balance, month_profits * tax_rate as f64);
-
             let reinvesment_budget = business.balance * as_decimal_percent!(business.marketing_cost_percentage) as f64;
 
             if reinvesment_budget > 0. {
@@ -250,6 +249,8 @@ impl GameState {
 
         let mut remaining_market_percentage: f32 = 100.;
         let mut cost_per_percent = 0.;
+
+        let purchase_rate = self.purchases as f32 / self.total_possible_purchases as f32;
 
         for i in 0..reinvestment_budgets.len() {
             let (bid, budget) = &reinvestment_budgets[i];
@@ -274,7 +275,7 @@ impl GameState {
                 demand += person.demand[&business.product_type];
             }
 
-            business.get_new_market(assigned_percent, cost_per_percent, &mut self.people, demand);
+            business.get_new_market(assigned_percent, cost_per_percent, &mut self.people, demand, purchase_rate);
             business.last_month_balance = business.balance;
 
             remaining_market_percentage -= assigned_percent;
@@ -286,5 +287,7 @@ impl GameState {
 
         self.government_balance -= self.healthcare_investment as i64;
         self.month_unhospitalised_count = 0;
+        self.total_possible_purchases = 0;
+        self.purchases = 0;
     }
 }

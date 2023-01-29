@@ -40,7 +40,6 @@ pub struct Business {
     pub last_month_balance: f64, // Used to calculate the income for this month
 
     pub loss_percentage: i32, // Business funds that is spent on resources
-    pub average_profit_accuracy: SlotArray<f32>, // Percentage of expected profits that was lost last month 
 }
 
 impl Business {
@@ -49,7 +48,6 @@ impl Business {
         self.id = Uuid::new_v4();
         let mut rng = rand::thread_rng();
 
-        self.average_profit_accuracy = SlotArray::from(vec![0.85; 6]);
         self.product_type = product_type;
         self.minimum_education_level = generate_education_level(config);
         self.marketing_cost_percentage = rng.gen_range(1..=2);
@@ -59,7 +57,7 @@ impl Business {
         let (sufficient_businesses, marketing_reach_percentage) = self.generate_marketing_reach(remaining_market_percentage);
         if sufficient_businesses { return sufficient_businesses }
 
-        let exp_purchases = self.assign_to_people(as_decimal_percent!(marketing_reach_percentage) * product_demand, people) as i64;
+        let exp_purchases = self.assign_to_people(as_decimal_percent!(marketing_reach_percentage) * product_demand, people, 0.8) as i64;
         self.expected_income = exp_purchases * self.product_price as i64;
 
         // TODO: make this more varied & accurate, influence it by external factors
@@ -117,7 +115,7 @@ impl Business {
 
     fn generate_marketing_reach(&self, remaining_market_percentage: &mut f32) -> (bool, f32) {
         let marketing_reach_percentage = match self.minimum_education_level {
-            NoFormalEducation | HighSchoolDiploma | College => self.random_marketing_percentage_multiplyer(0.05, 0.22),
+            NoFormalEducation | HighSchoolDiploma | College => self.random_marketing_percentage_multiplyer(0.8, 0.25),
             AssociateDegree | Bachelors | AdvancedDegree => self.random_marketing_percentage_multiplyer(0.1, 0.5),
         };
 
@@ -129,7 +127,7 @@ impl Business {
         (false, marketing_reach_percentage)
     }
 
-    pub fn assign_to_people(&self, demand: f32, people: &mut HashMap<Uuid, Person>) -> i32 {
+    pub fn assign_to_people(&self, demand: f32, people: &mut HashMap<Uuid, Person>, purchase_rate: f32) -> i32 {
         let mut rng = rand::thread_rng();
 
         // People who have not yet picked a business to buy from
@@ -150,14 +148,7 @@ impl Business {
             }
         }
 
-        let mut total_profit_accuracy = 0.;
-
-        for accuracy in &self.average_profit_accuracy.array {
-            total_profit_accuracy += accuracy;
-        }
-
-        let profit_accuracy = (self.average_profit_accuracy.len() as f32 / total_profit_accuracy) / 100.;
-        (met_demand as f32 * profit_accuracy) as i32 // Expect roughly 5% of people not afford items
+        (met_demand as f32 * purchase_rate) as i32 // Expect roughly 5% of people not afford items
     }
 
     fn assign_employees(&mut self, people: &mut HashMap<Uuid, Person>, new_employee_count: i32) {
@@ -196,15 +187,15 @@ impl Business {
     pub fn random_marketing_percentage_multiplyer(&self, min: f32, max: f32) -> f32 {
         // 1 - smallest, 3 - largest
         let tier = percentage_based_output_int(hashmap! {
-            1 => 75,
-            2 => 20,
-            3 => 5,
+            1 => 82,
+            2 => 15,
+            3 => 3,
         });
 
         let mut rng = rand::thread_rng();
         let increase_multiplyer = match tier {
-            8 => rng.gen_range(2..5) as f32, // Increase start and end by a random range of 150%-320%
-            3 => rng.gen_range(5..10) as f32,
+            2 => float_range(0.5, 2., 2),
+            2 => rng.gen_range(2..5) as f32,
             _ => 1.,
         };
 
@@ -212,8 +203,8 @@ impl Business {
     }
 
     /// This function assigns the business to a new market with a new market percentage. This runs monthly.
-    pub fn get_new_market(&mut self, market_percentage: f32, cost_per_percent: f32, people: &mut HashMap<Uuid, Person>, demand: f32) {
-        self.expected_income = self.assign_to_people(as_decimal_percent!(market_percentage) * demand, people) as i64 * self.product_price as i64;
+    pub fn get_new_market(&mut self, market_percentage: f32, cost_per_percent: f32, people: &mut HashMap<Uuid, Person>, demand: f32, purchase_rate: f32) {
+        self.expected_income = self.assign_to_people(as_decimal_percent!(market_percentage) * demand, people, purchase_rate) as i64 * self.product_price as i64;
         let employee_diff = self.calculate_expected_employee_count() - self.employees.len() as i32;
 
         if employee_diff > 0 {

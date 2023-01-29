@@ -334,7 +334,7 @@ impl Person {
         }
     }
 
-    pub fn day_pass(&mut self, day: i32, hospital_current_capacity: &mut i32, month_unhospitalised_count: &mut i32, date: &Date, death_queue: &mut Vec<Uuid>, businesses: &mut HashMap<Uuid, Business>) {
+    pub fn day_pass(&mut self, day: i32, hospital_current_capacity: &mut i32, month_unhospitalised_count: &mut i32, date: &Date, death_queue: &mut Vec<Uuid>, businesses: &mut HashMap<Uuid, Business>, purchases: &mut u32, total_possible_purchases: &mut u32) {
         self.check_birthday(date);
 
         let mut rng = rand::thread_rng();
@@ -397,9 +397,12 @@ impl Person {
         if let Some(quantity) = quantity_opt {
             let business = businesses.get_mut(&self.business_this_month.unwrap()).unwrap();
             let item_cost = (business.product_price * quantity) as f32;
+            *total_possible_purchases += quantity as u32;
 
             for _ in 0..quantity {
                 if self.can_afford(item_cost) {
+                    *purchases += 1;
+
                     self.balance -= item_cost;
                     let demand = self.demand.get_mut(&business.product_type).unwrap();
                     *demand -= item_cost;
@@ -409,6 +412,7 @@ impl Person {
                     self.welfare_machine.add_welfare_if(WELFARE_IMPACT_TWO, day, true);
                 } else {
                     not_afford_wanted_item = true;
+                    break;
                 }
             }
         }
