@@ -1,9 +1,11 @@
 <script lang="ts">
 
   import { listen } from "@tauri-apps/api/event";
+  import { invoke } from "@tauri-apps/api/tauri";
   import type { DesktopAppShortcut } from "../../../scripts/desktopApp";
   //import type { NotificationData } from "../../../scripts/notificationData";
   import { APP_LIST_MIN_WIDTH, APP_LIST_WIDTH_PERCENT, DATE_TIME_HEIGHT, TOOLBAR_HEIGHT } from "../../../scripts/desktopConstants";
+  import { WINDOW_AQUIRE_FOCUS, WINDOW_CLOSE, WINDOW_MINIMIZE } from "../../../scripts/windowEvent";
 
   import Email from "../windows/Email.svelte";
   import BudgetPanel from "../windows/BudgetPanel.svelte";
@@ -11,7 +13,6 @@
   // DEBUG
   import { onMount } from 'svelte'
   import DebuggerApp from "../windows/DebuggerApp.svelte";
-  import { WINDOW_AQUIRE_FOCUS, WINDOW_CLOSE, WINDOW_MINIMIZE } from "../../../scripts/windowEvent";
 
   let date: string = "undefined date";
   let windowContainer: HTMLElement;
@@ -110,7 +111,7 @@
   });
 
   // DEBUG
-  onMount(() => {
+  onMount(async () => {
     /*
     setTimeout(() => {
       notifications = [
@@ -122,6 +123,8 @@
       ];
     }, 2000);
     */
+
+   invoke("frontend_ready");
   });
 
 </script>
