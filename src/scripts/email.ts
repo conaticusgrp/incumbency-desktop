@@ -1,5 +1,12 @@
+export interface EmailUser {
+    username: string,
+    address?: string
+}
+
 export interface EmailData {
     title: string,
     content: string,
-    sender?: string
+    date: string,
+    sender?: EmailUser,
+    cc?: EmailUser
 }

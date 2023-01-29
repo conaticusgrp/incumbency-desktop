@@ -38,6 +38,7 @@
     if (index < 0 || index >= apps.length) return;
 
     apps[index].opened = true;
+    focusedApp = index;
     updateUI();
   }
 

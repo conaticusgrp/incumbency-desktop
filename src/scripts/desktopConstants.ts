@@ -1,5 +1,5 @@
 export const RESIZE_BAR_SIZE = 5;                   // px
-export const MIN_WINDOW_WIDTH = 300;                // px
+export const MIN_WINDOW_WIDTH = 400;                // px
 export const MIN_WINDOW_HEIGHT = 200;               // px
 export const WINDOW_HEADER_HEIGHT = 25;             // px
 

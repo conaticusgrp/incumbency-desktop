@@ -1,6 +1,6 @@
 <script lang="ts">
   
-  import { createEventDispatcher, onMount } from "svelte";
+  import { createEventDispatcher } from "svelte";
 
   import {
     MIN_WINDOW_HEIGHT,
@@ -9,7 +9,13 @@
     WINDOW_HEADER_HEIGHT,
   } from "../../../scripts/desktopConstants";
 
-  import { WINDOW_AQUIRE_FOCUS, WINDOW_CLOSE, WINDOW_MINIMIZE } from "../../../scripts/windowEvent";
+  import {
+    WINDOW_AQUIRE_FOCUS,
+    WINDOW_CLOSE,
+    WINDOW_MAXIMIZE,
+    WINDOW_MINIMIZE,
+    WINDOW_RESIZE
+  } from "../../../scripts/windowEvent";
 
   export let title: string = "?";
   export let pos: { x: number; y: number } = { x: 0, y: 0 };
@@ -49,11 +55,13 @@
     boundsBeforeMaximizing = { ...pos, ...size }
     pos = { x: 0, y: 0 }
     size = { width: thisObj.parentElement?.clientWidth ?? 0, height: thisObj.parentElement?.clientHeight ?? 0, maximized: true }
+    dispatcher('windowEvent', { type: WINDOW_MAXIMIZE, status: true });
   }
-
+  
   const unmaximize = (): void => {
     pos = { x: boundsBeforeMaximizing.x, y: boundsBeforeMaximizing.y }
     size = { width: boundsBeforeMaximizing.width, height: boundsBeforeMaximizing.height, maximized: false }
+    dispatcher('windowEvent', { type: WINDOW_MAXIMIZE, status: false });
   }
 
   const handleClose = (): void => {
@@ -165,6 +173,8 @@
       pos.y = newY;
       
     }
+
+    dispatcher('windowEvent', { type: WINDOW_RESIZE });
     
   }
 
