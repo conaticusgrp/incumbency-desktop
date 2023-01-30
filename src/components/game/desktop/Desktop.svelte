@@ -252,7 +252,7 @@
   .app-list-section > h2 {
     margin: 2em;
     font-size: 14px;
-    font-weight: bold;
+    font-weight: bolder;
   }
 
   .app-list {
@@ -261,6 +261,7 @@
     align-items: flex-start;
     width: calc(100% - 1em * 2);
     margin: 0 1em 0 1em;
+    font-size: 14px;
   }
 
   .app-list > div {

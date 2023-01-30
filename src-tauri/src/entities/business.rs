@@ -115,8 +115,8 @@ impl Business {
 
     fn generate_marketing_reach(&self, remaining_market_percentage: &mut f32) -> (bool, f32) {
         let marketing_reach_percentage = match self.minimum_education_level {
-            NoFormalEducation | HighSchoolDiploma | College => self.random_marketing_percentage_multiplyer(0.8, 0.25),
-            AssociateDegree | Bachelors | AdvancedDegree => self.random_marketing_percentage_multiplyer(0.1, 0.5),
+            NoFormalEducation | HighSchoolDiploma | College => self.random_marketing_percentage_multiplyer(0.8, 0.35),
+            AssociateDegree | Bachelors | AdvancedDegree => self.random_marketing_percentage_multiplyer(0.2, 0.6),
         };
 
         if (*remaining_market_percentage - marketing_reach_percentage) < 0. {
@@ -187,7 +187,7 @@ impl Business {
         let mut rng = rand::thread_rng();
         let increase_multiplyer = match tier {
             2 => float_range(0.5, 2., 2),
-            2 => rng.gen_range(2..5) as f32,
+            3 => rng.gen_range(5..10) as f32,
             _ => 1.,
         };
 

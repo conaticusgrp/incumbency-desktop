@@ -33,7 +33,8 @@ pub struct GameState {
 }
 
 const GOVERNMENT_START_BALANCE: u32 = 12000000; // TODO: changeme
-const POPULATION_DAILY_INCREASE_PERCENTAGE: f32 = 4.8125e-5; // Based on real world statistics - TODO: make me more dynamic
+// const POPULATION_DAILY_INCREASE_PERCENTAGE: f32 = 4.8125e-5; // Based on real world statistics - TODO: make me more dynamic
+const POPULATION_DAILY_INCREASE_PERCENTAGE: f32 = 1e-4; // Based on real world statistics - TODO: make me more dynamic
 
 pub type GameStateSafe = Arc<Mutex<GameState>>;
 
@@ -116,10 +117,6 @@ impl GameState {
 
         self.deaths_in_last_month.push(death_queue.len());
 
-        if let Some(app) = app_handle {
-            app.emit_all("debug_payload",  hashmap! { "Population" => self.people.len() }).unwrap();
-        }
-
         self.population_counter += (self.people.len() as f32 * POPULATION_DAILY_INCREASE_PERCENTAGE) as f64;
 
         let mut new_birth_count = self.population_counter.floor() as i32 - population_before_deaths;
@@ -166,6 +163,7 @@ impl GameState {
 
             // TODO - send me daily
             app.emit_all("debug_payload",  json! ({
+                "Population": self.people.len(),
                 "Average Welfare": average_welfare,
                 "Government Balance": self.government_balance,
                 "Monthly Births": births_total,

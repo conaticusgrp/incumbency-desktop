@@ -2,7 +2,7 @@ use std::{time::Duration};
 use crate::{common::{payloads::{PayloadNewDay}, config::{load_config, Config}}};
 use tauri::{State, Manager};
 
-use super::{generation::{generate_game, stabilize_game}, state_manager::GameStateSafe};
+use super::{generation::{generate_game, stabilize_game}, state_manager::{GameStateSafe, GameState}};
 
 #[tauri::command]
 pub fn frontend_ready(app_handle: tauri::AppHandle) {
@@ -40,6 +40,11 @@ pub fn get_healthcare_cost(state_mux: State<'_, GameStateSafe>) -> f64 {
 
     state.cost_per_hospital_capacity = state.healthcare_investment / state.month_unhospitalised_count as f64;
     state.cost_per_hospital_capacity
+}
+
+#[tauri::command]
+pub fn reset_game(app_handle: tauri::AppHandle) {
+    // do stuff
 }
 
 pub async fn start_game_loop(state_mux: &GameStateSafe, app_handle: &tauri::AppHandle, config: &Config) {
