@@ -267,6 +267,7 @@
     color: var(--color-highlight);
     background-color: var(--color-bg);
     border: 1px solid var(--color-accent);
+    cursor: pointer;
   }
   
   .email-list-entry[data-selected="true"] {
