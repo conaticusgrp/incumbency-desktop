@@ -2,7 +2,7 @@ use std::{time::Duration};
 use crate::{common::{payloads::{PayloadNewDay}, config::{load_config, Config}}};
 use tauri::{State, Manager};
 
-use super::{generation::{generate_game, stabilize_game}, state_manager::{GameStateSafe, GameState}};
+use super::{generation::{generate_game, stabilize_game}, state_manager::{GameStateSafe}};
 
 #[tauri::command]
 pub fn frontend_ready(app_handle: tauri::AppHandle) {
@@ -20,12 +20,6 @@ pub async fn create_game(state_mux: State<'_, GameStateSafe>, app_handle: tauri:
 
     start_game_loop(&state_mux, &app_handle, &config).await;
     Ok(())
-}
-
-#[tauri::command]
-pub fn set_tax(state_mux: State<'_, GameStateSafe>, tax_rate: f32) {
-    let mut state = state_mux.lock().unwrap();
-    state.tax_rate = tax_rate / 100.;
 }
 
 #[tauri::command]
@@ -63,8 +57,7 @@ pub async fn start_game_loop(state_mux: &GameStateSafe, app_handle: &tauri::AppH
         state.day_pass(day, Some(app_handle), config);
 
         if state.date.on_new_month {
-            let tax_rate = state.tax_rate; // Dont need to .clone on basic types like f32
-            state.month_pass(tax_rate);
+            state.month_pass();
         }
     }
 }

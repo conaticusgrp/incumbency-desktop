@@ -174,7 +174,7 @@ impl GameState {
         }
     }
 
-    pub fn month_pass(&mut self, tax_rate: f32) {
+    pub fn month_pass(&mut self) {
         for person in self.people.values_mut() {
             person.business_this_month = None;
 
@@ -186,7 +186,7 @@ impl GameState {
                     if business.is_some() {
                         let business = business.unwrap();
 
-                        person.pay_tax(&mut self.government_balance, (person.salary as f32 / 12.) * tax_rate);
+                        person.pay_tax(&mut self.government_balance, (person.salary as f32 / 12.) * self.tax_rate);
                         person.business_pay(business, business.employee_salary as f64 / 12.);
                     } else {
                         person.job = Job::Unemployed;
@@ -238,7 +238,7 @@ impl GameState {
                 bus_removal_queue.push(business.id);
             }
 
-            business.pay_tax(&mut self.government_balance, month_profits * tax_rate as f64);
+            business.pay_tax(&mut self.government_balance, month_profits * self.business_tax_rate as f64);
             let reinvesment_budget = business.balance * as_decimal_percent!(business.marketing_cost_percentage) as f64;
 
             if reinvesment_budget > 0. {
