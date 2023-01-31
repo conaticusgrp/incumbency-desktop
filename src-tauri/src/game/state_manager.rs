@@ -7,30 +7,7 @@ use uuid::Uuid;
 use crate::{entities::{business::{Business, ProductType}, person::{person::{Person, Job, Birthday}, debt::{Debt, DebtType}, self}}, as_decimal_percent, common::{util::{Date, SlotArray, set_decimal_count, percentage_chance, chance_one_in, generate_unemployed_salary}, config::Config}, percentage_of};
 use tauri::Manager;
 
-#[derive(Clone)]
-pub struct GameState {
-  pub tax_rate: f32,
-  pub business_tax_rate: f32,
-  pub businesses: HashMap<Uuid, Business>,
-  pub people: HashMap<Uuid, Person>,
-  pub date: Date,
-
-  pub government_balance: i64, // This is expected to be quite large
-  pub healthcare_investment: f64,
-
-  pub hospital_total_capacity: i32,
-  pub hospital_current_capacity: i32,
-  pub cost_per_hospital_capacity: f64, // This is the cost per person capacity in a hospital for the government, each month
-  pub month_unhospitalised_count: i32, // Number of patient that could not go to hospital because of the full capacity
-
-  pub population_counter: f64,
-
-  pub births_in_last_month: SlotArray<i32>,
-  pub deaths_in_last_month: SlotArray<usize>,
-
-  pub total_possible_purchases: u32,
-  pub purchases: u32,
-}
+use super::structs::{GameState, GameStateRules};
 
 const GOVERNMENT_START_BALANCE: u32 = 12000000; // TODO: changeme
 // const POPULATION_DAILY_INCREASE_PERCENTAGE: f32 = 4.8125e-5; // Based on real world statistics - TODO: make me more dynamic
@@ -62,6 +39,8 @@ impl Default for GameState {
 
             total_possible_purchases: 0,
             purchases: 0,
+
+            rules: GameStateRules::default(),
         }
     }
 }
@@ -125,7 +104,7 @@ impl GameState {
         }
 
         for _ in 0..new_birth_count {
-            let infant = Person::new_infant(Birthday::from(&date), config, self.tax_rate);
+            let infant = Person::new_infant(Birthday::from(&date), config, self.tax_rate, &self.rules.tax_rule);
             self.people.insert(infant.id, infant);
         }
 
@@ -178,7 +157,8 @@ impl GameState {
         for person in self.people.values_mut() {
             person.business_this_month = None;
 
-            person.calculate_demand(person.salary as f32, None, self.tax_rate);
+            let tax_rate = Person::get_tax_rate(&self.rules.tax_rule, self.tax_rate, person.salary);
+            person.calculate_demand(person.salary, None, tax_rate);
 
             match person.job {
                 Job::BusinessOwner(bid) | Job::Employee(bid) => {
@@ -186,7 +166,7 @@ impl GameState {
                     if business.is_some() {
                         let business = business.unwrap();
 
-                        person.pay_tax(&mut self.government_balance, (person.salary as f32 / 12.) * self.tax_rate);
+                        person.pay_tax(&mut self.government_balance, (person.salary as f32 / 12.) * tax_rate);
                         person.business_pay(business, business.employee_salary as f64 / 12.);
                     } else {
                         person.job = Job::Unemployed;
@@ -231,14 +211,16 @@ impl GameState {
         let mut bus_removal_queue: Vec<Uuid> = Vec::new();
 
         for business in self.businesses.values_mut() {
-            let mut month_profits = business.balance - business.last_month_balance;
+            business.last_month_income = business.balance - business.last_month_balance;
             
             // TODO: make me more varied
             if business.balance <= 0. {
                 bus_removal_queue.push(business.id);
             }
 
-            business.pay_tax(&mut self.government_balance, month_profits * self.business_tax_rate as f64);
+            let tax_rate = Business::get_tax_rate(&self.rules.busines_tax_rule, business.last_month_income, self.business_tax_rate);
+
+            business.pay_tax(&mut self.government_balance, business.last_month_income * tax_rate as f64);
             let reinvesment_budget = business.balance * as_decimal_percent!(business.marketing_cost_percentage) as f64;
 
             if reinvesment_budget > 0. {

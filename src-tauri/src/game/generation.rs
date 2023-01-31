@@ -35,7 +35,7 @@ pub fn generate_game(state_mux: &GameStateSafe, config: &Config) {
     product_demand.insert(ProductType::Leisure, 0.);
 
     for _ in 0..config.starting_population {
-        let person = Person::new_generate(&config, &mut product_demand, state.tax_rate);
+        let person = Person::new_generate(&config, &mut product_demand, state.tax_rate, &state.rules.tax_rule);
         state.people.insert(person.id, person);
     }
 
@@ -46,8 +46,10 @@ pub fn generate_game(state_mux: &GameStateSafe, config: &Config) {
         
         let idx = state.businesses.len();
 
-        let sufficient_businesses = business.generate(&config, ProductType::Leisure, product_demand[&ProductType::Leisure], &mut remaning_market_percentage, &mut state.people, idx, state.business_tax_rate);
-        let owner = Person { job: Job::BusinessOwner(business.id), age: rand::thread_rng().gen_range(20..70), ..Person::new_generate(&config, &mut product_demand, state.tax_rate) };
+        let bus_tax_rate = state.business_tax_rate;
+
+        let sufficient_businesses = business.generate(&config, ProductType::Leisure, product_demand[&ProductType::Leisure], &mut remaning_market_percentage, &mut state.people, idx, bus_tax_rate);
+        let owner = Person { job: Job::BusinessOwner(business.id), age: rand::thread_rng().gen_range(20..70), ..Person::new_generate(&config, &mut product_demand, state.tax_rate, &state.rules.tax_rule) };
         business.owner_id = owner.id;
 
         state.people.insert(owner.id, owner);
@@ -78,5 +80,5 @@ pub fn stabilize_game(state_mux: &GameStateSafe, config: &Config) {
     let starting_investment = state.cost_per_hospital_capacity * state.month_unhospitalised_count as f64;
     state.set_healthcare_investment(starting_investment);
 
-    state.month_pass(state.tax_rate);
+    state.month_pass();
 }

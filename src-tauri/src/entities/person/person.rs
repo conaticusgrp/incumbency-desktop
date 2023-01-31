@@ -2,7 +2,7 @@ use std::{ops::Range, collections::HashMap};
 use maplit::hashmap;
 use rand::{Rng};
 use uuid::Uuid;
-use crate::{common::util::{float_range, percentage_based_output_int, Date, percentage_chance, chance_one_in, generate_unemployed_salary}, common::config::Config, game::{generation::{generate_education_level, get_expected_salary_range}}, entities::business::{ProductType, Business}, percentage_of, as_decimal_percent};
+use crate::{common::util::{float_range, percentage_based_output_int, Date, percentage_chance, chance_one_in, generate_unemployed_salary}, common::config::Config, game::{generation::{generate_education_level, get_expected_salary_range}, structs::TaxRule}, entities::business::{ProductType, Business}, percentage_of, as_decimal_percent};
 use EducationLevel::*;
 
 use super::{debt::{Debt}, welfare::{WelfareMachine, WELFARE_IMPACT_FOUR, WELFARE_IMPACT_FIVE, WELFARE_IMPACT_THREE, WELFARE_IMPACT_TWO, WELFARE_IMPACT_ONE}};
@@ -84,7 +84,7 @@ pub struct Person {
 // Static methods
 impl Person {
     /// Generates a randomly aged person based on statistics
-    pub fn new_generate(config: &Config, product_demand: &mut HashMap<ProductType, f32>, tax_rate: f32) -> Self {
+    pub fn new_generate(config: &Config, product_demand: &mut HashMap<ProductType, f32>, tax_rate: f32, tax_rule: &TaxRule) -> Self {
         let mut person = Self {
             id: Uuid::new_v4(),
             gender: Self::generate_gender(),
@@ -95,7 +95,9 @@ impl Person {
 
         person.education_level = generate_education_level(config);
         person.expected_salary_range = get_expected_salary_range(config, &person.education_level);
-        let expected_salary = ((person.expected_salary_range.start + person.expected_salary_range.end) / 2) as f32;
+
+        let expected_salary = ((person.expected_salary_range.start + person.expected_salary_range.end) / 2) as i32;
+        let tax_rate = Self::get_tax_rate(tax_rule, tax_rate, expected_salary);
 
         person.generate_spending_behaviour();
         person.generate_balance(expected_salary);
@@ -114,8 +116,16 @@ impl Person {
         person
     }
 
+    pub fn get_tax_rate(rule: &TaxRule, standard_tax_rate: f32, salary: i32) -> f32 {
+        if rule.enabled && salary >= rule.minimum_salary {
+            return rule.tax_rate;
+        }
+
+        standard_tax_rate
+    }
+
     /// Adds a new baby to the population
-    pub fn new_infant(birthday: Birthday, config: &Config, tax_rate: f32) -> Self {
+    pub fn new_infant(birthday: Birthday, config: &Config, tax_rate: f32, tax_rule: &TaxRule) -> Self {
         let mut infant = Self {
             id: Uuid::new_v4(),
             birthday,
@@ -129,8 +139,11 @@ impl Person {
         infant.education_level = generate_education_level(config);
         infant.expected_salary_range = get_expected_salary_range(config, &infant.education_level);
 
+        let expected_salary = ((infant.expected_salary_range.start + infant.expected_salary_range.end) / 2) as i32;
+        let tax_rate = Self::get_tax_rate(tax_rule, tax_rate, expected_salary);
+
         infant.generate_spending_behaviour();
-        infant.calculate_demand(0., None, tax_rate);
+        infant.calculate_demand(0, None, tax_rate);
 
         infant
     }
@@ -210,16 +223,16 @@ impl Person {
         }
     }
 
-    fn generate_balance(&mut self, salary: f32) {
+    fn generate_balance(&mut self, salary: i32) {
         // TODO: Vary on spending behaviour
 
         if self.age >= 18 {
-            if salary > 0. {
+            if salary > 0 {
                 /*
                     We calculate the average % of salary U.S citizens have in their bank account with ((average_salary * us_population) / us_gdp) * 100
                     This evaluated to 107%, have added a 50% leeway which gives us a range between 53.5% and 214% of the individuals salary
                 */
-                return self.balance = salary * float_range(0.535, 2.14, 3);
+                return self.balance = salary as f32 * float_range(0.535, 2.14, 3);
             }
 
             return self.balance = float_range(50., 1200., 1);
@@ -229,8 +242,8 @@ impl Person {
         self.balance = float_range(4., 90., 1);
     }
 
-    pub fn calculate_demand(&mut self, salary: f32, product_demand: Option<&mut HashMap<ProductType, f32>>, tax_rate: f32) {
-        if salary == 0. {
+    pub fn calculate_demand(&mut self, salary: i32, product_demand: Option<&mut HashMap<ProductType, f32>>, tax_rate: f32) {
+        if salary == 0 {
             *self.demand.entry(ProductType::Leisure).or_insert(0.) = 0.;
             return;
         }
@@ -246,7 +259,7 @@ impl Person {
 
         let remaining_balance = self.balance - (4. * 30.) - self.monthly_debt_cost;
         let mut total_demand = remaining_balance * as_decimal_percent!(balance_percentage);
-        total_demand -= (salary / 12.) * tax_rate;
+        total_demand -= (salary / 12) as f32 * tax_rate;
         if total_demand < 0. {
             total_demand = 0.; 
         }

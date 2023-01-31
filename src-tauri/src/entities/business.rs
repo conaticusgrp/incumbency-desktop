@@ -4,7 +4,7 @@ use maplit::hashmap;
 use rand::Rng;
 use uuid::Uuid;
 
-use crate::{common::config::Config, common::util::{percentage_based_output_int, float_range, generate_unemployed_salary, SlotArray}, game::{generation::{generate_education_level, get_expected_salary_range}}, as_decimal_percent, percentage_of};
+use crate::{common::config::Config, common::util::{percentage_based_output_int, float_range, generate_unemployed_salary, SlotArray}, game::{generation::{generate_education_level, get_expected_salary_range}, structs::BusinessTaxRule}, as_decimal_percent, percentage_of};
 
 use super::person::person::{EducationLevel::{*, self}, Person, Job};
 
@@ -38,8 +38,19 @@ pub struct Business {
 
     pub expected_income: i64, // Expected income for the current month
     pub last_month_balance: f64, // Used to calculate the income for this month
+    pub last_month_income: f64, // Income made last month
 
     pub loss_percentage: i32, // Business funds that is spent on resources
+}
+
+impl Business {
+    pub fn get_tax_rate(rule: &BusinessTaxRule, income: f64, standard_tax_rate: f32) -> f32 {
+        if rule.enabled && income >= rule.minimum_monthly_income {
+            return rule.tax_rate;
+        }
+
+        standard_tax_rate
+    }
 }
 
 impl Business {
