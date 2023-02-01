@@ -2,6 +2,7 @@
 
   import { listen } from "@tauri-apps/api/event";
   import { invoke } from "@tauri-apps/api/tauri";
+  import { onMount } from "svelte";
   import Desktop from "../game/desktop/Desktop.svelte"
   import Loading from "../game/desktop/Loading.svelte";
 
@@ -11,7 +12,11 @@
     gameGenerated = true;
   });
 
-  invoke("create_game");
+  // The invoke call is in onMount because the backend could potentially instantly create the game,
+  // which will lead to other frontend events ignored
+  onMount(() => {
+    invoke("create_game");
+  });
   
 </script>
 
