@@ -6,7 +6,7 @@
   import MultiplayerMenu from './components/views/MultiplayerMenu.svelte';
   import SettingsMenu from './components/views/SettingsMenu.svelte';
   import Credits from './components/views/Credits.svelte';
-  import Loading from './components/views/Loading.svelte';
+  import Loading from './components/game/desktop/Loading.svelte';
   import SingleplayerGame from './components/views/SingleplayerGame.svelte';
   import MultiplayerGame from './components/views/MultiplayerGame.svelte';
   
@@ -52,10 +52,6 @@
 
       case 'Singleplayer':
         currentComponent = SingleplayerGame;
-        break;
-
-      case 'Loading':
-        currentComponent = Loading;
         break;
 
       case 'Multiplayer':
