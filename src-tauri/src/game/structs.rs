@@ -2,6 +2,8 @@ use std::collections::HashMap;
 use uuid::Uuid;
 use crate::{entities::{business::Business, person::person::Person}, common::util::{Date, SlotArray}};
 
+use super::events::App;
+
 #[derive(Default)]
 pub struct TaxRule {
     pub enabled: bool, 
@@ -54,4 +56,5 @@ pub struct GameState {
   pub purchases: u32,
 
   pub rules: GameStateRules,
+  pub open_apps: HashMap<App, bool>
 }

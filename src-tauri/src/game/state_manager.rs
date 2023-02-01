@@ -6,7 +6,7 @@ use serde_json::json;
 use uuid::Uuid;
 use crate::{entities::{business::{Business, ProductType}, person::{person::{Person, Job, Birthday}, debt::{Debt, DebtType}, self}}, as_decimal_percent, common::{util::{Date, SlotArray, set_decimal_count, percentage_chance, chance_one_in, generate_unemployed_salary}, config::Config}, percentage_of};
 use tauri::Manager;
-
+use super::events::App;
 use super::structs::{GameState, GameStateRules};
 
 const GOVERNMENT_START_BALANCE: u32 = 12000000; // TODO: changeme
@@ -41,6 +41,7 @@ impl Default for GameState {
             purchases: 0,
 
             rules: GameStateRules::default(),
+            open_apps: HashMap::new(),
         }
     }
 }
