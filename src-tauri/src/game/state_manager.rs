@@ -211,6 +211,7 @@ impl GameState {
         let mut bus_removal_queue: Vec<Uuid> = Vec::new();
 
         for business in self.businesses.values_mut() {
+            Business::check_funding(&self.rules.business_funding_rule, business);
             business.last_month_income = business.balance - business.last_month_balance;
             
             // TODO: make me more varied
@@ -218,7 +219,7 @@ impl GameState {
                 bus_removal_queue.push(business.id);
             }
 
-            let tax_rate = Business::get_tax_rate(&self.rules.busines_tax_rule, business.last_month_income, self.business_tax_rate);
+            let tax_rate = Business::get_tax_rate(&self.rules.business_tax_rule, business.last_month_income, self.business_tax_rate);
 
             business.pay_tax(&mut self.government_balance, business.last_month_income * tax_rate as f64);
             let reinvesment_budget = business.balance * as_decimal_percent!(business.marketing_cost_percentage) as f64;

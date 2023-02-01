@@ -17,9 +17,17 @@ pub struct BusinessTaxRule {
 }
 
 #[derive(Default)]
+pub struct BusinessFundingRule {
+  pub enabled: bool,
+  pub fund: f64,
+  pub maximum_income: f64,
+}
+
+#[derive(Default)]
 pub struct GameStateRules {
   pub tax_rule: TaxRule,
-  pub busines_tax_rule: BusinessTaxRule,
+  pub business_tax_rule: BusinessTaxRule,
+  pub business_funding_rule: BusinessFundingRule,
 }
 
 pub struct GameState {
