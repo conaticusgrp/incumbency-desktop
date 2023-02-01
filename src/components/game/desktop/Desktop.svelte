@@ -125,7 +125,8 @@
     }, 2000);
     */
 
-   invoke("frontend_ready");
+    // TODO: delete
+    invoke("frontend_ready");
   });
 
 </script>
@@ -238,6 +239,8 @@
     position: relative;
     width: 100%;
     height: 100%;
+    z-index: 0;
+    isolation: isolate;
     color: var(--color-highlight);
     background-color: black;
   }
