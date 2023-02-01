@@ -4,10 +4,10 @@ use super::state_manager::GameStateSafe;
 
 #[derive(PartialEq, Eq, Hash)]
 pub enum App {
-    Finance,
-    Healthcare,
-    Welfare,
-    Business,
+    Finance = 2,
+    Healthcare = 3,
+    Welfare = 4,
+    Business = 5,
 }
 
 pub fn get_app_from_id(app_id: u8) -> App {
