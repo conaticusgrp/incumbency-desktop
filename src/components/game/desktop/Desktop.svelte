@@ -191,8 +191,11 @@
       <svelte:component
         this={app.componentConstructor}
         bind:this={app.component}
-        opened={!!app.opened && !app.minimized}
-        focused={i === focusedApp}
+        windowData={{
+          opened: !!app.opened && !app.minimized,
+          focused: i === focusedApp,
+          index: i
+        }}
         {...app.props}
         on:criticalWindowEvent={(e) => handleCriticalEvent(i, e)}
       />

@@ -15,7 +15,7 @@ pub async fn create_game(state_mux: State<'_, GameStateSafe>, app_handle: tauri:
 
     app_handle.emit_all("generating_game", ()).unwrap();
     generate_game(&state_mux, &config, &app_handle);
-    app_handle.emit_all("checking stable", ()).unwrap();
+    app_handle.emit_all("checking_stable", ()).unwrap();
     stabilize_game(&state_mux, &config);
     
     app_handle.emit_all("game_generated", ()).unwrap();
