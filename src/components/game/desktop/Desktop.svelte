@@ -8,7 +8,7 @@
   import { WINDOW_AQUIRE_FOCUS, WINDOW_CLOSE, WINDOW_MINIMIZE } from "../../../scripts/windowEvent";
 
   import Email from "../windows/Email.svelte";
-  import BudgetPanel from "../windows/BudgetPanel.svelte";
+  import Finance from "../windows/Finance.svelte";
   
   // DEBUG
   import { onMount } from 'svelte'
@@ -20,7 +20,7 @@
   let apps: DesktopAppShortcut[] = [
     { componentConstructor: DebuggerApp, name: "DEBUG" },
     { componentConstructor: Email,       name: "Email", badgeCount: 2 },
-    { componentConstructor: BudgetPanel, name: "Budget Panel", badgeCount: 1 }
+    { componentConstructor: Finance, name: "Budget Panel", badgeCount: 1 }
   ];
   let focusedApp: number | null = null;
   
@@ -191,8 +191,11 @@
       <svelte:component
         this={app.componentConstructor}
         bind:this={app.component}
-        opened={!!app.opened && !app.minimized}
-        focused={i === focusedApp}
+        windowData={{
+          opened: !!app.opened && !app.minimized,
+          focused: i === focusedApp,
+          index: i
+        }}
         {...app.props}
         on:criticalWindowEvent={(e) => handleCriticalEvent(i, e)}
       />

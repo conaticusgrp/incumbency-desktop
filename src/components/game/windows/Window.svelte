@@ -1,14 +1,13 @@
 <script lang="ts">
   
+  import { invoke } from "@tauri-apps/api/tauri";
   import { createEventDispatcher } from "svelte";
-
   import {
     MIN_WINDOW_HEIGHT,
     MIN_WINDOW_WIDTH,
     RESIZE_BAR_SIZE,
     WINDOW_HEADER_HEIGHT,
   } from "../../../scripts/desktopConstants";
-
   import {
     WINDOW_AQUIRE_FOCUS,
     WINDOW_CLOSE,
@@ -17,6 +16,7 @@
     WINDOW_OPENED,
     WINDOW_RESIZE
   } from "../../../scripts/windowEvent";
+  import type { CriticalWindowData } from "../../../scripts/criticalWindowData";
 
   export let title: string = "?";
   export let pos: { x: number; y: number } = { x: 0, y: 0 };
@@ -25,15 +25,17 @@
     height: 400,
     maximized: false
   };
-  export let opened: boolean = true;
-  export let focused: boolean = false;
+  export let windowData: CriticalWindowData = { opened: false, focused: false, index: -1 };
   
   let thisObj: HTMLElement;
   let dragOffset: { dx: number; dy: number };
   let resizeType: { w?: 'r' | 'l', h?: 't' | 'b' };
   let boundsBeforeMaximizing: { x: number, y: number, width: number, height: number };
 
-  $: if (opened) dispatcher('windowEvent', { type: WINDOW_OPENED });
+  $: if (windowData.opened) {
+    dispatcher('windowEvent', { type: WINDOW_OPENED });
+    invoke('app_open', { appId: windowData.index });
+  }
   
   let dispatcher = createEventDispatcher();
 
@@ -68,10 +70,12 @@
   }
 
   const handleClose = (): void => {
-    focused = true;
+    windowData.focused = true;
+    windowData = windowData;
     dispatcher('criticalWindowEvent', { type: WINDOW_CLOSE });
+    invoke('app_close', { appId: windowData.index });
   }
-
+  
   const handleMaximize = (): void => {
     if (size.maximized) {
       unmaximize();
@@ -79,9 +83,10 @@
       maximize();
     }
   }
-
+  
   const handleMinimize = (): void => {
     dispatcher('criticalWindowEvent', { type: WINDOW_MINIMIZE });
+    invoke('app_close', { appId: windowData.index });
   }
 
   const handleDragStart = (e: MouseEvent): void => {
@@ -198,12 +203,12 @@
 <!-- PARENT COMPONENT -->
 <main
   style="
-    display: {opened ? 'initial' : 'none'};
+    display: {windowData.opened ? 'initial' : 'none'};
     left: {pos.x}px;
     top: {pos.y}px;
     width: {size.width}px;
     height: {size.height}px;
-    z-index: {focused ? 10_000 : 9999};
+    z-index: {windowData.focused ? 10_000 : 9999};
   "
   on:mousedown={requestFocus}
   bind:this={thisObj}

@@ -3,12 +3,12 @@
   import { listen } from "@tauri-apps/api/event";
   import { createEventDispatcher, tick } from "svelte";
   import type { EmailData } from "../../../scripts/email";
+  import type { CriticalWindowData } from "../../../scripts/criticalWindowData";
   import Window from "./Window.svelte"
   import { countLines, getLineHeight } from "../../../scripts/text";
   import { WINDOW_MAXIMIZE, WINDOW_OPENED, WINDOW_RESIZE } from "../../../scripts/windowEvent";
 
-  export let opened: boolean;
-  export let focused: boolean;
+  export let windowData: CriticalWindowData;
 
   const EMAIL_LIST_WIDTH = 35;        // %
   const EMAIL_LIST_MIN_WIDTH = 250;   // px
@@ -106,8 +106,7 @@
   title="Email (last checked {lastCheckedDate})"
   pos={{ x: 100, y: 50 }}
   size={{ width: 800, height: 600 }}
-  {opened}
-  {focused}
+  {windowData}
   on:windowEvent={handleWindowEvents}
   on:criticalWindowEvent={(e) => dispatcher('criticalWindowEvent', e.detail)}
 >

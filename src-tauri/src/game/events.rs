@@ -10,13 +10,13 @@ pub enum App {
     Business = 5,
 }
 
-pub fn get_app_from_id(app_id: u8) -> App {
+pub fn get_app_from_id(app_id: u8) -> Option<App> {
     match app_id {
-        a if a == App::Finance as u8 => App::Finance,
-        a if a == App::Healthcare as u8 => App::Healthcare,
-        a if a == App::Welfare as u8 => App::Welfare,
-        a if a == App::Business as u8 => App::Business,
-        _ => unreachable!(),
+        a if a == App::Finance as u8 => Some(App::Finance),
+        a if a == App::Healthcare as u8 => Some(App::Healthcare),
+        a if a == App::Welfare as u8 => Some(App::Welfare),
+        a if a == App::Business as u8 => Some(App::Business),
+        _ => None,
     }
 }
 
@@ -24,7 +24,10 @@ pub fn get_app_from_id(app_id: u8) -> App {
 pub fn app_open(state_mux: State<'_, GameStateSafe>, app_id: u8) {
     let mut state = state_mux.lock().unwrap();
 
-    let app = get_app_from_id(app_id); 
+    let app = match get_app_from_id(app_id) {
+        Some(a) => a,
+        None => return,
+    };
     *state.open_apps.entry(app).or_insert(true) = true;
 }
 
@@ -32,6 +35,9 @@ pub fn app_open(state_mux: State<'_, GameStateSafe>, app_id: u8) {
 pub fn app_close(state_mux: State<'_, GameStateSafe>, app_id: u8) {
     let mut state = state_mux.lock().unwrap();
 
-    let app = get_app_from_id(app_id); 
+    let app = match get_app_from_id(app_id) {
+        Some(a) => a,
+        None => return,
+    }; 
     *state.open_apps.entry(app).or_insert(false) = false;
 }

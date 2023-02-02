@@ -2,11 +2,11 @@
   
   import { createEventDispatcher } from "svelte";
   import { listen } from "@tauri-apps/api/event";
+  import type { CriticalWindowData } from "../../../scripts/criticalWindowData";
   import Window from "./Window.svelte"
   import DebugValueDisplay from "../debug/DebugValueDisplay.svelte";
 
-  export let opened: boolean;
-  export let focused: boolean;
+  export let windowData: CriticalWindowData;
 
   let dispatcher = createEventDispatcher();
 
@@ -27,8 +27,7 @@
   title="DEBUG"
   pos={{ x: 100, y: 50 }}
   size={{ width: 800, height: 600 }}
-  {opened}
-  {focused}
+  {windowData}
   on:criticalWindowEvent={(e) => dispatcher('criticalWindowEvent', e.detail)}
 >
   <main>

@@ -1,10 +1,10 @@
 <script lang="ts">
   
   import { createEventDispatcher } from "svelte";
+  import type { CriticalWindowData } from "../../../scripts/criticalWindowData";
   import Window from "./Window.svelte"
 
-  export let opened: boolean;
-  export let focused: boolean;
+  export let windowData: CriticalWindowData;
 
   let dispatcher = createEventDispatcher();
 
@@ -21,8 +21,7 @@
   title="Budget Panel"
   pos={{ x: 100, y: 50 }}
   size={{ width: 800, height: 600 }}
-  {opened}
-  {focused}
+  {windowData}
   on:criticalWindowEvent={(e) => dispatcher('criticalWindowEvent', e.detail)}
 >
   <main>
