@@ -40,13 +40,6 @@ pub struct GameState {
   pub date: Date,
 
   pub government_balance: i64, // This is expected to be quite large
-  pub healthcare_investment: f64,
-
-  pub hospital_total_capacity: i32,
-  pub hospital_current_capacity: i32,
-  pub cost_per_hospital_capacity: f64, // This is the cost per person capacity in a hospital for the government, each month
-  pub month_unhospitalised_count: i32, // Number of patient that could not go to hospital because of the full capacity
-
   pub population_counter: f64,
 
   pub births_in_last_month: SlotArray<i32>,
@@ -56,5 +49,33 @@ pub struct GameState {
   pub purchases: u32,
 
   pub rules: GameStateRules,
-  pub open_apps: HashMap<App, bool>
+  pub open_apps: HashMap<App, bool>,
+
+  pub healthcare: HealthcareState,
+}
+
+#[derive(Default, Clone, Copy)]
+pub struct HealthcareGroup {
+  pub budget: f32,
+  pub current_capacity: i32,
+  pub total_capacity: i32,
+}
+
+#[derive(Default)]
+pub struct HealthcareState {
+  pub cost_per_hospital_capacity: f32, // This is the cost per person capacity in a hospital for the government, each month
+  pub month_unhospitalised_count: i32, // Number of patient that could not go to hospital because of the full capacity
+
+  pub budget: f32,
+  pub total_capacity: i32,
+
+  pub childcare: HealthcareGroup,
+  pub adultcare: HealthcareGroup,
+  pub eldercare: HealthcareGroup,
+}
+
+impl HealthcareState {
+  pub fn get_current_capacity(&self) -> i32 {
+    self.childcare.current_capacity + self.adultcare.current_capacity + self.eldercare.current_capacity
+  }
 }

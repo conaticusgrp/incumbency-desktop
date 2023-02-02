@@ -1,6 +1,6 @@
 use maplit::hashmap;
 use rand::Rng;
-use crate::{common::util::percentage_based_output_int};
+use crate::{common::util::{percentage_based_output_int, get_healthcare_group}, game::structs::{HealthcareState, HealthcareGroup}};
 use super::{person::Person, debt::Debt};
 
 impl Person {
@@ -36,7 +36,7 @@ impl Person {
         }
     }
 
-    pub fn remove_health(&mut self, amount: i32, hospital_capacity: &mut i32, month_unhospitalised_count: &mut i32) {
+    pub fn remove_health(&mut self, amount: i32, healthcare: &mut HealthcareState) {
         self.health_percentage -= amount;
         if self.health_percentage <= 2 {
             self.die(0);
@@ -48,19 +48,21 @@ impl Person {
 
         let mut death_chance = self.get_death_chance();
         let predetermined_health_factor = if self.hospitalisation_percentage > 35 { percentage_below_hospitalisation + (self.hospitalisation_percentage / 8) } else { 0 };
-        
+
+        let healthcare_group = get_healthcare_group(self.age, healthcare);
+
         death_chance += predetermined_health_factor; // death chance is higher based on age and capacity for new patients
-        death_chance = (death_chance as f32 * self.multiplyer_based_on_capacity(*hospital_capacity)) as i32;
+        death_chance = (death_chance as f32 * self.multiplyer_based_on_capacity(healthcare_group.current_capacity)) as i32;
 
         if death_chance > 100 { death_chance = 100 }
 
-        if *hospital_capacity == 0 {
-            *month_unhospitalised_count += 1;
+        if healthcare_group.current_capacity == 0 {
+            healthcare.month_unhospitalised_count += 1;
             self.die_based_on_chance(death_chance * 3, 0); // will die for the proceeding day - TODO: die on the current day instead, if possible
             return;
         }
 
-        *hospital_capacity -= 1;
+        healthcare_group.current_capacity -= 1;
         self.hospitalize(percentage_below_hospitalisation, death_chance, amount);
     }
 

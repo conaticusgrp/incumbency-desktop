@@ -1,13 +1,9 @@
-use std::{sync::{Mutex, Arc}, ops::Deref, collections::HashMap};
-use std::sync::atomic::{AtomicUsize, Ordering, ATOMIC_USIZE_INIT};
-use std::thread;
-use maplit::hashmap;
+use std::{sync::{Mutex, Arc}, collections::HashMap};
 use serde_json::json;
 use uuid::Uuid;
-use crate::{entities::{business::{Business, ProductType}, person::{person::{Person, Job, Birthday}, debt::{Debt, DebtType}, self}}, as_decimal_percent, common::{util::{Date, SlotArray, set_decimal_count, percentage_chance, chance_one_in, generate_unemployed_salary}, config::Config}, percentage_of};
+use crate::{entities::{business::{Business}, person::{person::{Person, Job, Birthday}, debt::{Debt, DebtType}}}, as_decimal_percent, common::{util::{Date, SlotArray, set_decimal_count, chance_one_in, generate_unemployed_salary, get_healthcare_group}, config::Config}};
 use tauri::Manager;
-use super::events::App;
-use super::structs::{GameState, GameStateRules};
+use super::structs::{GameState, GameStateRules, HealthcareGroup, HealthcareState};
 
 const GOVERNMENT_START_BALANCE: u32 = 12000000; // TODO: changeme
 // const POPULATION_DAILY_INCREASE_PERCENTAGE: f32 = 4.8125e-5; // Based on real world statistics - TODO: make me more dynamic
@@ -25,13 +21,6 @@ impl Default for GameState {
             date: Date::default(),
 
             government_balance: GOVERNMENT_START_BALANCE as i64,
-            healthcare_investment: GOVERNMENT_START_BALANCE as f64 * 0.07, // For now, 7% of the government budget should be spent on hospitals
-            
-            hospital_total_capacity: 0,
-            hospital_current_capacity: 0,
-            cost_per_hospital_capacity: 0.,
-            month_unhospitalised_count: 0,
-
             population_counter: 0.,
 
             births_in_last_month: SlotArray::new(30),
@@ -42,26 +31,27 @@ impl Default for GameState {
 
             rules: GameStateRules::default(),
             open_apps: HashMap::new(),
+            healthcare: HealthcareState::default(),
         }
     }
 }
 
 impl GameState {
-    /// Returns whether the new investment is possible, if not it also returns the minimum healthcare investment
-    pub fn set_healthcare_investment(&mut self, investment: f64) -> (bool, Option<f64>) {
-        if investment < self.healthcare_investment {
-            let minimum_investment = (self.hospital_total_capacity - self.hospital_current_capacity) as f64 * self.cost_per_hospital_capacity;
-            if investment < minimum_investment {
-                return (false, Some(minimum_investment));
-            }
-        }
+    /// Returns whether the new budget is possible, if not it also returns the minimum healthcare budget
+    // pub fn set_healthcare_budget(&mut self, budget: f32) -> (bool, Option<f32>) {
+    //     if budget < self.healthcare {
+    //         let minimum_investment = (self.hospital_total_capacity - self.hospital_current_capacity) as f32 * self.cost_per_hospital_capacity;
+    //         if budget < minimum_investment {
+    //             return (false, Some(minimum_investment));
+    //         }
+    //     }
 
-        let previous_total_capacity = self.hospital_total_capacity;
-        self.hospital_total_capacity = (investment / self.cost_per_hospital_capacity) as i32;
-        self.hospital_current_capacity += self.hospital_total_capacity - previous_total_capacity;
+    //     let previous_total_capacity = self.hospital_total_capacity;
+    //     self.hospital_total_capacity = (budget / self.cost_per_hospital_capacity) as i32;
+    //     self.hospital_current_capacity += self.hospital_total_capacity - previous_total_capacity;
 
-        (true, None)
-    }
+    //     (true, None)
+    // }
 
     pub fn day_pass(&mut self, day: i32, app_handle: Option<&tauri::AppHandle>, config: &Config) {
         let mut death_queue: Vec<Uuid> = Vec::new(); // Queue of people who are going to die :) - we need this because rust memory
@@ -69,7 +59,7 @@ impl GameState {
         let date = self.date.clone();
 
         for per in self.people.values_mut() {
-            per.day_pass(day, &mut self.hospital_current_capacity, &mut self.month_unhospitalised_count, &date, &mut death_queue, &mut self.businesses, &mut self.purchases, &mut self.total_possible_purchases);
+            per.day_pass(day, &mut self.healthcare, &date, &mut death_queue, &mut self.businesses, &mut self.purchases, &mut self.total_possible_purchases);
             if per.age >= 18 && per.job == Job::Unemployed {
                 // TODO: make this be affected by other factors
                 if !per.homeless && chance_one_in(500 * 365) { // 1 in 500 chance every year
@@ -82,6 +72,9 @@ impl GameState {
 
         for id in &death_queue {
             let per = self.people.get(&id).unwrap();
+            let healthcare_group = get_healthcare_group(per.age, &mut self.healthcare);
+            healthcare_group.current_capacity += 1;
+
             if let Job::Employee(bid) = per.job {
                 let business = self.businesses.get_mut(&bid);
                 if business.is_some() {
@@ -269,8 +262,8 @@ impl GameState {
             self.businesses.remove(&id);
         }
 
-        self.government_balance -= self.healthcare_investment as i64;
-        self.month_unhospitalised_count = 0;
+        self.government_balance -= self.healthcare.budget as i64;
+        self.healthcare.month_unhospitalised_count = 0;
         self.total_possible_purchases = 0;
         self.purchases = 0;
     }

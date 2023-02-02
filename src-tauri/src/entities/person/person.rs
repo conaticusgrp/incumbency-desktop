@@ -2,7 +2,7 @@ use std::{ops::Range, collections::HashMap};
 use maplit::hashmap;
 use rand::{Rng};
 use uuid::Uuid;
-use crate::{common::util::{float_range, percentage_based_output_int, Date, percentage_chance, chance_one_in, generate_unemployed_salary}, common::config::Config, game::{generation::{generate_education_level, get_expected_salary_range}, structs::TaxRule}, entities::business::{ProductType, Business}, percentage_of, as_decimal_percent};
+use crate::{common::util::{float_range, percentage_based_output_int, Date, percentage_chance, chance_one_in, generate_unemployed_salary}, common::{config::Config, util::get_healthcare_group}, game::{generation::{generate_education_level, get_expected_salary_range}, structs::{TaxRule, HealthcareState}}, entities::business::{ProductType, Business}, percentage_of, as_decimal_percent};
 use EducationLevel::*;
 
 use super::{debt::{Debt}, welfare::{WelfareMachine, WELFARE_IMPACT_FOUR, WELFARE_IMPACT_FIVE, WELFARE_IMPACT_THREE, WELFARE_IMPACT_TWO, WELFARE_IMPACT_ONE}};
@@ -347,13 +347,13 @@ impl Person {
         }
     }
 
-    pub fn day_pass(&mut self, day: i32, hospital_current_capacity: &mut i32, month_unhospitalised_count: &mut i32, date: &Date, death_queue: &mut Vec<Uuid>, businesses: &mut HashMap<Uuid, Business>, purchases: &mut u32, total_possible_purchases: &mut u32) {
+    pub fn day_pass(&mut self, day: i32, healthcare: &mut HealthcareState, date: &Date, death_queue: &mut Vec<Uuid>, businesses: &mut HashMap<Uuid, Business>, purchases: &mut u32, total_possible_purchases: &mut u32) {
         self.check_birthday(date);
 
         let mut rng = rand::thread_rng();
 
         if chance_one_in(7300) { // Average person has minor accident every 20 years
-            self.remove_health(rng.gen_range(15..=25), hospital_current_capacity, month_unhospitalised_count);
+            self.remove_health(rng.gen_range(15..=25), healthcare);
         }
 
         if self.homeless {
@@ -376,7 +376,7 @@ impl Person {
             self.welfare_machine.remove_welfare_if(welfare_loss, day, welfare_loss != 0);
 
             if percentage_chance(health_loss_chance) {
-                self.remove_health(1, hospital_current_capacity, month_unhospitalised_count);
+                self.remove_health(1, healthcare);
             }
         }
 
@@ -384,7 +384,6 @@ impl Person {
             *days -= 1;
             if *days <= 0 {
                 death_queue.push(self.id);
-                *hospital_current_capacity += 1;
                 return;
             }
         }
@@ -397,7 +396,8 @@ impl Person {
             *days -= 1;
             if *days <= 0 {
                 self.days_left_in_hospital = None;
-                *hospital_current_capacity += 1;
+                let healthcare_group = get_healthcare_group(self.age, healthcare);
+                healthcare_group.current_capacity += 1;
             }
         }
 

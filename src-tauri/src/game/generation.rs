@@ -4,9 +4,9 @@ use rand::Rng;
 use serde_json::json;
 use tauri::{AppHandle, Manager};
 
-use crate::{common::{config::{Config}, util::percentage_based_output_int}, entities::{person::person::{EducationLevel::{*, self}, Person, Job}, business::{ProductType, Business}}};
+use crate::{common::{config::{Config}, util::percentage_based_output_int}, entities::{person::{person::{EducationLevel::{*, self}, Person, Job}, health}, business::{ProductType, Business}}};
 
-use super::state_manager::GameStateSafe;
+use super::{state_manager::GameStateSafe, structs::{HealthcareGroup, GameState}};
 
 pub fn generate_education_level(config: &Config) -> EducationLevel {
     percentage_based_output_int::<EducationLevel>(hashmap! {
@@ -45,6 +45,7 @@ pub fn generate_game(state_mux: &GameStateSafe, config: &Config, app_handle: &Ap
             "Generating health"
         ]
     })).unwrap();
+
     for _ in 0..config.starting_population {
         let person = Person::new_generate(&config, &mut product_demand, state.tax_rate, &state.rules.tax_rule);
         state.people.insert(person.id, person);
@@ -96,10 +97,25 @@ pub fn stabilize_game(state_mux: &GameStateSafe, config: &Config) {
         state.day_pass(day, None, config);
     }
 
-    state.cost_per_hospital_capacity = state.healthcare_investment / state.month_unhospitalised_count as f64;
+    let government_balance = state.government_balance;
+    let healthcare = &mut state.healthcare;
 
-    let starting_investment = state.cost_per_hospital_capacity * state.month_unhospitalised_count as f64;
-    state.set_healthcare_investment(starting_investment);
+    healthcare.budget = (government_balance as f64 * 0.07) as f32; // For now we start with 7% of the government balance
+    healthcare.cost_per_hospital_capacity = healthcare.budget / healthcare.month_unhospitalised_count as f32;
+    healthcare.total_capacity = (healthcare.budget / healthcare.cost_per_hospital_capacity) as i32;
+
+    let divided_budget = healthcare.budget / 3.; // Divide into the three sectors
+    let budget_capacity = (divided_budget / healthcare.cost_per_hospital_capacity) as i32;
+
+    let budget = HealthcareGroup {
+        budget: divided_budget,
+        current_capacity: budget_capacity,
+        total_capacity: budget_capacity,
+    };
+
+    healthcare.childcare = budget;
+    healthcare.adultcare = budget.clone();
+    healthcare.eldercare = budget.clone();
 
     state.month_pass();
 }

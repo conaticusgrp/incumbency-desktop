@@ -2,6 +2,8 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, ops::{Index, IndexMut}};
 
+use crate::game::structs::{HealthcareGroup, HealthcareState};
+
 #[macro_export]
 macro_rules! percentage_of {
     ($partial:expr; / $total:expr) => {
@@ -218,4 +220,12 @@ impl<T> IndexMut<usize> for SlotArray<T> {
 
 pub fn generate_unemployed_salary() -> i32 {
     rand::thread_rng().gen_range(300..=1100)    
+}
+
+pub fn get_healthcare_group(age: i32, healthcare: &mut HealthcareState) -> &mut HealthcareGroup {
+    match age {
+        age if age <= 18 => &mut healthcare.childcare,
+        age if age <= 65 => &mut healthcare.adultcare,
+        _ => &mut healthcare.eldercare,
+    }
 }

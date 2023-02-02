@@ -29,20 +29,6 @@ pub async fn create_game(state_mux: State<'_, GameStateSafe>, app_handle: tauri:
 }
 
 #[tauri::command]
-pub fn set_healthcare_investment(state_mux: State<'_, GameStateSafe>, investment: f64) {
-    let mut state = state_mux.lock().unwrap();
-    state.set_healthcare_investment(investment);
-}
-
-#[tauri::command]
-pub fn get_healthcare_cost(state_mux: State<'_, GameStateSafe>) -> f64 {
-    let mut state = state_mux.lock().unwrap();
-
-    state.cost_per_hospital_capacity = state.healthcare_investment / state.month_unhospitalised_count as f64;
-    state.cost_per_hospital_capacity
-}
-
-#[tauri::command]
 pub fn reset_game(app_handle: tauri::AppHandle) {
     // do stuff
 }
