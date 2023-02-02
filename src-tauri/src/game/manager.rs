@@ -13,7 +13,9 @@ pub fn frontend_ready(app_handle: tauri::AppHandle) {
 pub async fn create_game(state_mux: State<'_, GameStateSafe>, app_handle: tauri::AppHandle) -> Result<(), ()> {
     let config = load_config();
 
-    generate_game(&state_mux, &config);
+    app_handle.emit_all("generating_game", ()).unwrap();
+    generate_game(&state_mux, &config, &app_handle);
+    app_handle.emit_all("checking stable", ()).unwrap();
     stabilize_game(&state_mux, &config);
     
     app_handle.emit_all("game_generated", ()).unwrap();
