@@ -1,5 +1,6 @@
-use std::{time::Duration};
+use std::{time::Duration, vec};
 use crate::{common::{payloads::{PayloadNewDay}, config::{load_config, Config}}};
+use serde_json::json;
 use tauri::{State, Manager};
 
 use super::{generation::{generate_game, stabilize_game}, state_manager::{GameStateSafe}};
@@ -12,10 +13,13 @@ pub fn frontend_ready(app_handle: tauri::AppHandle) {
 #[tauri::command] // TODO: Take in game name as argument and call "create_save(name)"
 pub async fn create_game(state_mux: State<'_, GameStateSafe>, app_handle: tauri::AppHandle) -> Result<(), ()> {
     let config = load_config();
-
-    app_handle.emit_all("generating_game", ()).unwrap();
+    app_handle.emit_all("loading_status", json!({
+        "Generating Game": []
+    })).unwrap();
     generate_game(&state_mux, &config, &app_handle);
-    app_handle.emit_all("checking_stable", ()).unwrap();
+    app_handle.emit_all("loading_status", json!({
+        "Checking everything is stable": ["Checking busineses", "Checking jobs & salaries", "Checking economy is stable", "Checking welfare is sufficient", "Checking hospital capacity is sufficient"]
+    })).unwrap();
     stabilize_game(&state_mux, &config);
     
     app_handle.emit_all("game_generated", ()).unwrap();

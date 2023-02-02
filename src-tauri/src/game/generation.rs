@@ -1,6 +1,7 @@
 use std::{collections::{HashMap}, ops::Range};
 use maplit::hashmap;
 use rand::Rng;
+use serde_json::json;
 use tauri::{AppHandle, Manager};
 
 use crate::{common::{config::{Config}, util::percentage_based_output_int}, entities::{person::person::{EducationLevel::{*, self}, Person, Job}, business::{ProductType, Business}}};
@@ -35,7 +36,15 @@ pub fn generate_game(state_mux: &GameStateSafe, config: &Config, app_handle: &Ap
     let mut product_demand: HashMap<ProductType, f32> = HashMap::new();
     product_demand.insert(ProductType::Leisure, 0.);
 
-    app_handle.emit_all("generating_population", ()).unwrap();
+    app_handle.emit_all("loading_status", json!({
+        "Generating people": [
+            "Generating ages",
+            "Generating educations",
+            "Generating debts",
+            "Generating spending behaviour",
+            "Generating health"
+        ]
+    })).unwrap();
     for _ in 0..config.starting_population {
         let person = Person::new_generate(&config, &mut product_demand, state.tax_rate, &state.rules.tax_rule);
         state.people.insert(person.id, person);
@@ -43,7 +52,15 @@ pub fn generate_game(state_mux: &GameStateSafe, config: &Config, app_handle: &Ap
 
     let mut remaning_market_percentage: f32 = 100.;
 
-    app_handle.emit_all("generating_businesses", ()).unwrap();
+    app_handle.emit_all("loading_status", json!({
+        "Generating businesses": [
+            "Generating salaries",
+            "Generating market",
+            "Generating stock & products",
+            "Generating budget ratios",
+            "Generating jobs",
+        ]
+    })).unwrap();
 
     loop {
         let mut business = Business::default();
