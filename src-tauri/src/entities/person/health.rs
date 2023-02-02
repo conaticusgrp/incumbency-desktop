@@ -1,6 +1,6 @@
 use maplit::hashmap;
 use rand::Rng;
-use crate::{common::util::{percentage_based_output_int, get_healthcare_group}, game::structs::{HealthcareState, HealthcareGroup}};
+use crate::{common::util::{percentage_based_output_int, get_healthcare_group}, game::structs::{HealthcareState, HealthcareGroup, GameStateRules}};
 use super::{person::Person, debt::Debt};
 
 impl Person {
@@ -36,7 +36,19 @@ impl Person {
         }
     }
 
-    pub fn remove_health(&mut self, amount: i32, healthcare: &mut HealthcareState) {
+    pub fn eligible_for_healthcare(&self, rules: &GameStateRules) -> bool {
+        if rules.deny_age_rule.enabled && self.age > rules.deny_age_rule.maximum_age {
+            return false;
+        }
+
+        if rules.deny_health_percentage_rule.enabled && self.health_percentage > rules.deny_health_percentage_rule.maximum_percentage {
+            return false;
+        }
+
+        true
+    }
+
+    pub fn remove_health(&mut self, amount: i32, healthcare: &mut HealthcareState, rules: &GameStateRules) {
         self.health_percentage -= amount;
         if self.health_percentage <= 2 {
             self.die(0);
@@ -56,7 +68,7 @@ impl Person {
 
         if death_chance > 100 { death_chance = 100 }
 
-        if healthcare_group.current_capacity == 0 {
+        if healthcare_group.current_capacity == 0 || !self.eligible_for_healthcare(rules) {
             healthcare.month_unhospitalised_count += 1;
             self.die_based_on_chance(death_chance * 3, 0); // will die for the proceeding day - TODO: die on the current day instead, if possible
             return;

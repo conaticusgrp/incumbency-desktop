@@ -59,7 +59,7 @@ impl GameState {
         let date = self.date.clone();
 
         for per in self.people.values_mut() {
-            per.day_pass(day, &mut self.healthcare, &date, &mut death_queue, &mut self.businesses, &mut self.purchases, &mut self.total_possible_purchases);
+            per.day_pass(day, &mut self.healthcare, &date, &mut death_queue, &mut self.businesses, &mut self.purchases, &mut self.total_possible_purchases, &self.rules);
             if per.age >= 18 && per.job == Job::Unemployed {
                 // TODO: make this be affected by other factors
                 if !per.homeless && chance_one_in(500 * 365) { // 1 in 500 chance every year

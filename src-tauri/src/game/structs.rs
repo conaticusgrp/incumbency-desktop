@@ -26,10 +26,39 @@ pub struct BusinessFundingRule {
 }
 
 #[derive(Default)]
+pub struct DenyAgeRule {
+  pub enabled: bool,
+  pub maximum_age: i32,
+}
+
+#[derive(Default)]
+pub struct DenyHealthPercentageRule {
+  pub enabled: bool,
+  pub maximum_percentage: i32,
+}
+
+#[derive(Default)]
+pub struct CoverFoodRule {
+  pub enabled: bool,
+  pub people_count: i32,
+  pub maxmimum_salary: f32,
+}
+
+#[derive(Default)]
+pub struct CoverFoodUnemployedRule {
+  pub enabled: bool,
+  pub people_count: i32,
+}
+
+#[derive(Default)]
 pub struct GameStateRules {
   pub tax_rule: TaxRule,
   pub business_tax_rule: BusinessTaxRule,
   pub business_funding_rule: BusinessFundingRule,
+  pub deny_age_rule: DenyAgeRule,
+  pub deny_health_percentage_rule: DenyHealthPercentageRule,
+  pub cover_food_rule: CoverFoodRule,
+  pub cover_food_unemployed_rule: CoverFoodUnemployedRule,
 }
 
 pub struct GameState {
