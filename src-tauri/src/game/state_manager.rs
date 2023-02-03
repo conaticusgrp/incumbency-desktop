@@ -3,7 +3,7 @@ use serde_json::json;
 use uuid::Uuid;
 use crate::{entities::{business::{Business}, person::{person::{Person, Job, Birthday}, debt::{Debt, DebtType}}}, as_decimal_percent, common::{util::{Date, SlotArray, set_decimal_count, chance_one_in, generate_unemployed_salary, get_healthcare_group}, config::Config}};
 use tauri::Manager;
-use super::structs::{GameState, GameStateRules, HealthcareGroup, HealthcareState};
+use super::structs::{GameState, GameStateRules, HealthcareGroup, HealthcareState, FinanceData};
 
 const GOVERNMENT_START_BALANCE: u32 = 12000000; // TODO: changeme
 // const POPULATION_DAILY_INCREASE_PERCENTAGE: f32 = 4.8125e-5; // Based on real world statistics - TODO: make me more dynamic
@@ -32,6 +32,11 @@ impl Default for GameState {
             rules: GameStateRules::default(),
             open_apps: HashMap::new(),
             healthcare: HealthcareState::default(),
+
+            finance_data: FinanceData::default(),
+            welfare_budget: (GOVERNMENT_START_BALANCE as f64 * 0.15) as i64,
+            business_budget: (GOVERNMENT_START_BALANCE as f64 * 0.1) as i64,
+            spare_budget: (GOVERNMENT_START_BALANCE as f64 * 0.55) as i64,
         }
     }
 }
@@ -60,8 +65,13 @@ impl GameState {
         let mut food_coverage = 0;
         let mut unemployed_food_coverage = 0;
 
+        let total_monthly_income: i64 = 0;
+
         for per in self.people.values_mut() {
             per.day_pass(day, &mut self.healthcare, &date, &mut death_queue, &mut self.businesses, &mut self.purchases, &mut self.total_possible_purchases, &self.rules, &mut food_coverage, &mut unemployed_food_coverage);
+
+            total_monthly_income += (per.salary / 12) as i64;
+
             if per.age >= 18 && per.job == Job::Unemployed {
                 // TODO: make this be affected by other factors
                 if !per.homeless && chance_one_in(500 * 365) { // 1 in 500 chance every year
@@ -69,6 +79,8 @@ impl GameState {
                 }
             }
         }
+
+        self.finance_data.average_monthly_income = (total_monthly_income / self.people.len() as i64) as i32;
 
         let population_before_deaths = self.people.len() as i32;
 
@@ -135,6 +147,8 @@ impl GameState {
 
             let average_welfare = total_welfare_percentage as f32 / self.people.len() as f32;
             let average_welfare = set_decimal_count(average_welfare, 2);
+
+            self.spare_budget = self.government_balance - self.healthcare.budget - self.business_budget - self.welfare_budget;
 
             // TODO - send me daily
             app.emit_all("debug_payload",  json! ({

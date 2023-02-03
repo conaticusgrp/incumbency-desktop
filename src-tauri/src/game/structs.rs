@@ -61,6 +61,13 @@ pub struct GameStateRules {
   pub cover_food_unemployed_rule: CoverFoodUnemployedRule,
 }
 
+#[derive(Default)]
+pub struct FinanceData {
+  pub average_monthly_income: i32,
+  pub expected_person_income: i64,
+  pub expected_business_income: i64,
+}
+
 pub struct GameState {
   pub tax_rate: f32,
   pub business_tax_rate: f32,
@@ -81,11 +88,16 @@ pub struct GameState {
   pub open_apps: HashMap<App, bool>,
 
   pub healthcare: HealthcareState,
+  pub finance_data: FinanceData,
+
+  pub welfare_budget: i64,
+  pub business_budget: i64,
+  pub spare_budget: i64,
 }
 
 #[derive(Default, Clone, Copy)]
 pub struct HealthcareGroup {
-  pub budget: f32,
+  pub budget: i64,
   pub current_capacity: i32,
   pub total_capacity: i32,
 }
@@ -95,7 +107,7 @@ pub struct HealthcareState {
   pub cost_per_hospital_capacity: f32, // This is the cost per person capacity in a hospital for the government, each month
   pub month_unhospitalised_count: i32, // Number of patient that could not go to hospital because of the full capacity
 
-  pub budget: f32,
+  pub budget: i64,
   pub total_capacity: i32,
 
   pub childcare: HealthcareGroup,

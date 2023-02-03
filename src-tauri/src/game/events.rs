@@ -1,3 +1,5 @@
+use serde::{Serialize, Deserialize};
+use serde_json::json;
 use tauri::State;
 
 use super::{state_manager::GameStateSafe, structs::GameState};
@@ -8,6 +10,23 @@ pub enum App {
     Healthcare = 3,
     Welfare = 4,
     Business = 5,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct FinanceAppOpenedPayload {
+    pub government_balance: i64,
+    pub average_monthly_income: i32,
+    pub expected_person_income: i64,
+    pub expected_business_income: i64,
+    pub used_hospital_capacity: i32,
+    pub total_hospital_capacity: i32,
+    pub business_tax_rate: i32,
+    pub tax_rate: i32,
+    pub healthcare_budget: i64,
+    pub welfare_budget: i64,
+    pub business_budget: i64,
+    pub spare_budget: i64,
+    pub rules: serde_json::Value,
 }
 
 pub fn get_app_from_id(app_id: u8) -> Option<App> {
@@ -21,14 +40,48 @@ pub fn get_app_from_id(app_id: u8) -> Option<App> {
 }
 
 #[tauri::command]
-pub fn app_open(state_mux: State<'_, GameStateSafe>, app_id: u8) {
+pub fn app_open(state_mux: State<'_, GameStateSafe>, app_id: u8) -> String {
     let mut state = state_mux.lock().unwrap();
 
     let app = match get_app_from_id(app_id) {
         Some(a) => a,
-        None => return,
+        None => return String::new(),
     };
+
     *state.open_apps.entry(app).or_insert(true) = true;
+
+    match app {
+        App::Finance => {
+            let payload = FinanceAppOpenedPayload {
+                government_balance: state.government_balance,
+                average_monthly_income: state.finance_data.average_monthly_income,
+                expected_person_income: state.finance_data.expected_person_income,
+                expected_business_income: state.finance_data.expected_business_income,
+                used_hospital_capacity: state.healthcare.get_current_capacity(),
+                total_hospital_capacity: state.healthcare.total_capacity,
+                business_tax_rate: (state.business_tax_rate * 100.) as i32,
+                tax_rate: (state.tax_rate * 100.) as i32,
+                healthcare_budget: state.healthcare.budget,
+                welfare_budget: state.welfare_budget,
+                business_budget: state.business_budget,
+                spare_budget: state.spare_budget,
+                rules: json!({
+                    "tax": { "enabled": state.rules.tax_rule.enabled, "data": {
+                        "minimum_salary": state.rules.tax_rule.minimum_salary,
+                        "tax_rate": (state.rules.tax_rule.tax_rate * 100.) as i32
+                    }},
+
+                    "business_tax": { "enabled": state.rules.tax_rule.enabled, "data": {
+                        "minimum_monthly_income": state.rules.business_tax_rule.minimum_monthly_income,
+                        "tax_rate": (state.rules.business_tax_rule.tax_rate * 100.) as i32,
+                    }},
+                }),
+            };
+
+            serde_json::to_string(&payload).unwrap()
+        },
+        _ => String::new(),
+    }
 }
 
 #[tauri::command]
