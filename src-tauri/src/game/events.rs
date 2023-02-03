@@ -43,7 +43,14 @@ pub struct HealthcareAppOpenedPayload {
     pub child_care: HealthcareGroup,
     pub adult_care: HealthcareGroup,
     pub elder_care: HealthcareGroup,
-    rules: serde_json::Value,
+    pub rules: serde_json::Value,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct WelfareAppOpenedPayload {
+    pub average_welfare: f32,
+    pub average_unemployed_welfare: f32,
+    pub rules: serde_json::Value,
 }
 
 pub fn get_app_from_id(app_id: u8) -> Option<App> {
@@ -110,6 +117,19 @@ pub fn app_open(state_mux: State<'_, GameStateSafe>, app_id: u8) -> String {
             serde_json::to_string(&payload).unwrap()
         },
 
+        App::Welfare => {
+            let payload = WelfareAppOpenedPayload {
+                average_welfare: state.average_welfare,
+                average_unemployed_welfare: state.average_welfare_unemployed,
+                rules: json!({
+                    "cover_food": state.rules.cover_food_rule,
+                    "cover_food_unemployed": state.rules.cover_food_unemployed_rule,
+                })
+            };
+
+            serde_json::to_string(&payload).unwrap()
+        }
+
         _ => String::new(),
     };
 
@@ -168,7 +188,7 @@ pub fn disable_rule(state_mux: State<'_, GameStateSafe>, rule_id: i32) {
 }
 
 #[tauri::command]
-pub fn update_rule(state_mux: State<'_, GameStateSafe>, rule_id: i32, data: serde_json::Value) {
+pub fn update_rule(state_mux: State<'_, GameStateSafe>, rule_id: i32, data: serde_json::Value) -> serde_json::Value {
     let mut state = state_mux.lock().unwrap();
     match rule_id {
         0 => {
@@ -190,14 +210,47 @@ pub fn update_rule(state_mux: State<'_, GameStateSafe>, rule_id: i32, data: serd
             state.rules.deny_health_percentage_rule.maximum_percentage = (data.get("maximum_percentage").unwrap().as_i64().unwrap()) as i32;
         },
         5 => {
-            state.rules.cover_food_rule.people_count = (data.get("people_count").unwrap().as_i64().unwrap()) as i32;
-            state.rules.cover_food_rule.maximum_salary = (data.get("maximum_salary").unwrap().as_i64().unwrap()) as i32;
+            let people_count = (data.get("people_count").unwrap().as_i64().unwrap()) as i32;
+            let maximum_salary = (data.get("maximum_salary").unwrap().as_i64().unwrap()) as i32;
+            let budget_cost = people_count as i64 * 4;
+
+            let remaining_budget = state.welfare_budget - state.rules.cover_food_unemployed_rule.budget_cost;
+            if budget_cost > remaining_budget {
+                return json!({
+                    "error": "Cannot cover food as the cost exceeds the welfare budget.",
+                });
+            }
+
+            state.rules.cover_food_rule.people_count = people_count;
+            state.rules.cover_food_rule.maximum_salary = maximum_salary;
+            state.rules.cover_food_rule.budget_cost = budget_cost;
+
+            return json!({
+                "budget_cost": budget_cost,
+            });
         },
         6 => {
-            state.rules.cover_food_unemployed_rule.people_count = (data.get("people_count").unwrap().as_i64().unwrap()) as i32;
+            let people_count = (data.get("people_count").unwrap().as_i64().unwrap()) as i32;
+            let budget_cost = people_count as i64 * 4;
+
+            let remaining_budget = state.welfare_budget - state.rules.cover_food_rule.budget_cost;
+            if budget_cost > remaining_budget {
+                return json!({
+                    "error": "Cannot cover food as the cost exceeds the welfare budget.",
+                });
+            }
+
+            state.rules.cover_food_unemployed_rule.people_count = people_count;
+            state.rules.cover_food_unemployed_rule.budget_cost = budget_cost;
+
+            return json!({
+                "budget_cost": budget_cost,
+            });
         },
         _ => unreachable!(),
-    }
+    };
+
+    json!({})
 }
 
 pub fn update_app(app: App, payload: serde_json::Value, app_handle: &AppHandle) {

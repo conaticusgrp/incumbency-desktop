@@ -37,6 +37,9 @@ impl Default for GameState {
             welfare_budget: (GOVERNMENT_START_BALANCE as f64 * 0.15) as i64,
             business_budget: (GOVERNMENT_START_BALANCE as f64 * 0.1) as i64,
             spare_budget: (GOVERNMENT_START_BALANCE as f64 * 0.55) as i64,
+
+            average_welfare: 100.,
+            average_welfare_unemployed: 100.,
         }
     }
 }
@@ -76,6 +79,9 @@ impl GameState {
             "85+": 0,
         });
 
+        let mut total_welfare = 0;
+        let mut total_welfare_unemployed = 0;
+
         for per in self.people.values_mut() {
             let key = match per.age {
                 a if a <= 18 => "0-18",
@@ -98,6 +104,13 @@ impl GameState {
                 if !per.homeless && chance_one_in(500 * 365) { // 1 in 500 chance every year
                     per.homeless = true;
                 }
+            }
+
+            per.get_welfare();
+
+            total_welfare += per.welfare;
+            if per.job == Job::Unemployed {
+                total_welfare_unemployed += per.welfare; 
             }
         }
 
@@ -156,23 +169,15 @@ impl GameState {
         }
 
         if let Some(app) = app_handle {
-            let mut total_welfare_percentage = 0;
+
             let mut unemployed_count = 0; // Does not include the homeless
             let mut homeless_count = 0;
 
-            for person in self.people.values_mut() {
-                person.get_welfare();
+            self.average_welfare = total_welfare as f32 / self.people.len() as f32;
+            self.average_welfare = set_decimal_count(self.average_welfare, 2);
 
-                total_welfare_percentage += person.welfare;
-                if person.homeless { homeless_count += 1; continue }
-
-                if person.job == Job::Unemployed && person.age >= 18 {
-                    unemployed_count += 1;
-                }
-            }
-
-            let average_welfare = total_welfare_percentage as f32 / self.people.len() as f32;
-            let average_welfare = set_decimal_count(average_welfare, 2);
+            self.average_welfare_unemployed = total_welfare_unemployed as f32 / unemployed_count as f32;
+            self.average_welfare_unemployed = set_decimal_count(self.average_welfare_unemployed, 3);
 
             self.spare_budget = self.get_spare_budget();
 
@@ -194,10 +199,15 @@ impl GameState {
                 "deaths_per_month": self.healthcare.deaths_per_month
             }), &app);
 
+            update_app(App::Welfare, json!({
+                "average_welfare": self.average_welfare,
+                "average_unemployed_welfare": self.average_welfare_unemployed,
+            }), &app);
+
             // TODO - send me daily
             app.emit_all("debug_payload",  json! ({
                 "Population": self.people.len(),
-                "Average Welfare": average_welfare,
+                "Average Welfare": self.average_welfare,
                 "Government Balance": self.government_balance,
                 "Monthly Births": self.healthcare.births_per_month,
                 "Monthly Deaths": self.healthcare.deaths_per_month,

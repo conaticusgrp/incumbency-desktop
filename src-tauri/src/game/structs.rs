@@ -44,12 +44,14 @@ pub struct CoverFoodRule {
   pub enabled: bool,
   pub people_count: i32,
   pub maximum_salary: i32,
+  pub budget_cost: i64,
 }
 
 #[derive(Default, Serialize, Deserialize)]
 pub struct CoverFoodUnemployedRule {
   pub enabled: bool,
   pub people_count: i32,
+  pub budget_cost: i64,
 }
 
 #[derive(Default)]
@@ -95,6 +97,9 @@ pub struct GameState {
   pub welfare_budget: i64,
   pub business_budget: i64,
   pub spare_budget: i64,
+
+  pub average_welfare: f32,
+  pub average_welfare_unemployed: f32,
 }
 
 #[derive(Default, Clone, Copy, Serialize, Deserialize)]
