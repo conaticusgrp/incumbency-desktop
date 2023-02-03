@@ -2,8 +2,8 @@ use std::{sync::{Mutex, Arc}, collections::HashMap};
 use serde_json::json;
 use uuid::Uuid;
 use crate::{entities::{business::{Business}, person::{person::{Person, Job, Birthday}, debt::{Debt, DebtType}}}, as_decimal_percent, common::{util::{Date, SlotArray, set_decimal_count, chance_one_in, generate_unemployed_salary, get_healthcare_group}, config::Config}};
-use tauri::Manager;
-use super::structs::{GameState, GameStateRules, HealthcareGroup, HealthcareState, FinanceData};
+use tauri::{Manager, AppHandle};
+use super::{structs::{GameState, GameStateRules, HealthcareGroup, HealthcareState, FinanceData}, events::{update_app, App}};
 
 const GOVERNMENT_START_BALANCE: u32 = 12000000; // TODO: changeme
 // const POPULATION_DAILY_INCREASE_PERCENTAGE: f32 = 4.8125e-5; // Based on real world statistics - TODO: make me more dynamic
@@ -150,6 +150,12 @@ impl GameState {
 
             self.spare_budget = self.government_balance - self.healthcare.budget - self.business_budget - self.welfare_budget;
 
+            update_app(App::Finance, json!({
+                "government_balance": self.government_balance,
+                "spare_budget": self.spare_budget,
+                "used_hospital_capacity": self.healthcare.get_current_capacity(),
+            }), &app);
+
             // TODO - send me daily
             app.emit_all("debug_payload",  json! ({
                 "Population": self.people.len(),
@@ -163,7 +169,9 @@ impl GameState {
         }
     }
 
-    pub fn month_pass(&mut self) {
+    pub fn month_pass(&mut self, app_handle: &AppHandle) {
+        self.finance_data.expected_person_income = 0;
+
         for person in self.people.values_mut() {
             person.business_this_month = None;
 
@@ -175,6 +183,9 @@ impl GameState {
                     let business = self.businesses.get_mut(&bid);
                     if business.is_some() {
                         let business = business.unwrap();
+
+                        let tax_payment = (person.salary as f32 / 12.) * tax_rate;
+                        self.finance_data.expected_person_income += tax_payment as i64;
 
                         person.pay_tax(&mut self.government_balance, (person.salary as f32 / 12.) * tax_rate);
                         person.business_pay(business, business.employee_salary as f64 / 12.);
@@ -220,6 +231,8 @@ impl GameState {
 
         let mut bus_removal_queue: Vec<Uuid> = Vec::new();
 
+        self.finance_data.expected_business_income = 0;
+
         for business in self.businesses.values_mut() {
             Business::check_funding(&self.rules.business_funding_rule, business);
             business.last_month_income = business.balance - business.last_month_balance;
@@ -230,6 +243,8 @@ impl GameState {
             }
 
             let tax_rate = Business::get_tax_rate(&self.rules.business_tax_rule, business.last_month_income, self.business_tax_rate);
+            let tax_cost = business.last_month_income * tax_rate as f64;
+            self.finance_data.expected_business_income += tax_cost as i64;
 
             business.pay_tax(&mut self.government_balance, business.last_month_income * tax_rate as f64);
             let reinvesment_budget = business.balance * as_decimal_percent!(business.marketing_cost_percentage) as f64;
@@ -277,6 +292,12 @@ impl GameState {
         for id in bus_removal_queue {
             self.businesses.remove(&id);
         }
+
+        update_app(App::Finance, json!({
+            "average_monthly_income": self.finance_data.average_monthly_income,
+            "expected_person_income": self.finance_data.expected_person_income,
+            "expected_business_income": self.finance_data.expected_business_income,
+        }), app_handle);
 
         self.government_balance -= self.healthcare.budget as i64;
         self.healthcare.month_unhospitalised_count = 0;

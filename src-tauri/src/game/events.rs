@@ -1,6 +1,6 @@
 use serde::{Serialize, Deserialize};
 use serde_json::json;
-use tauri::State;
+use tauri::{State, AppHandle, Manager};
 
 use super::{state_manager::GameStateSafe, structs::GameState};
 
@@ -164,4 +164,10 @@ pub fn update_rule(state_mux: State<'_, GameStateSafe>, rule_id: i32, data: serd
             state.rules.cover_food_unemployed_rule.people_count = (data.get("people_count").unwrap().as_i64().unwrap()) as i32;
         }
     }
+}
+
+#[tauri::command]
+pub fn update_app(app: App, payload: serde_json::Value, app_handle: &AppHandle) {
+    let app_id = app as u8;
+    app_handle.emit_all("update_app", json!({ "app_id": app_id, "data": payload })).unwrap();
 }

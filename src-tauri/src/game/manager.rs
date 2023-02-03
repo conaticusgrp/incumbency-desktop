@@ -20,7 +20,8 @@ pub async fn create_game(state_mux: State<'_, GameStateSafe>, app_handle: tauri:
     app_handle.emit_all("loading_status", json!({
         "Checking everything is stable": ["Checking busineses", "Checking jobs & salaries", "Checking economy is stable", "Checking welfare is sufficient", "Checking hospital capacity is sufficient"]
     })).unwrap();
-    stabilize_game(&state_mux, &config);
+    
+    stabilize_game(&state_mux, &config, &app_handle);
     
     app_handle.emit_all("game_generated", ()).unwrap();
 
@@ -49,7 +50,7 @@ pub async fn start_game_loop(state_mux: &GameStateSafe, app_handle: &tauri::AppH
         state.day_pass(day, Some(app_handle), config);
 
         if state.date.on_new_month {
-            state.month_pass();
+            state.month_pass(app_handle);
         }
     }
 }

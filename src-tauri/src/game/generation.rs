@@ -6,7 +6,7 @@ use tauri::{AppHandle, Manager};
 
 use crate::{common::{config::{Config}, util::percentage_based_output_int}, entities::{person::{person::{EducationLevel::{*, self}, Person, Job}, health}, business::{ProductType, Business}}};
 
-use super::{state_manager::GameStateSafe, structs::{HealthcareGroup, GameState}};
+use super::{state_manager::GameStateSafe, structs::{HealthcareGroup, GameState}, events::App};
 
 pub fn generate_education_level(config: &Config) -> EducationLevel {
     percentage_based_output_int::<EducationLevel>(hashmap! {
@@ -91,7 +91,7 @@ pub fn generate_game(state_mux: &GameStateSafe, config: &Config, app_handle: &Ap
 }
 
 /// Runs 1 month of the game to prepare the economy and get all the required values
-pub fn stabilize_game(state_mux: &GameStateSafe, config: &Config) {
+pub fn stabilize_game(state_mux: &GameStateSafe, config: &Config, app_handle: &AppHandle) {
     let mut state = state_mux.lock().unwrap();
     for day in 1..=30 {
         state.day_pass(day, None, config);
@@ -117,5 +117,5 @@ pub fn stabilize_game(state_mux: &GameStateSafe, config: &Config) {
     healthcare.adultcare = budget.clone();
     healthcare.eldercare = budget.clone();
 
-    state.month_pass();
+    state.month_pass(app_handle);
 }
