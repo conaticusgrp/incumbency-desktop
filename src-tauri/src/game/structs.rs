@@ -1,50 +1,52 @@
 use std::collections::HashMap;
+use serde::{Serialize, Deserialize};
+use serde_json::json;
 use uuid::Uuid;
 use crate::{entities::{business::Business, person::person::Person}, common::util::{Date, SlotArray}};
 
 use super::events::App;
 
-#[derive(Default)]
+#[derive(Default, Serialize, Deserialize)]
 pub struct TaxRule {
     pub enabled: bool, 
     pub minimum_salary: i32,
     pub tax_rate: f32,
 }
 
-#[derive(Default)]
+#[derive(Default, Serialize, Deserialize)]
 pub struct BusinessTaxRule {
     pub enabled: bool,
     pub minimum_monthly_income: f64,
     pub tax_rate: f32,
 }
 
-#[derive(Default)]
+#[derive(Default, Serialize, Deserialize)]
 pub struct BusinessFundingRule {
   pub enabled: bool,
   pub fund: f64,
   pub maximum_income: f64,
 }
 
-#[derive(Default)]
+#[derive(Default, Serialize, Deserialize)]
 pub struct DenyAgeRule {
   pub enabled: bool,
   pub maximum_age: i32,
 }
 
-#[derive(Default)]
+#[derive(Default, Serialize, Deserialize)]
 pub struct DenyHealthPercentageRule {
   pub enabled: bool,
   pub maximum_percentage: i32,
 }
 
-#[derive(Default)]
+#[derive(Default, Serialize, Deserialize)]
 pub struct CoverFoodRule {
   pub enabled: bool,
   pub people_count: i32,
   pub maximum_salary: i32,
 }
 
-#[derive(Default)]
+#[derive(Default, Serialize, Deserialize)]
 pub struct CoverFoodUnemployedRule {
   pub enabled: bool,
   pub people_count: i32,
@@ -78,16 +80,16 @@ pub struct GameState {
   pub government_balance: i64, // This is expected to be quite large
   pub population_counter: f64,
 
-  pub births_in_last_month: SlotArray<i32>,
-  pub deaths_in_last_month: SlotArray<usize>,
-
   pub total_possible_purchases: u32,
   pub purchases: u32,
 
   pub rules: GameStateRules,
   pub open_apps: HashMap<App, bool>,
 
+  pub births_in_last_month: SlotArray<i32>,
+  pub deaths_in_last_month: SlotArray<usize>,
   pub healthcare: HealthcareState,
+
   pub finance_data: FinanceData,
 
   pub welfare_budget: i64,
@@ -95,7 +97,7 @@ pub struct GameState {
   pub spare_budget: i64,
 }
 
-#[derive(Default, Clone, Copy)]
+#[derive(Default, Clone, Copy, Serialize, Deserialize)]
 pub struct HealthcareGroup {
   pub budget: i64,
   pub current_capacity: i32,
@@ -113,6 +115,12 @@ pub struct HealthcareState {
   pub childcare: HealthcareGroup,
   pub adultcare: HealthcareGroup,
   pub eldercare: HealthcareGroup,
+
+  pub life_expectancy: i32,
+  pub age_ranges: serde_json::Value,
+
+  pub births_per_month: i32,
+  pub deaths_per_month: i32,
 }
 
 impl HealthcareState {

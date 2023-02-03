@@ -4,7 +4,7 @@ use tauri::{State, AppHandle, Manager};
 
 use crate::entities::{person::person::Person, business::Business};
 
-use super::{state_manager::GameStateSafe, structs::{GameState, TaxRule}};
+use super::{state_manager::GameStateSafe, structs::{GameState, TaxRule, HealthcareGroup}};
 
 #[derive(PartialEq, Eq, Hash)]
 pub enum App {
@@ -31,6 +31,21 @@ pub struct FinanceAppOpenedPayload {
     pub rules: serde_json::Value,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct HealthcareAppOpenedPayload {
+    pub population: i32,
+    pub births_per_month: i32,
+    pub deaths_per_months: i32,
+    pub life_expectancy: i32,
+    pub used_capacity: i32,
+    pub total_capacity: i32,
+    pub age_ranges: serde_json::Value,
+    pub child_care: HealthcareGroup,
+    pub adult_care: HealthcareGroup,
+    pub elder_care: HealthcareGroup,
+    rules: serde_json::Value,
+}
+
 pub fn get_app_from_id(app_id: u8) -> Option<App> {
     match app_id {
         a if a == App::Finance as u8 => Some(App::Finance),
@@ -50,9 +65,7 @@ pub fn app_open(state_mux: State<'_, GameStateSafe>, app_id: u8) -> String {
         None => return String::new(),
     };
 
-    *state.open_apps.entry(app).or_insert(true) = true;
-
-    match app {
+    let ret = match app {
         App::Finance => {
             let payload = FinanceAppOpenedPayload {
                 government_balance: state.government_balance,
@@ -68,22 +81,40 @@ pub fn app_open(state_mux: State<'_, GameStateSafe>, app_id: u8) -> String {
                 business_budget: state.business_budget,
                 spare_budget: state.spare_budget,
                 rules: json!({
-                    "tax": { "enabled": state.rules.tax_rule.enabled, "data": {
-                        "minimum_salary": state.rules.tax_rule.minimum_salary,
-                        "tax_rate": (state.rules.tax_rule.tax_rate * 100.) as i32
-                    }},
-
-                    "business_tax": { "enabled": state.rules.tax_rule.enabled, "data": {
-                        "minimum_monthly_income": state.rules.business_tax_rule.minimum_monthly_income,
-                        "tax_rate": (state.rules.business_tax_rule.tax_rate * 100.) as i32,
-                    }},
+                    "tax": state.rules.tax_rule,
+                    "business_tax": state.rules.business_tax_rule,
                 }),
             };
 
             serde_json::to_string(&payload).unwrap()
         },
+
+        App::Healthcare => {
+            let payload = HealthcareAppOpenedPayload {
+                population: state.people.len() as i32,
+                births_per_month: state.healthcare.births_per_month,
+                deaths_per_months: state.healthcare.deaths_per_month,
+                life_expectancy: state.healthcare.life_expectancy,
+                used_capacity: state.healthcare.get_current_capacity(),
+                total_capacity: state.healthcare.total_capacity,
+                age_ranges: state.healthcare.age_ranges.clone(),
+                child_care: state.healthcare.childcare,
+                adult_care: state.healthcare.adultcare,
+                elder_care: state.healthcare.eldercare,
+                rules: json!({
+                    "deny_past_age": state.rules.deny_age_rule,
+                    "deny_past_health": state.rules.deny_health_percentage_rule
+                })
+            };
+
+            serde_json::to_string(&payload).unwrap()
+        },
+
         _ => String::new(),
-    }
+    };
+
+    *state.open_apps.entry(app).or_insert(true) = true;
+    ret
 }
 
 #[tauri::command]
@@ -120,8 +151,8 @@ fn set_rule(state: &mut GameState, id: i32, enabled: bool) {
         6 => {
             state.rules.cover_food_unemployed_rule.enabled = enabled;
         }
+        _ => unreachable!(),
     };
-
 }
 
 #[tauri::command]
@@ -164,7 +195,8 @@ pub fn update_rule(state_mux: State<'_, GameStateSafe>, rule_id: i32, data: serd
         },
         6 => {
             state.rules.cover_food_unemployed_rule.people_count = (data.get("people_count").unwrap().as_i64().unwrap()) as i32;
-        }
+        },
+        _ => unreachable!(),
     }
 }
 

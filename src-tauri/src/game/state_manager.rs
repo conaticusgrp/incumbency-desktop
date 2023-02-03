@@ -69,9 +69,30 @@ impl GameState {
         let mut food_coverage = 0;
         let mut unemployed_food_coverage = 0;
 
-        let total_monthly_income: i64 = 0;
+        let mut total_monthly_income: i64 = 0;
+
+        self.healthcare.age_ranges = json!({
+            "0-18": 0,
+            "19-29": 0,
+            "30-44": 0,
+            "45-60": 0,
+            "61-84": 0,
+            "85+": 0,
+        });
 
         for per in self.people.values_mut() {
+            let key = match per.age {
+                a if a <= 18 => "0-18",
+                a if a <= 29 => "19-29",
+                a if a <= 44 => "30-44",
+                a if a <= 60 => "45-60",
+                a if a <= 84 => "61-84",
+                _ => "85+",
+            };
+
+            let int64 = self.healthcare.age_ranges.get(key).unwrap().as_i64().unwrap();
+            *self.healthcare.age_ranges.get_mut(key).unwrap() = json!(int64 + 1);
+
             per.day_pass(day, &mut self.healthcare, &date, &mut death_queue, &mut self.businesses, &mut self.purchases, &mut self.total_possible_purchases, &self.rules, &mut food_coverage, &mut unemployed_food_coverage);
 
             total_monthly_income += (per.salary / 12) as i64;
@@ -88,8 +109,12 @@ impl GameState {
 
         let population_before_deaths = self.people.len() as i32;
 
+        let mut ages_total = 0;
+
         for id in &death_queue {
             let per = self.people.get(&id).unwrap();
+            ages_total += per.age;
+
             let healthcare_group = get_healthcare_group(per.age, &mut self.healthcare);
             healthcare_group.current_capacity += 1;
 
@@ -106,6 +131,7 @@ impl GameState {
             self.population_counter -= 1.;
         }
 
+        self.healthcare.life_expectancy = ages_total / death_queue.len() as i32;
         self.deaths_in_last_month.push(death_queue.len());
 
         self.population_counter += (self.people.len() as f32 * POPULATION_DAILY_INCREASE_PERCENTAGE) as f64;
@@ -122,18 +148,18 @@ impl GameState {
 
         self.births_in_last_month.push(new_birth_count);
 
+        self.healthcare.births_per_month = 0;
+        self.healthcare.deaths_per_month = 0;
+
+        for day_amount in &self.births_in_last_month.array {
+            self.healthcare.births_per_month += *day_amount as i32; 
+        }
+
+        for day_amount in &self.deaths_in_last_month.array {
+            self.healthcare.deaths_per_month += *day_amount as i32;
+        }
+
         if let Some(app) = app_handle {
-            let mut births_total = 0;
-            let mut deaths_total = 0;
-
-            for day_amount in &self.births_in_last_month.array {
-                births_total += day_amount; 
-            }
-
-            for day_amount in &self.deaths_in_last_month.array {
-                deaths_total += day_amount;
-            }
-
             let mut total_welfare_percentage = 0;
             let mut unemployed_count = 0; // Does not include the homeless
             let mut homeless_count = 0;
@@ -165,8 +191,8 @@ impl GameState {
                 "Population": self.people.len(),
                 "Average Welfare": average_welfare,
                 "Government Balance": self.government_balance,
-                "Monthly Births": births_total,
-                "Monthly Deaths": deaths_total,
+                "Monthly Births": self.healthcare.births_per_month,
+                "Monthly Deaths": self.healthcare.deaths_per_month,
                 "Homeless Count": homeless_count,
                 "Unemployed Count": unemployed_count,
             })).unwrap();
