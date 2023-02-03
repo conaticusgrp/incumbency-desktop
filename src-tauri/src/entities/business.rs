@@ -52,9 +52,14 @@ impl Business {
         standard_tax_rate
     }
 
-    pub fn check_funding(rule: &BusinessFundingRule, business: &mut Business) {
-        if rule.enabled && business.last_month_income < rule.maximum_income {
-            business.balance += rule.fund; 
+    pub fn check_funding(rule: &BusinessFundingRule, business: &mut Business, funded_businesses: &mut i32) {
+        if *funded_businesses >= rule.business_count {
+            return;
+        }
+
+        if rule.enabled && (business.last_month_income as i64) < rule.maximum_income {
+            business.balance += rule.fund as f64;
+            *funded_businesses += 1;
         }
     }
 }

@@ -53,6 +53,14 @@ pub struct WelfareAppOpenedPayload {
     pub rules: serde_json::Value,
 }
 
+#[derive(Serialize, Deserialize)]
+pub struct BusinessAppOpenedPayload {
+    pub business_count: i32,
+    pub average_employees: i32,
+    pub average_monthly_income: i64,
+    pub rules: serde_json::Value,
+}
+
 pub fn get_app_from_id(app_id: u8) -> Option<App> {
     match app_id {
         a if a == App::Finance as u8 => Some(App::Finance),
@@ -128,7 +136,20 @@ pub fn app_open(state_mux: State<'_, GameStateSafe>, app_id: u8) -> String {
             };
 
             serde_json::to_string(&payload).unwrap()
-        }
+        },
+
+        App::Business => {
+            let payload = BusinessAppOpenedPayload {
+                business_count: state.businesses.len() as i32,
+                average_employees: state.business_data.average_employees,
+                average_monthly_income: state.business_data.average_monthly_income,
+                rules: json!({
+                    "funding": state.rules.business_funding_rule,
+                })
+            };
+
+            serde_json::to_string(&payload).unwrap()
+        },
 
         _ => String::new(),
     };
@@ -200,8 +221,24 @@ pub fn update_rule(state_mux: State<'_, GameStateSafe>, rule_id: i32, data: serd
             state.rules.business_tax_rule.tax_rate = (data.get("tax_rate").unwrap().as_f64().unwrap() / 100.) as f32;
         },
         2 => {
-            state.rules.business_funding_rule.fund = data.get("fund").unwrap().as_f64().unwrap();
-            state.rules.business_funding_rule.maximum_income = data.get("maximum_income").unwrap().as_f64().unwrap();
+            let fund = data.get("fund").unwrap().as_i64().unwrap();
+            let maximum_income = data.get("maximum_income").unwrap().as_i64().unwrap();
+            let business_count = (data.get("business_count").unwrap().as_i64().unwrap()) as i32;
+
+            let budget_cost = fund * business_count as i64;
+            if budget_cost > state.business_budget {
+                return json!({
+                    "error": "This fund exceeds the budget for businesses.",
+                });
+            }
+
+            state.rules.business_funding_rule.fund = fund;
+            state.rules.business_funding_rule.maximum_income = maximum_income;
+            state.rules.business_funding_rule.business_count = business_count;
+
+            return json!({
+                "budget_cost": budget_cost,
+            });
         },
         3 => {
             state.rules.deny_age_rule.maximum_age = (data.get("maximum_age").unwrap().as_i64().unwrap()) as i32;

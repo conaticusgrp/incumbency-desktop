@@ -3,7 +3,7 @@ use serde_json::json;
 use uuid::Uuid;
 use crate::{entities::{business::{Business}, person::{person::{Person, Job, Birthday}, debt::{Debt, DebtType}}}, as_decimal_percent, common::{util::{Date, SlotArray, set_decimal_count, chance_one_in, generate_unemployed_salary, get_healthcare_group}, config::Config}};
 use tauri::{Manager, AppHandle};
-use super::{structs::{GameState, GameStateRules, HealthcareGroup, HealthcareState, FinanceData}, events::{update_app, App}};
+use super::{structs::{GameState, GameStateRules, HealthcareState, FinanceData, BusinessData}, events::{update_app, App}};
 
 const GOVERNMENT_START_BALANCE: u32 = 12000000; // TODO: changeme
 // const POPULATION_DAILY_INCREASE_PERCENTAGE: f32 = 4.8125e-5; // Based on real world statistics - TODO: make me more dynamic
@@ -40,6 +40,8 @@ impl Default for GameState {
 
             average_welfare: 100.,
             average_welfare_unemployed: 100.,
+
+            business_data: BusinessData::default(),
         }
     }
 }
@@ -81,6 +83,8 @@ impl GameState {
 
         let mut total_welfare = 0;
         let mut total_welfare_unemployed = 0;
+        let mut unemployed_count = 0; // Does not include the homeless
+        let mut homeless_count = 0;
 
         for per in self.people.values_mut() {
             let key = match per.age {
@@ -106,11 +110,16 @@ impl GameState {
                 }
             }
 
+            if per.homeless {
+                homeless_count += 1;
+            }
+
             per.get_welfare();
 
             total_welfare += per.welfare;
-            if per.job == Job::Unemployed {
+            if per.job == Job::Unemployed && !per.homeless {
                 total_welfare_unemployed += per.welfare; 
+                unemployed_count += 1;
             }
         }
 
@@ -169,10 +178,6 @@ impl GameState {
         }
 
         if let Some(app) = app_handle {
-
-            let mut unemployed_count = 0; // Does not include the homeless
-            let mut homeless_count = 0;
-
             self.average_welfare = total_welfare as f32 / self.people.len() as f32;
             self.average_welfare = set_decimal_count(self.average_welfare, 2);
 
@@ -202,6 +207,10 @@ impl GameState {
             update_app(App::Welfare, json!({
                 "average_welfare": self.average_welfare,
                 "average_unemployed_welfare": self.average_welfare_unemployed,
+            }), &app);
+
+            update_app(App::Business, json!({
+                "business_count": self.businesses.len() as i32,
             }), &app);
 
             // TODO - send me daily
@@ -281,8 +290,13 @@ impl GameState {
 
         self.finance_data.expected_business_income = 0;
 
+        let mut total_business_income: u128 = 0;
+        let mut total_employees: u64 = 0;
+
+        let funded_businesses = &mut 0;
+
         for business in self.businesses.values_mut() {
-            Business::check_funding(&self.rules.business_funding_rule, business);
+            Business::check_funding(&self.rules.business_funding_rule, business, funded_businesses);
             business.last_month_income = business.balance - business.last_month_balance;
             
             // TODO: make me more varied
@@ -301,7 +315,13 @@ impl GameState {
                 total_reinvestment_budget += reinvesment_budget;
                 reinvestment_budgets.push((business.id, reinvesment_budget));
             }
+
+            total_business_income += business.last_month_income as u128;
+            total_employees = business.employees.len() as u64;
         }
+
+        self.business_data.average_monthly_income = (total_business_income / self.businesses.len() as u128) as i64;
+        self.business_data.average_employees = (total_employees / self.businesses.len() as u64) as i32; 
 
         let mut remaining_market_percentage: f32 = 100.;
         let mut cost_per_percent = 0.;
@@ -341,11 +361,6 @@ impl GameState {
             self.businesses.remove(&id);
         }
 
-        self.government_balance -= self.healthcare.budget as i64;
-        self.healthcare.month_unhospitalised_count = 0;
-        self.total_possible_purchases = 0;
-        self.purchases = 0;
-
         update_app(App::Finance, json!({
             "average_monthly_income": self.finance_data.average_monthly_income,
             "expected_person_income": self.finance_data.expected_person_income,
@@ -355,5 +370,17 @@ impl GameState {
         update_app(App::Healthcare, json!({
             "life_expectancy": self.healthcare.life_expectancy,
         }), app_handle);
+
+        update_app(App::Business, json!({
+            "average_employees": self.business_data.average_employees,
+            "average_monthly_income": self.business_data.average_monthly_income,
+        }), app_handle);
+
+        self.government_balance -= self.healthcare.budget + self.welfare_budget + self.business_budget; // TODO: don't spend busienss and welfare when not needed
+
+
+        self.healthcare.month_unhospitalised_count = 0;
+        self.total_possible_purchases = 0;
+        self.purchases = 0;
     }
 }

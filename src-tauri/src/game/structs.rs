@@ -23,8 +23,9 @@ pub struct BusinessTaxRule {
 #[derive(Default, Serialize, Deserialize)]
 pub struct BusinessFundingRule {
   pub enabled: bool,
-  pub fund: f64,
-  pub maximum_income: f64,
+  pub fund: i64,
+  pub maximum_income: i64,
+  pub business_count: i32,
 }
 
 #[derive(Default, Serialize, Deserialize)]
@@ -72,6 +73,12 @@ pub struct FinanceData {
   pub expected_business_income: i64,
 }
 
+#[derive(Default)]
+pub struct BusinessData {
+  pub average_employees: i32,
+  pub average_monthly_income: i64,
+}
+
 pub struct GameState {
   pub tax_rate: f32,
   pub business_tax_rate: f32,
@@ -100,6 +107,8 @@ pub struct GameState {
 
   pub average_welfare: f32,
   pub average_welfare_unemployed: f32,
+
+  pub business_data: BusinessData,
 }
 
 #[derive(Default, Clone, Copy, Serialize, Deserialize)]
