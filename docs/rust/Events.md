@@ -90,8 +90,10 @@ Sent when a game rule is updated.
 
 Input Payload:
 ```ts
+{
     rule_id: number;
     data: object,
+}
 ```
 
 ### `payload.data` Payloads
