@@ -125,11 +125,15 @@ Business Funding Rule:
 
 Outputs:
 ```ts
+{
     budget_cost: number,
+}
 ```
 
 ```ts
+{
     error: string,
+}
 ```
 \
 \
@@ -143,37 +147,51 @@ Healthcare Deny Age Rule:
 \
 Deny Health Percentage Rule:
 ```ts
+{
     maximum_percentage: number,
+}
 ```
 \
 \
 Cover Food Cost Rule:
 ```ts
+{
     people_count: number,
     maximum_salary: number,
+}
 ```
 Outputs:
 ```ts
+{
     budget_cost: number,
+}
 ```
 
 ```ts
+{
     error: string,
+}
 ```
 \
 \
 Cover Food Cost Unemployed Rule:
 ```ts
+{
     people_count: number,
+}
 ```
 
 Outputs:
 ```ts
+{
     budget_cost: number,
+}
 ```
 
 ```ts
+{
     error: string,
+}
 ```
 \
 \
@@ -360,4 +378,4 @@ Output Payloads:
 ### Description
 Received when an app needs a data update.
 
-### Output Payload: `object` - Object containing the updated app data (this will have the same data keys as sent back in the `app_opened` event)
+Output Payload: `object` - Object containing the updated app data (this will have the same data keys as sent back in the `app_opened` event)
