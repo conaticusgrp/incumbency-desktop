@@ -150,8 +150,6 @@ pub fn app_open(state_mux: State<'_, GameStateSafe>, app_id: u8) -> String {
 
             serde_json::to_string(&payload).unwrap()
         },
-
-        _ => String::new(),
     };
 
     *state.open_apps.entry(app).or_insert(true) = true;
