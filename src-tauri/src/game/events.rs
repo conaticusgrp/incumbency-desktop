@@ -2,7 +2,7 @@ use serde::{Serialize, Deserialize};
 use serde_json::json;
 use tauri::{State, AppHandle, Manager};
 
-use crate::entities::{person::person::Person, business::Business};
+use crate::{entities::{person::person::Person, business::Business}, percentage_of, as_decimal_percent};
 
 use super::{state_manager::GameStateSafe, structs::{GameState, TaxRule, HealthcareGroup}};
 
@@ -243,20 +243,37 @@ pub fn update_business_tax_rate(state_mux: State<'_, GameStateSafe>, tax_rate: i
 pub fn update_healthcare_budget(state_mux: State<'_, GameStateSafe>, new_budget: i64) -> serde_json::Value {
     let mut state = state_mux.lock().unwrap();
 
-    let old_budget = state.healthcare.budget;
+    let new_total_capacity = (new_budget as i64 / state.healthcare.cost_per_hospital_capacity as i64) as i32;
 
+    let childcare_percent = as_decimal_percent!(percentage_of!(state.healthcare.childcare.budget; / state.healthcare.budget));
+    let adultcare_percent = as_decimal_percent!(percentage_of!(state.healthcare.adultcare.budget; / state.healthcare.budget));
+    let eldercare_percent = as_decimal_percent!(percentage_of!(state.healthcare.eldercare.budget; / state.healthcare.budget));
+    
+    let error_checker_failed = &mut false;
+    state.check_healthcare_capacity((new_total_capacity as f32 * childcare_percent) as i32, error_checker_failed);
+    state.check_healthcare_capacity((new_total_capacity as f32 * adultcare_percent) as i32, error_checker_failed);
+    state.check_healthcare_capacity((new_total_capacity as f32 * eldercare_percent) as i32, error_checker_failed);
+
+    if *error_checker_failed {
+        return json!({
+            "error": "Cannot change to this healthcare capacity because there are too many people in hospital."
+        });
+    }
+
+    let old_budget = state.healthcare.budget;
     state.healthcare.budget = new_budget;
+
     let spare_budget = state.get_spare_budget();
 
     if spare_budget < 0 {
         state.healthcare.budget = old_budget;
         return json!({
-            "error": "Cannot afford this budget",
+            "error": "Cannot afford this budget.",
         });
     }
 
     state.spare_budget = spare_budget;
-    state.healthcare.total_capacity = (new_budget as i64 / state.healthcare.cost_per_hospital_capacity as i64) as i32;
+    state.healthcare.total_capacity = new_total_capacity;
 
     json!({
         "used_hospital_capacity": state.healthcare.get_current_capacity(),
@@ -303,5 +320,80 @@ pub fn update_business_budget(state_mux: State<'_, GameStateSafe>, new_budget: i
 
     state.spare_budget = spare_budget;
 
+    json!({})
+}
+
+#[tauri::command]
+pub fn update_childcare_capacity(state_mux: State<'_, GameStateSafe>, new_capacity: i32) -> serde_json::Value {
+    let mut state = state_mux.lock().unwrap();
+
+    let remaining_capacity = state.healthcare.total_capacity - (state.healthcare.adultcare.total_capacity + state.healthcare.eldercare.total_capacity);
+    if new_capacity > remaining_capacity {
+        return json!({
+            "error": "This capacity exceeds the remaining hospital capacity.",
+        });
+    }
+
+    if state.healthcare.childcare.total_capacity > new_capacity {
+        let lost_capacity = state.healthcare.childcare.total_capacity - new_capacity;
+        let remaining_capacity = state.healthcare.childcare.total_capacity - state.healthcare.childcare.current_capacity;
+        if remaining_capacity - lost_capacity < 0 {
+            return json!({
+                "error": "Cannot change to this childcare capacity because there are too many children in hospital."
+            });
+        }
+    }
+
+    state.healthcare.childcare.total_capacity = new_capacity;
+    json!({})
+}
+
+#[tauri::command]
+pub fn update_adultcare_capacity(state_mux: State<'_, GameStateSafe>, new_capacity: i32) -> serde_json::Value {
+    let mut state = state_mux.lock().unwrap();
+
+    let remaining_capacity = state.healthcare.total_capacity - (state.healthcare.childcare.total_capacity + state.healthcare.eldercare.total_capacity);
+    if new_capacity > remaining_capacity {
+        return json!({
+            "error": "This capacity exceeds the remaining hospital capacity.",
+        });
+    }
+
+    if state.healthcare.adultcare.total_capacity > new_capacity {
+        let lost_capacity = state.healthcare.adultcare.total_capacity - new_capacity;
+        let remaining_capacity = state.healthcare.adultcare.total_capacity - state.healthcare.adultcare.current_capacity;
+        if remaining_capacity - lost_capacity < 0 {
+            return json!({
+                "error": "Cannot change to this adultcare capacity because there are too many adults in hospital."
+            });
+        }
+    }
+
+    state.healthcare.adultcare.total_capacity = new_capacity;
+    json!({})
+}
+
+#[tauri::command]
+pub fn update_eldercare_capacity(state_mux: State<'_, GameStateSafe>, new_capacity: i32) -> serde_json::Value {
+    let mut state = state_mux.lock().unwrap();
+
+    let remaining_capacity = state.healthcare.total_capacity - (state.healthcare.childcare.total_capacity + state.healthcare.adultcare.total_capacity);
+    if new_capacity > remaining_capacity {
+        return json!({
+            "error": "This capacity exceeds the remaining hospital capacity.",
+        });
+    }
+
+    if state.healthcare.eldercare.total_capacity > new_capacity {
+        let lost_capacity = state.healthcare.eldercare.total_capacity - new_capacity;
+        let remaining_capacity = state.healthcare.eldercare.total_capacity - state.healthcare.eldercare.current_capacity;
+        if remaining_capacity - lost_capacity < 0 {
+            return json!({
+                "error": "Cannot change to this eldercare capacity because there are too many elders in hospital."
+            });
+        }
+    }
+
+    state.healthcare.eldercare.total_capacity = new_capacity;
     json!({})
 }

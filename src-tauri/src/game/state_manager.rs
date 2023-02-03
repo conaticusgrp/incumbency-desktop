@@ -42,21 +42,17 @@ impl Default for GameState {
 }
 
 impl GameState {
-    /// Returns whether the new budget is possible, if not it also returns the minimum healthcare budget
-    // pub fn set_healthcare_budget(&mut self, budget: f32) -> (bool, Option<f32>) {
-    //     if budget < self.healthcare {
-    //         let minimum_investment = (self.hospital_total_capacity - self.hospital_current_capacity) as f32 * self.cost_per_hospital_capacity;
-    //         if budget < minimum_investment {
-    //             return (false, Some(minimum_investment));
-    //         }
-    //     }
+    pub fn check_healthcare_capacity(&self, new_total_capacity: i32, error_checker_failed: &mut bool) {
+        if new_total_capacity > self.healthcare.total_capacity {
+            return;
+        }
 
-    //     let previous_total_capacity = self.hospital_total_capacity;
-    //     self.hospital_total_capacity = (budget / self.cost_per_hospital_capacity) as i32;
-    //     self.hospital_current_capacity += self.hospital_total_capacity - previous_total_capacity;
-
-    //     (true, None)
-    // }
+        let lost_capacity =  self.healthcare.total_capacity - new_total_capacity;
+        let remaining_capacity = self.healthcare.total_capacity - self.healthcare.get_current_capacity();
+        if remaining_capacity - lost_capacity < 0 {
+            *error_checker_failed = true;
+        }
+    }
 
     pub fn get_spare_budget(&self) -> i64 {
         self.government_balance - (self.healthcare.budget + self.welfare_budget + self.business_budget) 
@@ -184,6 +180,18 @@ impl GameState {
                 "government_balance": self.government_balance,
                 "spare_budget": self.spare_budget,
                 "used_hospital_capacity": self.healthcare.get_current_capacity(),
+            }), &app);
+
+            update_app(App::Healthcare, json!({
+                "population": self.people.len() as i32,
+                "used_capacity": self.healthcare.get_current_capacity(),
+                "total_capacity": self.healthcare.total_capacity,
+                "age_ranges": self.healthcare.age_ranges,
+                "child_care": self.healthcare.childcare,
+                "adult_care": self.healthcare.adultcare,
+                "elder_care": self.healthcare.eldercare,
+                "births_per_month": self.healthcare.births_per_month,
+                "deaths_per_month": self.healthcare.deaths_per_month
             }), &app);
 
             // TODO - send me daily
@@ -332,6 +340,10 @@ impl GameState {
             "average_monthly_income": self.finance_data.average_monthly_income,
             "expected_person_income": self.finance_data.expected_person_income,
             "expected_business_income": self.finance_data.expected_business_income,
+        }), app_handle);
+
+        update_app(App::Healthcare, json!({
+            "life_expectancy": self.healthcare.life_expectancy,
         }), app_handle);
     }
 }
