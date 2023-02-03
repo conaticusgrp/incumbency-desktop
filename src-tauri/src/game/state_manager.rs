@@ -57,9 +57,11 @@ impl GameState {
         let mut death_queue: Vec<Uuid> = Vec::new(); // Queue of people who are going to die :) - we need this because rust memory
 
         let date = self.date.clone();
+        let mut food_coverage = 0;
+        let mut unemployed_food_coverage = 0;
 
         for per in self.people.values_mut() {
-            per.day_pass(day, &mut self.healthcare, &date, &mut death_queue, &mut self.businesses, &mut self.purchases, &mut self.total_possible_purchases, &self.rules);
+            per.day_pass(day, &mut self.healthcare, &date, &mut death_queue, &mut self.businesses, &mut self.purchases, &mut self.total_possible_purchases, &self.rules, &mut food_coverage, &mut unemployed_food_coverage);
             if per.age >= 18 && per.job == Job::Unemployed {
                 // TODO: make this be affected by other factors
                 if !per.homeless && chance_one_in(500 * 365) { // 1 in 500 chance every year

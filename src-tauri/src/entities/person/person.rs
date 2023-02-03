@@ -347,7 +347,7 @@ impl Person {
         }
     }
 
-    pub fn day_pass(&mut self, day: i32, healthcare: &mut HealthcareState, date: &Date, death_queue: &mut Vec<Uuid>, businesses: &mut HashMap<Uuid, Business>, purchases: &mut u32, total_possible_purchases: &mut u32, rules: &GameStateRules) {
+    pub fn day_pass(&mut self, day: i32, healthcare: &mut HealthcareState, date: &Date, death_queue: &mut Vec<Uuid>, businesses: &mut HashMap<Uuid, Business>, purchases: &mut u32, total_possible_purchases: &mut u32, rules: &GameStateRules, food_coverage: &mut i32, unemployed_food_coverage: &mut i32) {
         self.check_birthday(date);
 
         let mut rng = rand::thread_rng();
@@ -358,6 +358,14 @@ impl Person {
 
         if self.homeless {
             self.balance += rng.gen_range(1..=2) as f32;
+        }
+
+        if rules.cover_food_rule.enabled && self.salary < rules.cover_food_rule.maximum_salary && *food_coverage <= rules.cover_food_rule.people_count {
+            self.balance += 4.;
+            *food_coverage += 1;
+        } else if rules.cover_food_unemployed_rule.enabled && self.job == Job::Unemployed && *unemployed_food_coverage <= rules.cover_food_unemployed_rule.people_count {
+            self.balance += 4.;
+            *food_coverage += 1;
         }
 
         if self.age >= 18 && !matches!(self.job, Job::BusinessOwner(_)) {

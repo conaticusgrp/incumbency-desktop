@@ -41,7 +41,7 @@ pub struct DenyHealthPercentageRule {
 pub struct CoverFoodRule {
   pub enabled: bool,
   pub people_count: i32,
-  pub maxmimum_salary: f32,
+  pub maximum_salary: i32,
 }
 
 #[derive(Default)]
