@@ -2,7 +2,9 @@ use serde::{Serialize, Deserialize};
 use serde_json::json;
 use tauri::{State, AppHandle, Manager};
 
-use super::{state_manager::GameStateSafe, structs::GameState};
+use crate::entities::{person::person::Person, business::Business};
+
+use super::{state_manager::GameStateSafe, structs::{GameState, TaxRule}};
 
 #[derive(PartialEq, Eq, Hash)]
 pub enum App {
@@ -166,8 +168,108 @@ pub fn update_rule(state_mux: State<'_, GameStateSafe>, rule_id: i32, data: serd
     }
 }
 
-#[tauri::command]
 pub fn update_app(app: App, payload: serde_json::Value, app_handle: &AppHandle) {
     let app_id = app as u8;
     app_handle.emit_all("update_app", json!({ "app_id": app_id, "data": payload })).unwrap();
+}
+
+#[tauri::command]
+pub fn update_tax_rate(state_mux: State<'_, GameStateSafe>, tax_rate: i32) -> i64 {
+    let mut state = state_mux.lock().unwrap();
+
+    state.tax_rate = tax_rate as f32 / 100.;
+    
+    let mut total_income: i64 = 0;
+
+    for per in state.people.values() {
+        let tax_rate = Person::get_tax_rate(&state.rules.tax_rule, state.tax_rate, per.salary);
+        total_income += ((per.salary as f32 / 12.) * tax_rate) as i64;
+    }
+
+    state.finance_data.expected_person_income = total_income / state.people.len() as i64;
+    state.finance_data.expected_person_income
+}
+
+#[tauri::command]
+pub fn update_business_tax_rate(state_mux: State<'_, GameStateSafe>, tax_rate: i32) -> i64 {
+    let mut state = state_mux.lock().unwrap();
+
+    state.business_tax_rate = tax_rate as f32 / 100.;
+
+    let mut total_income: i64 = 0;
+
+    for bus in state.businesses.values() {
+        let tax_rate = Business::get_tax_rate(&state.rules.business_tax_rule, bus.last_month_income, state.business_tax_rate);
+        total_income += (bus.last_month_income * tax_rate as f64) as i64;
+    }
+
+    state.finance_data.expected_business_income = total_income / state.businesses.len() as i64;
+    state.finance_data.expected_business_income
+}
+
+#[tauri::command]
+pub fn update_healthcare_budget(state_mux: State<'_, GameStateSafe>, new_budget: i64) -> serde_json::Value {
+    let mut state = state_mux.lock().unwrap();
+
+    let old_budget = state.healthcare.budget;
+
+    state.healthcare.budget = new_budget;
+    let spare_budget = state.get_spare_budget();
+
+    if spare_budget < 0 {
+        state.healthcare.budget = old_budget;
+        return json!({
+            "error": "Cannot afford this budget",
+        });
+    }
+
+    state.spare_budget = spare_budget;
+    state.healthcare.total_capacity = (new_budget as i64 / state.healthcare.cost_per_hospital_capacity as i64) as i32;
+
+    json!({
+        "used_hospital_capacity": state.healthcare.get_current_capacity(),
+        "total_hospital_capacity": state.healthcare.total_capacity,
+    })
+}
+
+#[tauri::command]
+pub fn update_welfare_budget(state_mux: State<'_, GameStateSafe>, new_budget: i64) -> serde_json::Value {
+    let mut state = state_mux.lock().unwrap();
+
+    let old_budget = state.welfare_budget;
+
+    state.welfare_budget = new_budget;
+    let spare_budget = state.get_spare_budget();
+
+    if spare_budget < 0 {
+        state.welfare_budget = old_budget;
+        return json!({
+            "error": "Cannot afford this budget",
+        })
+    }
+
+    state.spare_budget = spare_budget;
+
+    json!({})
+}
+
+#[tauri::command]
+pub fn update_business_budget(state_mux: State<'_, GameStateSafe>, new_budget: i64) -> serde_json::Value {
+    let mut state = state_mux.lock().unwrap();
+
+    let old_budget = state.business_budget;
+
+    state.business_budget = new_budget;
+    let spare_budget = state.get_spare_budget();
+
+    if spare_budget < 0 {
+        state.business_budget = old_budget;
+        return json!({
+            "error": "Cannot afford this budget",
+        })
+    }
+
+    state.spare_budget = spare_budget;
+
+    json!({})
 }

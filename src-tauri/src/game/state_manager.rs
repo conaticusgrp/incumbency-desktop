@@ -58,6 +58,10 @@ impl GameState {
     //     (true, None)
     // }
 
+    pub fn get_spare_budget(&self) -> i64 {
+        self.government_balance - (self.healthcare.budget + self.welfare_budget + self.business_budget) 
+    }
+
     pub fn day_pass(&mut self, day: i32, app_handle: Option<&tauri::AppHandle>, config: &Config) {
         let mut death_queue: Vec<Uuid> = Vec::new(); // Queue of people who are going to die :) - we need this because rust memory
 
@@ -148,7 +152,7 @@ impl GameState {
             let average_welfare = total_welfare_percentage as f32 / self.people.len() as f32;
             let average_welfare = set_decimal_count(average_welfare, 2);
 
-            self.spare_budget = self.government_balance - self.healthcare.budget - self.business_budget - self.welfare_budget;
+            self.spare_budget = self.get_spare_budget();
 
             update_app(App::Finance, json!({
                 "government_balance": self.government_balance,
@@ -293,15 +297,15 @@ impl GameState {
             self.businesses.remove(&id);
         }
 
+        self.government_balance -= self.healthcare.budget as i64;
+        self.healthcare.month_unhospitalised_count = 0;
+        self.total_possible_purchases = 0;
+        self.purchases = 0;
+
         update_app(App::Finance, json!({
             "average_monthly_income": self.finance_data.average_monthly_income,
             "expected_person_income": self.finance_data.expected_person_income,
             "expected_business_income": self.finance_data.expected_business_income,
         }), app_handle);
-
-        self.government_balance -= self.healthcare.budget as i64;
-        self.healthcare.month_unhospitalised_count = 0;
-        self.total_possible_purchases = 0;
-        self.purchases = 0;
     }
 }
