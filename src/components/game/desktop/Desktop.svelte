@@ -1,8 +1,22 @@
+<script lang="ts" context="module">
+
+  interface DesktopAppShortcut {
+    componentConstructor: any,
+    name: string,
+
+    component?: any,
+    props?: any,
+    badgeCount?: number,
+    opened?: boolean,
+    minimized?: boolean
+  };
+
+</script>
+
 <script lang="ts">
 
   import { listen } from "@tauri-apps/api/event";
   import { invoke } from "@tauri-apps/api/tauri";
-  import type { DesktopAppShortcut } from "../../../scripts/desktopApp";
   //import type { NotificationData } from "../../../scripts/notificationData";
   import { APP_LIST_MIN_WIDTH, APP_LIST_WIDTH_PERCENT, DATE_TIME_HEIGHT, TOOLBAR_HEIGHT } from "../../../scripts/desktopConstants";
   import { WINDOW_AQUIRE_FOCUS, WINDOW_CLOSE, WINDOW_MINIMIZE } from "../../../scripts/windowEvent";

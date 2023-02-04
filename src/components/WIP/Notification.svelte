@@ -1,3 +1,13 @@
+<script lang="ts" context="module">
+
+  interface NotificationData {
+    iconPath?: string,
+    header: string,
+    content: string
+  }
+
+</script>
+
 <script lang="ts">
   
   import { NOTIFICATIONS_WINDOW_HEIGHT, NOTIFICATION_HEADER_HEIGHT, NOTIFICATION_PADDING } from "../../scripts/desktopConstants";
