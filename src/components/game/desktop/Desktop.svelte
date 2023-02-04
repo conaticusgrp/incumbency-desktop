@@ -1,39 +1,48 @@
+<script lang="ts" context="module">
+
+  interface DesktopAppShortcut {
+    componentConstructor: any,
+    name: string,
+
+    component?: any,
+    props?: any,
+    badgeCount?: number,
+    opened?: boolean,
+    minimized?: boolean
+  };
+
+</script>
+
 <script lang="ts">
 
   import { listen } from "@tauri-apps/api/event";
   import { invoke } from "@tauri-apps/api/tauri";
-  import type { DesktopAppShortcut } from "../../../scripts/desktopApp";
-  //import type { NotificationData } from "../../../scripts/notificationData";
   import { APP_LIST_MIN_WIDTH, APP_LIST_WIDTH_PERCENT, DATE_TIME_HEIGHT, TOOLBAR_HEIGHT } from "../../../scripts/desktopConstants";
   import { WINDOW_AQUIRE_FOCUS, WINDOW_CLOSE, WINDOW_MINIMIZE } from "../../../scripts/windowEvent";
 
   import Email from "../windows/Email.svelte";
   import Finance from "../windows/Finance.svelte";
+  import Healthcare from "../windows/Healthcare.svelte";
+  import Welfare from "../windows/Welfare.svelte";
+  import Business from "../windows/Business.svelte";
   
   // DEBUG
   import { onMount } from 'svelte'
   import DebuggerApp from "../windows/DebuggerApp.svelte";
 
   let date: string = "undefined date";
-  let windowContainer: HTMLElement;
   let wallpaperPath: string | null = "./src/assets/Wallpaper.png";
   let apps: DesktopAppShortcut[] = [
     { componentConstructor: DebuggerApp, name: "DEBUG" },
     { componentConstructor: Email,       name: "Email", badgeCount: 2 },
-    { componentConstructor: Finance, name: "Budget Panel", badgeCount: 1 }
+    { componentConstructor: Finance,     name: "Finance", badgeCount: 1 },
+    { componentConstructor: Healthcare,  name: "Healthcare" },
+    { componentConstructor: Welfare,     name: "Welfare" },
+    { componentConstructor: Business,    name: "Business" }
   ];
   let focusedApp: number | null = null;
   
   //let notifications: NotificationData[] = [];
-
-  /*
-  $: if (notifications.length > 0 && !KEEP_NOTIFICATIONS_DISPLAYED) {
-    setTimeout(() => {
-      notifications.splice(0, 1);
-      notifications = notifications; // trigger render
-    }, (notifications[0].displayTime || DEFAULT_NOTIFICATION_DISPLAY_TIME) * 1_000);
-  }
-  */
 
   const handleOpenApp = (index: number): void => {
     if (index < 0 || index >= apps.length) return;
@@ -113,18 +122,6 @@
 
   // DEBUG
   onMount(() => {
-    /*
-    setTimeout(() => {
-      notifications = [
-        {
-          header: "Test notification",
-          content: "This is the first notification to ever pop up! Isn't it exciting? You should be happy!",
-          iconPath: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ-tf1a7Cwsujdb5k5YKQUP18mR_7dDJd5Bj9CGQv3CaQ&s"
-        }
-      ];
-    }, 2000);
-    */
-
     // TODO: delete
     invoke("frontend_ready");
   });
@@ -181,7 +178,6 @@
         height: calc(100% - {DATE_TIME_HEIGHT}em - {TOOLBAR_HEIGHT}em);
         background-image: {(wallpaperPath != null) ? `url(${wallpaperPath})` : "none"};
       "
-      bind:this={windowContainer}
     >
 
       {#each apps as app, i}

@@ -1,10 +1,25 @@
+<script lang="ts" context="module">
+
+  interface EmailUser {
+      username: string,
+      address?: string
+  }
+  
+  interface EmailData {
+      title: string,
+      content: string,
+      date: string,
+      sender?: EmailUser,
+      cc?: EmailUser
+  }
+
+</script>
+
 <script lang="ts">
   
   import { listen } from "@tauri-apps/api/event";
   import { createEventDispatcher, tick } from "svelte";
-  import type { EmailData } from "../../../scripts/email";
-  import type { CriticalWindowData } from "../../../scripts/criticalWindowData";
-  import Window from "./Window.svelte"
+  import Window, { type CriticalWindowData } from "./Window.svelte"
   import { countLines, getLineHeight } from "../../../scripts/text";
   import { WINDOW_MAXIMIZE, WINDOW_OPENED, WINDOW_RESIZE } from "../../../scripts/windowEvent";
 
