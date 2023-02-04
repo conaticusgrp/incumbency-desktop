@@ -1,3 +1,13 @@
+<script lang="ts" context="module">
+
+  export interface CriticalWindowData {
+      opened: boolean,
+      focused: boolean,
+      index: number
+  }
+
+</script>
+
 <script lang="ts">
   
   import { invoke } from "@tauri-apps/api/tauri";
@@ -16,7 +26,6 @@
     WINDOW_OPENED,
     WINDOW_RESIZE
   } from "../../../scripts/windowEvent";
-  import type { CriticalWindowData } from "../../../scripts/criticalWindowData";
 
   export let title: string = "?";
   export let pos: { x: number; y: number } = { x: 0, y: 0 };

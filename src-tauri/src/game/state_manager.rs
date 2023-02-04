@@ -152,7 +152,7 @@ impl GameState {
         if death_queue.len() > 0 {
             self.healthcare.life_expectancy = ages_total / death_queue.len() as i32;
         }
-
+        
         self.deaths_in_last_month.push(death_queue.len());
 
         self.population_counter += (self.people.len() as f32 * POPULATION_DAILY_INCREASE_PERCENTAGE) as f64;
