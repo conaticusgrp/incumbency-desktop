@@ -22,18 +22,23 @@
 
   import Email from "../windows/Email.svelte";
   import Finance from "../windows/Finance.svelte";
+  import Healthcare from "../windows/Healthcare.svelte";
+  import Welfare from "../windows/Welfare.svelte";
+  import Business from "../windows/Business.svelte";
   
   // DEBUG
   import { onMount } from 'svelte'
   import DebuggerApp from "../windows/DebuggerApp.svelte";
 
   let date: string = "undefined date";
-  let windowContainer: HTMLElement;
   let wallpaperPath: string | null = "./src/assets/Wallpaper.png";
   let apps: DesktopAppShortcut[] = [
     { componentConstructor: DebuggerApp, name: "DEBUG" },
     { componentConstructor: Email,       name: "Email", badgeCount: 2 },
-    { componentConstructor: Finance,     name: "Finance", badgeCount: 1 }
+    { componentConstructor: Finance,     name: "Finance", badgeCount: 1 },
+    { componentConstructor: Healthcare,  name: "Healthcare" },
+    { componentConstructor: Welfare,     name: "Welfare" },
+    { componentConstructor: Business,    name: "Business" }
   ];
   let focusedApp: number | null = null;
   
@@ -173,7 +178,6 @@
         height: calc(100% - {DATE_TIME_HEIGHT}em - {TOOLBAR_HEIGHT}em);
         background-image: {(wallpaperPath != null) ? `url(${wallpaperPath})` : "none"};
       "
-      bind:this={windowContainer}
     >
 
       {#each apps as app, i}
