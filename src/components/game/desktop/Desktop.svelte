@@ -1,17 +1,25 @@
 <script lang="ts">
-
   import { listen } from "@tauri-apps/api/event";
   import { invoke } from "@tauri-apps/api/tauri";
   import type { DesktopAppShortcut } from "../../../scripts/desktopApp";
   //import type { NotificationData } from "../../../scripts/notificationData";
-  import { APP_LIST_MIN_WIDTH, APP_LIST_WIDTH_PERCENT, DATE_TIME_HEIGHT, TOOLBAR_HEIGHT } from "../../../scripts/desktopConstants";
-  import { WINDOW_AQUIRE_FOCUS, WINDOW_CLOSE, WINDOW_MINIMIZE } from "../../../scripts/windowEvent";
+  import {
+    APP_LIST_MIN_WIDTH,
+    APP_LIST_WIDTH_PERCENT,
+    DATE_TIME_HEIGHT,
+    TOOLBAR_HEIGHT,
+  } from "../../../scripts/desktopConstants";
+  import {
+    WINDOW_AQUIRE_FOCUS,
+    WINDOW_CLOSE,
+    WINDOW_MINIMIZE,
+  } from "../../../scripts/windowEvent";
 
   import Email from "../windows/Email.svelte";
   import Finance from "../windows/Finance.svelte";
-  
+
   // DEBUG
-  import { onMount } from 'svelte'
+  import { onMount } from "svelte";
   import DebuggerApp from "../windows/DebuggerApp.svelte";
 
   let date: string = "undefined date";
@@ -19,11 +27,11 @@
   let wallpaperPath: string | null = "./src/assets/Wallpaper.png";
   let apps: DesktopAppShortcut[] = [
     { componentConstructor: DebuggerApp, name: "DEBUG" },
-    { componentConstructor: Email,       name: "Email", badgeCount: 2 },
-    { componentConstructor: Finance, name: "Budget Panel", badgeCount: 1 }
+    { componentConstructor: Email, name: "Email", badgeCount: 2 },
+    { componentConstructor: Finance, name: "Budget Panel", badgeCount: 1 },
   ];
   let focusedApp: number | null = null;
-  
+
   //let notifications: NotificationData[] = [];
 
   /*
@@ -46,18 +54,18 @@
     } else {
       unminimizeApp(index);
     }
-  }
+  };
 
   const unminimizeApp = (index: number) => {
     if (index < 0 || index >= apps.length) return;
-    
+
     apps[index].minimized = !apps[index].minimized;
     updateUI();
-  }
+  };
 
   const updateUI = () => {
     apps = apps;
-  }
+  };
 
   const handleCriticalEvent = (index: number, e: CustomEvent): void => {
     if (index < 0 || index >= apps.length) return;
@@ -87,16 +95,17 @@
         }
         break;
 
-      default: break;
+      default:
+        break;
     }
-  }
+  };
 
-  listen('new_day', (d) => {
+  listen("new_day", (d) => {
     //@ts-ignore
     date = d.payload.date as string;
   });
 
-  listen('open_debugger_app', (e) => {
+  listen("open_debugger_app", (e) => {
     //@ts-ignore
     handleOpenApp(apps.findIndex((v) => v.name === "DEBUG"));
   });
@@ -124,54 +133,38 @@
       ];
     }, 2000);
     */
-
-    // TODO: delete
-    invoke("frontend_ready");
   });
-
 </script>
 
 <main>
-
   <div
     class="app-list-section"
     style="width: {APP_LIST_WIDTH_PERCENT}%; min-width: {APP_LIST_MIN_WIDTH}px;"
   >
-
     <h2>Installed Software</h2>
 
     <div class="app-list">
-
       {#each apps as shortcut, i}
+        <!-- empty on:keydown to supress a warning -->
+        <div
+          style="color: var({apps[i].opened
+            ? '--color-highlight'
+            : '--color-shaded'});"
+          on:click={() => handleOpenApp(i)}
+          on:keydown={() => {}}
+        >
+          {shortcut.name}
 
-      <!-- empty on:keydown to supress a warning -->
-      <div
-        style="color: var({apps[i].opened ? '--color-highlight' : '--color-shaded'});"
-        on:click={() => handleOpenApp(i)}
-        on:keydown={() => {}}
-      >
-        {shortcut.name}
-        
-        {#if shortcut.badgeCount != undefined && shortcut.badgeCount > 0}
-        <span>({shortcut.badgeCount})</span>
-        {/if}
-      </div>
-
+          {#if shortcut.badgeCount != undefined && shortcut.badgeCount > 0}
+            <span>({shortcut.badgeCount})</span>
+          {/if}
+        </div>
       {/each}
-
     </div>
-
   </div>
 
-  <div
-    class="content"
-    style="width: calc({100 - APP_LIST_WIDTH_PERCENT}%);"
-  >
-
-    <div
-      class="date-time"
-      style="height: {DATE_TIME_HEIGHT}em;"
-    >
+  <div class="content" style="width: calc({100 - APP_LIST_WIDTH_PERCENT}%);">
+    <div class="date-time" style="height: {DATE_TIME_HEIGHT}em;">
       {date}
     </div>
 
@@ -179,63 +172,49 @@
       class="windows"
       style="
         height: calc(100% - {DATE_TIME_HEIGHT}em - {TOOLBAR_HEIGHT}em);
-        background-image: {(wallpaperPath != null) ? `url(${wallpaperPath})` : "none"};
+        background-image: {wallpaperPath != null
+        ? `url(${wallpaperPath})`
+        : 'none'};
       "
       bind:this={windowContainer}
     >
-
       {#each apps as app, i}
+        <!-- !! to cast (boolean | undefined) to boolean -->
 
-      <!-- !! to cast (boolean | undefined) to boolean -->
-
-      <svelte:component
-        this={app.componentConstructor}
-        bind:this={app.component}
-        windowData={{
-          opened: !!app.opened && !app.minimized,
-          focused: i === focusedApp,
-          index: i
-        }}
-        {...app.props}
-        on:criticalWindowEvent={(e) => handleCriticalEvent(i, e)}
-      />
-
+        <svelte:component
+          this={app.componentConstructor}
+          bind:this={app.component}
+          windowData={{
+            opened: !!app.opened && !app.minimized,
+            focused: i === focusedApp,
+            index: i,
+          }}
+          {...app.props}
+          on:criticalWindowEvent={(e) => handleCriticalEvent(i, e)}
+        />
       {/each}
-
     </div>
 
-    <div
-      class="toolbar"
-      style="height: {TOOLBAR_HEIGHT}em;"
-    >
-
+    <div class="toolbar" style="height: {TOOLBAR_HEIGHT}em;">
       {#each apps as shortcut, i}
-
-      {#if apps[i].opened}
-
-      <!-- !! to cast (boolean | undefined) to boolean -->
-      <!-- empty on:keydown to supress a warning -->
-      <span
-        data-minimized={!!apps[i].minimized}
-        title={shortcut.name}
-        on:click={() => unminimizeApp(i)}
-        on:keydown={() => {}}
-      >
-        {shortcut.name}
-      </span>
-
-      {/if}
-
+        {#if apps[i].opened}
+          <!-- !! to cast (boolean | undefined) to boolean -->
+          <!-- empty on:keydown to supress a warning -->
+          <span
+            data-minimized={!!apps[i].minimized}
+            title={shortcut.name}
+            on:click={() => unminimizeApp(i)}
+            on:keydown={() => {}}
+          >
+            {shortcut.name}
+          </span>
+        {/if}
       {/each}
-    
     </div>
-
   </div>
-
 </main>
 
 <style>
-
   main {
     display: flex;
     flex-direction: row;
@@ -281,7 +260,7 @@
     color: var(--color-critical);
     font-weight: bold;
   }
-  
+
   .content {
     display: flex;
     flex-direction: column;
@@ -294,7 +273,7 @@
     min-height: min-content;
     border-bottom: 1px solid green;
   }
-  
+
   .windows {
     position: relative;
     /* z-index: 100; */
@@ -303,7 +282,7 @@
     background-repeat: no-repeat;
     background-position: center;
   }
-  
+
   .toolbar {
     /* width: 100%; */
     display: flex;
@@ -311,7 +290,7 @@
     min-height: min-content;
     border-top: 1px solid green;
   }
-  
+
   .toolbar > span {
     position: relative;
     display: flex;
@@ -330,5 +309,4 @@
     color: unset;
     font-weight: unset;
   }
-
 </style>
