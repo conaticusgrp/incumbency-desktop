@@ -102,7 +102,11 @@ pub struct GameState {
   pub finance_data: FinanceData,
 
   pub welfare_budget: i64,
+  pub welfare_owed: i64,
+
   pub business_budget: i64,
+  pub business_owed: i64,
+
   pub spare_budget: i64,
 
   pub average_welfare: f32,

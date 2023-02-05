@@ -6,7 +6,6 @@ use tauri::{Manager, AppHandle};
 use super::{structs::{GameState, GameStateRules, HealthcareState, FinanceData, BusinessData}, events::{update_app, App}};
 
 const GOVERNMENT_START_BALANCE: u32 = 12000000; // TODO: changeme
-// const POPULATION_DAILY_INCREASE_PERCENTAGE: f32 = 4.8125e-5; // Based on real world statistics - TODO: make me more dynamic
 const POPULATION_DAILY_INCREASE_PERCENTAGE: f32 = 1e-4; // Based on real world statistics - TODO: make me more dynamic
 
 pub type GameStateSafe = Arc<Mutex<GameState>>;
@@ -35,7 +34,11 @@ impl Default for GameState {
 
             finance_data: FinanceData::default(),
             welfare_budget: (GOVERNMENT_START_BALANCE as f64 * 0.15) as i64,
+            welfare_owed: 0,
+
             business_budget: (GOVERNMENT_START_BALANCE as f64 * 0.1) as i64,
+            business_owed: 0,
+
             spare_budget: (GOVERNMENT_START_BALANCE as f64 * 0.55) as i64,
 
             average_welfare: 100.,
@@ -123,6 +126,7 @@ impl GameState {
             }
         }
 
+        self.welfare_owed += ((food_coverage + unemployed_food_coverage) * 4) as i64;
         self.finance_data.average_monthly_income = (total_monthly_income / self.people.len() as i64) as i32;
 
         let population_before_deaths = self.people.len() as i32;
@@ -379,8 +383,7 @@ impl GameState {
             "average_monthly_income": self.business_data.average_monthly_income,
         }), app_handle);
 
-        self.government_balance -= self.healthcare.budget + self.welfare_budget + self.business_budget; // TODO: don't spend busienss and welfare when not needed
-
+        self.government_balance -= self.welfare_owed + (*funded_businesses as i64 * self.rules.business_funding_rule.fund) + self.healthcare.budget;
 
         self.healthcare.month_unhospitalised_count = 0;
         self.total_possible_purchases = 0;
