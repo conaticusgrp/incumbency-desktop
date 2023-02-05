@@ -1,7 +1,7 @@
 use std::{sync::{Mutex, Arc}, collections::HashMap};
 use serde_json::json;
 use uuid::Uuid;
-use crate::{entities::{business::{Business}, person::{person::{Person, Job, Birthday}, debt::{Debt, DebtType}}}, as_decimal_percent, common::{util::{Date, SlotArray, set_decimal_count, chance_one_in, generate_unemployed_salary, get_healthcare_group}, config::Config}};
+use crate::{entities::{business::{Business, ProductType}, person::{person::{Person, Job, Birthday}, debt::{Debt, DebtType}}}, as_decimal_percent, common::{util::{Date, SlotArray, set_decimal_count, chance_one_in, generate_unemployed_salary, get_healthcare_group}, config::Config}};
 use tauri::{Manager, AppHandle};
 use super::{structs::{GameState, GameStateRules, HealthcareState, FinanceData, BusinessData}, events::{update_app, App}};
 
@@ -335,6 +335,11 @@ impl GameState {
 
         let purchase_rate = self.purchases as f32 / self.total_possible_purchases as f32;
 
+        let mut demand: f32 = 0.;
+        for person in self.people.values() { // TODO: do this for all product types
+            demand += person.demand[&ProductType::Leisure];
+        }
+
         for i in 0..reinvestment_budgets.len() {
             let (bid, budget) = &reinvestment_budgets[i];
 
@@ -350,13 +355,9 @@ impl GameState {
                 assigned_percent = remaining_market_percentage;
             }
 
-            let mut demand: f32 = 0.;
 
             let business = self.businesses.get_mut(&bid).unwrap();
 
-            for person in self.people.values() {
-                demand += person.demand[&business.product_type];
-            }
 
             business.get_new_market(assigned_percent, cost_per_percent, &mut self.people, demand, purchase_rate);
             business.last_month_balance = business.balance;
