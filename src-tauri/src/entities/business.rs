@@ -93,7 +93,7 @@ impl Business {
 
         let expected_employee_count = self.calculate_expected_employee_count();
 
-        let people_vec: &mut Vec<_> = &mut people.values_mut().into_iter().collect();
+        let people_vec: &mut Vec<_> = &mut people.values_mut().into_iter().filter(|per| per.job != Job::Retired).collect();
         // people_vec.sort_by_cached_key(|p| p.education_level as u8);
         self.assign_employees(people_vec, expected_employee_count);
         

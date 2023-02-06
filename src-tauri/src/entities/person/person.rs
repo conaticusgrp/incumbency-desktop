@@ -96,7 +96,14 @@ impl Person {
         person.education_level = generate_education_level(config);
         person.expected_salary_range = get_expected_salary_range(config, &person.education_level);
 
-        let expected_salary = ((person.expected_salary_range.start + person.expected_salary_range.end) / 2) as i32;
+        let mut expected_salary = ((person.expected_salary_range.start + person.expected_salary_range.end) / 2) as i32;
+        if person.age >= 70 || (person.age >= 65 && chance_one_in(60)) {
+            // Retired
+            person.job = Job::Retired;
+            person.set_salary(15800);
+            expected_salary = 15800;
+        }
+
         let tax_rate = Self::get_tax_rate(tax_rule, tax_rate, expected_salary);
 
         person.generate_spending_behaviour();
@@ -491,6 +498,7 @@ pub enum EducationLevel {
 pub enum Job {
     BusinessOwner(Uuid), // usize refers to index of the business in the game state
     Employee(Uuid),
+    Retired,
     #[default]
     Unemployed,
 }

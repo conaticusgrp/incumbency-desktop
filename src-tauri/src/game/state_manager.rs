@@ -253,6 +253,18 @@ impl GameState {
 
                         person.pay_tax(&mut self.government_balance, (person.salary as f32 / 12.) * tax_rate);
                         person.business_pay(business, business.employee_salary as f64 / 12.);
+
+                        if person.age >= 65 && chance_one_in(60) {
+                            // Retired
+                            person.set_salary(15800); // TODO: vary pension salary
+                            person.job = Job::Retired;
+
+                            let emp_idx = business.employees.iter().position(|&id| id == person.id);
+                            if emp_idx.is_some() {
+                                let idx = emp_idx.unwrap();
+                                business.employees.remove(idx);
+                            }
+                        }
                     } else {
                         person.job = Job::Unemployed;
                         person.set_salary(generate_unemployed_salary());
@@ -260,6 +272,7 @@ impl GameState {
 
                     // business.pay_owner(person);
                 },
+
                 _ => (),
             };
 
