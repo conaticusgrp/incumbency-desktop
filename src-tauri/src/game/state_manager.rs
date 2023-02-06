@@ -342,7 +342,6 @@ impl GameState {
 
         let people_cpy = &mut self.people.clone();
         let mut unemployed_people: &mut Vec<&mut Person> = &mut people_cpy.values_mut().filter(|p| p.job == Job::Unemployed && p.age >= 18).collect();
-        // unemployed_people.sort_by_cached_key(|p| p.education_level as u8);
 
         for i in 0..reinvestment_budgets.len() {
             let (bid, budget) = &reinvestment_budgets[i];

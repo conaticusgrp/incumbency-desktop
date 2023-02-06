@@ -187,8 +187,6 @@ impl Business {
             return;
         }
 
-        // educated_people.sort_by_cached_key(|p| p.education_level as u8);
-
         let people_ids = educated_people.iter().map(|p| p.id.clone());
         self.employees.extend(people_ids);
 
@@ -225,7 +223,7 @@ impl Business {
         if employee_diff > 0 && unemployed_people.len() > 0 {
             self.assign_employees(unemployed_people, employee_diff);
         } else if employee_diff < 0 {
-            // self.remove_employees(employee_diff, people);
+            self.remove_employees(employee_diff, people);
         }
 
         self.balance -= (self.get_production_cost() + (market_percentage * cost_per_percent)) as f64;
