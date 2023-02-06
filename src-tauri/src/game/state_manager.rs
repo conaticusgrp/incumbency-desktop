@@ -120,7 +120,7 @@ impl GameState {
             per.get_welfare();
 
             total_welfare += per.welfare;
-            if per.job == Job::Unemployed && !per.homeless {
+            if per.job == Job::Unemployed && !per.homeless && per.age >= 18 {
                 total_welfare_unemployed += per.welfare; 
                 unemployed_count += 1;
             }
@@ -340,6 +340,10 @@ impl GameState {
             demand += person.demand[&ProductType::Leisure];
         }
 
+        let people_cpy = &mut self.people.clone();
+        let mut unemployed_people: &mut Vec<&mut Person> = &mut people_cpy.values_mut().filter(|p| p.job == Job::Unemployed && p.age >= 18).collect();
+        // unemployed_people.sort_by_cached_key(|p| p.education_level as u8);
+
         for i in 0..reinvestment_budgets.len() {
             let (bid, budget) = &reinvestment_budgets[i];
 
@@ -355,14 +359,21 @@ impl GameState {
                 assigned_percent = remaining_market_percentage;
             }
 
-
             let business = self.businesses.get_mut(&bid).unwrap();
 
-
-            business.get_new_market(assigned_percent, cost_per_percent, &mut self.people, demand, purchase_rate);
+            business.get_new_market(assigned_percent, cost_per_percent, &mut self.people, &mut unemployed_people, demand, purchase_rate);
             business.last_month_balance = business.balance;
 
             remaining_market_percentage -= assigned_percent;
+        }
+
+        // Sync people to unemployed people
+        for per_cpy in unemployed_people {
+            if per_cpy.job != Job::Unemployed {
+                let per = self.people.get_mut(&per_cpy.id).unwrap();
+                per.job = per_cpy.job.clone();
+                per.set_salary(per_cpy.salary);
+            }
         }
 
         for id in bus_removal_queue {

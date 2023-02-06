@@ -92,7 +92,10 @@ impl Business {
         self.employee_budget_allocation = float_range(0.53, 0.63, 3);
 
         let expected_employee_count = self.calculate_expected_employee_count();
-        self.assign_employees(people, expected_employee_count);
+
+        let people_vec: &mut Vec<_> = &mut people.values_mut().into_iter().collect();
+        // people_vec.sort_by_cached_key(|p| p.education_level as u8);
+        self.assign_employees(people_vec, expected_employee_count);
         
         self.loss_percentage += percentage_of!(self.employees.len() * (self.employee_salary as usize / 12); / self.expected_income);
         self.set_starting_balance();
@@ -173,22 +176,20 @@ impl Business {
         (met_demand as f32 * purchase_rate) as i32 // Expect roughly 5% of people not afford items
     }
 
-    fn assign_employees(&mut self, people: &mut HashMap<Uuid, Person>, new_employee_count: i32) {
+    fn assign_employees(&mut self, unemployed_people: &mut Vec<&mut Person>, new_employee_count: i32) {
         let minimum_education_level = &self.minimum_education_level;
-        
-        let mut educated_people: Vec<&mut Person> = people
-            .values_mut()
-            .into_iter()
-            .filter(|p| {
-                p.job == Job::Unemployed && p.age >= 18 && (&p.education_level == minimum_education_level || ((p.education_level.clone() as u8) > (minimum_education_level.clone() as u8)))
-            })
-            .take(new_employee_count as usize)
-            .collect();
 
-        educated_people.sort_by_cached_key(|p| p.education_level as u8);
+        let educated_people: Vec<_> = unemployed_people.iter_mut().filter(|p| {
+            p.job == Job::Unemployed && p.age >= 18 && (&p.education_level == minimum_education_level || ((p.education_level.clone() as u8) > (minimum_education_level.clone() as u8)))
+        }).take(new_employee_count as usize).collect();
+
+        if educated_people.len() == 0 {
+            return;
+        }
+
+        // educated_people.sort_by_cached_key(|p| p.education_level as u8);
 
         let people_ids = educated_people.iter().map(|p| p.id.clone());
-
         self.employees.extend(people_ids);
 
         educated_people.into_iter().for_each(|p| {
@@ -217,14 +218,14 @@ impl Business {
     }
 
     /// This function assigns the business to a new market with a new market percentage. This runs monthly.
-    pub fn get_new_market(&mut self, market_percentage: f32, cost_per_percent: f32, people: &mut HashMap<Uuid, Person>, demand: f32, purchase_rate: f32) {
+    pub fn get_new_market(&mut self, market_percentage: f32, cost_per_percent: f32, people: &mut HashMap<Uuid, Person>, unemployed_people: &mut Vec<&mut Person>, demand: f32, purchase_rate: f32) {
         self.expected_income = self.assign_to_people(as_decimal_percent!(market_percentage) * demand, people, purchase_rate) as i64 * self.product_price as i64;
         let employee_diff = self.calculate_expected_employee_count() - self.employees.len() as i32;
 
-        if employee_diff > 0 {
-            self.assign_employees(people, employee_diff);
+        if employee_diff > 0 && unemployed_people.len() > 0 {
+            self.assign_employees(unemployed_people, employee_diff);
         } else if employee_diff < 0 {
-            self.remove_employees(employee_diff, people);
+            // self.remove_employees(employee_diff, people);
         }
 
         self.balance -= (self.get_production_cost() + (market_percentage * cost_per_percent)) as f64;
@@ -235,8 +236,8 @@ impl Business {
 
         let mut sorted_employees: Vec<_> = self.employees.clone();
         sorted_employees.sort_by(|a, b| {
-            let per_a = people.values().find(|p| p.id == *a).unwrap();
-            let per_b = people.values().find(|p| p.id == *b).unwrap();
+            let per_a = &people[a];
+            let per_b = &people[b];
 
             per_a.welfare.cmp(&per_b.welfare)
         });
