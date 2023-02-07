@@ -75,10 +75,8 @@
       <span style="margin-top: 2em;">Details:</span>
       <div
         class="details"
-        
-      >
-        <div style="height: 100%;" bind:this={details}></div>
-      </div>
+        bind:this={details}
+      ></div>
 
     </div>
 
@@ -104,9 +102,9 @@
   .loading-panel {
     display: flex;
     flex-direction: column;
+    min-width: 400px;
     width: 50%;
-    height: 35%;
-    min-height: 300px;
+    aspect-ratio: 5 / 2;
     margin: auto;
     border: 1px solid var(--color-accent);
     border-radius: 0.5rem;
@@ -131,7 +129,6 @@
   .content {
     display: flex;
     flex-direction: column;
-    width: calc(100% - 2 * 1em);
     height: 100%;
     margin: 1em;
     text-align: left;
@@ -156,10 +153,16 @@
   }
 
   .details {
-    width: 100%;
-    height: 100%;
+    width: calc(100% - 1em);
+    height: calc(100% - 2em - 1em);
     border: 1px solid var(--color-accent);
     border-radius: 1em;
+    padding-left: 1em;
+    overflow-y: scroll;
+  }
+
+  .details::-webkit-scrollbar {
+    display: none;
   }
 
 </style>
