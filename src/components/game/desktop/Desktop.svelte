@@ -183,8 +183,9 @@
         {:else}
         
         <button>{date}</button>
-        <button>Log off</button>
         <button>Shut down</button>
+        <button>Logoff</button>
+        <button>Restart</button>
         
         {/if}
       </div>
