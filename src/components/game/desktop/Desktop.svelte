@@ -15,9 +15,10 @@
 
 <script lang="ts">
   import { listen } from "@tauri-apps/api/event";
-  import { invoke } from "@tauri-apps/api/tauri";
   import { APP_LIST_MIN_WIDTH, APP_LIST_WIDTH_PERCENT, DATE_TIME_HEIGHT, TOOLBAR_HEIGHT } from "../../../scripts/desktopConstants";
   import { WINDOW_AQUIRE_FOCUS, WINDOW_CLOSE, WINDOW_MINIMIZE } from "../../../scripts/windowEvent";
+
+  import DebuggerApp from "../windows/DebuggerApp.svelte";
 
   import Email from "../windows/Email.svelte";
   import Finance from "../windows/Finance.svelte";
@@ -25,10 +26,8 @@
   import Welfare from "../windows/Welfare.svelte";
   import Business from "../windows/Business.svelte";
   
-  // DEBUG
-  import { onMount } from "svelte";
-  import DebuggerApp from "../windows/DebuggerApp.svelte";
-
+  let startMenu: HTMLElement;
+  let startMenuExpanded: boolean = false;
   let date: string = "undefined date";
   let wallpaperPath: string | null = "./src/assets/Wallpaper.png";
   let apps: DesktopAppShortcut[] = [
@@ -100,6 +99,19 @@
     }
   };
 
+  const openStartMenu = (): void => {
+    startMenuExpanded = true;
+
+    document.addEventListener('click', closeStartMenuIfClickedAway);
+    // TODO: add event listener
+  }
+
+  const closeStartMenuIfClickedAway = (e: MouseEvent): void => {
+    if (e.target == null || startMenu.contains(e.target as HTMLElement)) return;
+
+    startMenuExpanded = false;
+  }
+
   listen("new_day", (d) => {
     //@ts-ignore
     date = d.payload.date as string;
@@ -148,9 +160,35 @@
     </div>
   </div>
 
-  <div class="content" style="width: calc({100 - APP_LIST_WIDTH_PERCENT}%);">
-    <div class="date-time" style="height: {DATE_TIME_HEIGHT}em;">
-      {date}
+  <div
+    class="content"
+    style="width: calc({100 - APP_LIST_WIDTH_PERCENT}%);"
+  >
+    <div
+      class="top-panel"
+      style="height: {DATE_TIME_HEIGHT}em;"
+      on:click={openStartMenu}
+      on:keydown={() => {}}
+    >
+
+      <div
+        class="start-menu"
+        aria-expanded={startMenuExpanded}
+        bind:this={startMenu}
+      >
+        {#if !startMenuExpanded}
+
+        {date}
+        
+        {:else}
+        
+        <button>{date}</button>
+        <button>Log off</button>
+        <button>Shut down</button>
+        
+        {/if}
+      </div>
+
     </div>
 
     <div
@@ -250,12 +288,40 @@
     flex-direction: column;
   }
 
-  .date-time {
+  .top-panel {
     display: flex;
     justify-content: center;
-    align-items: center;
+    /* align-items: center; */
     min-height: min-content;
     border-bottom: 1px solid green;
+  }
+
+  .start-menu {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: min-content;
+    height: min-content;
+    cursor: pointer;
+  }
+  
+  .start-menu[aria-expanded="true"] {
+    width: 30%;
+    z-index: 2;
+    background-color: var(--color-bg);
+    border: 1px solid var(--color-accent);
+    border-top: none;
+  }
+
+  .start-menu[aria-expanded="true"] > button {
+    width: 100%;
+  }
+
+  .start-menu[aria-expanded="true"] > button:hover {
+    background-color: var(--color-accent);
+    color: var(--color-bg);
+    font-weight: bold;
   }
 
   .windows {

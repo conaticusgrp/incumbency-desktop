@@ -28,11 +28,9 @@
 
   const log = (msg: string): void => {
     details.innerText += `${msg}\n`;
-    // console.trace(msg);
   }
 
   listen('loading_status', (e) => {
-    console.log(e);
     if (timerResolve != null) {
       timerResolve();
       status.substatuses.forEach(m => log(m));
@@ -49,7 +47,6 @@
       timerResolve = resolve;
       for (let i = 0; i < status.substatuses.length; i++) {
         await randomDelay();
-        // console.log("status", status.substatuses[i]);
         log(status.substatuses.splice(i, 1)[0]);
       }
       timerResolve = null;
