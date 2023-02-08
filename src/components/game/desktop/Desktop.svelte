@@ -15,6 +15,7 @@
 
 <script lang="ts">
   import { listen } from "@tauri-apps/api/event";
+  import Notification, { type NotificationData } from "./Notification.svelte";
   import { APP_LIST_MIN_WIDTH, APP_LIST_WIDTH_PERCENT, DATE_TIME_HEIGHT, TOOLBAR_HEIGHT } from "../../../scripts/desktopConstants";
   import { WINDOW_AQUIRE_FOCUS, WINDOW_CLOSE, WINDOW_MINIMIZE } from "../../../scripts/windowEvent";
 
@@ -28,6 +29,7 @@
   
   let startMenu: HTMLElement;
   let startMenuExpanded: boolean = false;
+  let notificationSectionExpanded = false;
   let date: string = "undefined date";
   let wallpaperPath: string | null = "./src/assets/Wallpaper.png";
   let apps: DesktopAppShortcut[] = [
@@ -40,7 +42,14 @@
   ];
   let focusedApp: number | null = null;
 
-  //let notifications: NotificationData[] = [];
+  let notifications: NotificationData[] = [
+    {
+      app: "debug",
+      header: "Test",
+      content: "Test notification",
+      date: "now"
+    }
+  ];
 
   const handleOpenApp = (index: number): void => {
     if (index < 0 || index >= apps.length) return;
@@ -103,7 +112,10 @@
     startMenuExpanded = true;
 
     document.addEventListener('click', closeStartMenuIfClickedAway);
-    // TODO: add event listener
+  }
+
+  const toggleNotificationsSection = (): void => {
+    notificationSectionExpanded = !notificationSectionExpanded;
   }
 
   const closeStartMenuIfClickedAway = (e: MouseEvent): void => {
@@ -131,6 +143,7 @@
       e.preventDefault();
     }
   });
+
 </script>
 
 <main>
@@ -190,6 +203,13 @@
         {/if}
       </div>
 
+      <button
+        class="notification-section-toggle"
+        on:click={toggleNotificationsSection}
+      >
+        Notifications
+      </button>
+
     </div>
 
     <div
@@ -216,6 +236,19 @@
           on:criticalWindowEvent={(e) => handleCriticalEvent(i, e)}
         />
       {/each}
+
+      {#if notificationSectionExpanded}
+      <div class="notifications-section">
+        
+        {#each notifications as notif}
+
+        <Notification data={notif} />
+        
+        {/each}
+
+      </div>
+      {/if}
+
     </div>
 
     <div class="toolbar" style="height: {TOOLBAR_HEIGHT}em;">
@@ -235,6 +268,7 @@
       {/each}
     </div>
   </div>
+
 </main>
 
 <style>
@@ -288,11 +322,12 @@
     display: flex;
     flex-direction: column;
   }
-
+  
   .top-panel {
     display: flex;
     justify-content: center;
     /* align-items: center; */
+    position: relative;
     min-height: min-content;
     border-bottom: 1px solid green;
   }
@@ -307,6 +342,10 @@
     cursor: pointer;
   }
   
+  .start-menu[aria-expanded="false"] {
+    align-self: center;
+  }
+
   .start-menu[aria-expanded="true"] {
     width: 30%;
     z-index: 2;
@@ -323,6 +362,14 @@
     background-color: var(--color-accent);
     color: var(--color-bg);
     font-weight: bold;
+  }
+
+  .notification-section-toggle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    border-left: 1px solid var(--color-accent);
   }
 
   .windows {
@@ -359,5 +406,17 @@
     background-color: unset;
     color: unset;
     font-weight: unset;
+  }
+
+  .notifications-section {
+    position: absolute;
+    top: 0;
+    right: 0;
+    /* padding: 1em; */
+    width: 25%;
+    height: 100%;
+    background-color: var(--color-bg);
+    border-left: 1px solid var(--color-accent);
+    z-index: 10000;
   }
 </style>
