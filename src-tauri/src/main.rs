@@ -8,7 +8,7 @@ mod game;
 mod common;
 
 use game::{manager::{create_game}, structs::GameState};
-use common::filesystem::check_save_exists;
+use common::{filesystem::check_save_exists};
 use std::sync::{Arc, Mutex};
 use game::events::{app_open, app_close, enable_rule, disable_rule, update_rule, update_tax_rate, update_business_tax_rate, update_healthcare_budget, update_welfare_budget, update_business_budget, update_childcare_capacity, update_adultcare_capacity, update_eldercare_capacity};
 

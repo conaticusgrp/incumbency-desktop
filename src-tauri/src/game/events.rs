@@ -2,9 +2,9 @@ use serde::{Serialize, Deserialize};
 use serde_json::json;
 use tauri::{State, AppHandle, Manager};
 
-use crate::{entities::{person::person::Person, business::Business}, percentage_of, as_decimal_percent};
+use crate::{entities::{person::person::Person, business::Business}, percentage_of, as_decimal_percent, common::errors::{IncResult, Error}};
 
-use super::{state_manager::GameStateSafe, structs::{GameState, TaxRule, HealthcareGroup}};
+use super::{state_manager::GameStateSafe, structs::{GameState, HealthcareGroup}};
 
 #[derive(PartialEq, Eq, Hash)]
 pub enum App {
@@ -72,12 +72,12 @@ pub fn get_app_from_id(app_id: u8) -> Option<App> {
 }
 
 #[tauri::command]
-pub fn app_open(state_mux: State<'_, GameStateSafe>, app_id: u8) -> String {
+pub fn app_open(state_mux: State<'_, GameStateSafe>, app_id: u8) -> IncResult<String> {
     let mut state = state_mux.lock().unwrap();
 
     let app = match get_app_from_id(app_id) {
         Some(a) => a,
-        None => return String::new(),
+        None => return Ok(String::new()),
     };
 
     let ret = match app {
@@ -101,7 +101,7 @@ pub fn app_open(state_mux: State<'_, GameStateSafe>, app_id: u8) -> String {
                 }),
             };
 
-            serde_json::to_string(&payload).unwrap()
+            serde_json::to_string(&payload)
         },
 
         App::Healthcare => {
@@ -122,7 +122,7 @@ pub fn app_open(state_mux: State<'_, GameStateSafe>, app_id: u8) -> String {
                 })
             };
 
-            serde_json::to_string(&payload).unwrap()
+            serde_json::to_string(&payload)
         },
 
         App::Welfare => {
@@ -135,7 +135,7 @@ pub fn app_open(state_mux: State<'_, GameStateSafe>, app_id: u8) -> String {
                 })
             };
 
-            serde_json::to_string(&payload).unwrap()
+            serde_json::to_string(&payload)
         },
 
         App::Business => {
@@ -148,12 +148,12 @@ pub fn app_open(state_mux: State<'_, GameStateSafe>, app_id: u8) -> String {
                 })
             };
 
-            serde_json::to_string(&payload).unwrap()
+            serde_json::to_string(&payload)
         },
-    };
+    }?;
 
     *state.open_apps.entry(app).or_insert(true) = true;
-    ret
+    Ok(ret)
 }
 
 #[tauri::command]
@@ -206,86 +206,90 @@ pub fn disable_rule(state_mux: State<'_, GameStateSafe>, rule_id: i32) {
     set_rule(&mut state, rule_id, false);
 }
 
+pub fn json_get_f64(json: &serde_json::Value, key: &str) -> IncResult<f64> {
+    let val = json.get(key).ok_or(Error::Danger(format!("Expected '{}', was not found.", key)))?;
+    Ok(val.as_f64().ok_or(Error::Danger(format!("Failed to convert '{}' to f64.", val)))?)
+}
+
+pub fn json_get_i64(json: &serde_json::Value, key: &str) -> IncResult<i64> {
+    let val = json.get(key).ok_or(Error::Danger(format!("Expected '{}', was not found.", key)))?;
+    Ok(val.as_i64().ok_or(Error::Danger(format!("Failed to convert '{}' to i64.", val)))?)
+}
+
 #[tauri::command]
-pub fn update_rule(state_mux: State<'_, GameStateSafe>, rule_id: i32, data: serde_json::Value) -> serde_json::Value {
+pub fn update_rule(state_mux: State<'_, GameStateSafe>, rule_id: i32, data: serde_json::Value) -> IncResult<serde_json::Value> {
     let mut state = state_mux.lock().unwrap();
     match rule_id {
         0 => {
-            state.rules.tax_rule.minimum_salary = (data.get("minimum_salary").unwrap().as_i64().unwrap()) as i32;
-            state.rules.tax_rule.tax_rate = (data.get("tax_rate").unwrap().as_f64().unwrap() / 100.) as f32;
+            state.rules.tax_rule.minimum_salary = json_get_i64(&data, "minimum_salary")? as i32;
+            state.rules.tax_rule.tax_rate = json_get_f64(&data, "tax_rate")? as f32;
         },
         1 => {
-            state.rules.business_tax_rule.minimum_monthly_income = data.get("minimum_monthly_income").unwrap().as_f64().unwrap();
-            state.rules.business_tax_rule.tax_rate = (data.get("tax_rate").unwrap().as_f64().unwrap() / 100.) as f32;
+            state.rules.business_tax_rule.minimum_monthly_income = json_get_f64(&data, "minimum_monthly_income")?;
+            state.rules.business_tax_rule.tax_rate = json_get_f64(&data, "tax_rate")? as f32;
         },
         2 => {
-            let fund = data.get("fund").unwrap().as_i64().unwrap();
-            let maximum_income = data.get("maximum_income").unwrap().as_i64().unwrap();
-            let business_count = (data.get("business_count").unwrap().as_i64().unwrap()) as i32;
+            let fund = json_get_i64(&data, "fund")?;
+            let maximum_income = json_get_i64(&data, "maximum_income")?;
+            let business_count = json_get_i64(&data, "business_count")? as i32;
 
             let budget_cost = fund * business_count as i64;
             if budget_cost > state.business_budget {
-                return json!({
-                    "error": "This fund exceeds the budget for businesses.",
-                });
+                return Err(Error::Danger("This fund exceeds the budget for businesses".to_string()));
             }
 
             state.rules.business_funding_rule.fund = fund;
             state.rules.business_funding_rule.maximum_income = maximum_income;
             state.rules.business_funding_rule.business_count = business_count;
 
-            return json!({
+            return Ok(json!({
                 "budget_cost": budget_cost,
-            });
+            }));
         },
         3 => {
-            state.rules.deny_age_rule.maximum_age = (data.get("maximum_age").unwrap().as_i64().unwrap()) as i32;
+            state.rules.deny_age_rule.maximum_age = json_get_i64(&data, "maximum_age")? as i32;
         },
         4 => {
-            state.rules.deny_health_percentage_rule.maximum_percentage = (data.get("maximum_percentage").unwrap().as_i64().unwrap()) as i32;
+            state.rules.deny_health_percentage_rule.maximum_percentage = json_get_i64(&data, "maximum_percentage")? as i32;
         },
         5 => {
-            let people_count = (data.get("people_count").unwrap().as_i64().unwrap()) as i32;
-            let maximum_salary = (data.get("maximum_salary").unwrap().as_i64().unwrap()) as i32;
+            let people_count = json_get_i64(&data, "people_count")? as i32;
+            let maximum_salary = json_get_i64(&data, "maximum_salary")? as i32;
             let budget_cost = people_count as i64 * 4;
 
             let remaining_budget = state.welfare_budget - state.rules.cover_food_unemployed_rule.budget_cost;
             if budget_cost > remaining_budget {
-                return json!({
-                    "error": "Cannot cover food as the cost exceeds the welfare budget.",
-                });
+                return Err(Error::Danger("Cannot cover food as the cost exceeds the welfare budget.".to_string()));
             }
 
             state.rules.cover_food_rule.people_count = people_count;
             state.rules.cover_food_rule.maximum_salary = maximum_salary;
             state.rules.cover_food_rule.budget_cost = budget_cost;
 
-            return json!({
+            return Ok(json!({
                 "budget_cost": budget_cost,
-            });
+            }));
         },
         6 => {
-            let people_count = (data.get("people_count").unwrap().as_i64().unwrap()) as i32;
+            let people_count = json_get_i64(&data, "people_count")? as i32;
             let budget_cost = people_count as i64 * 4;
 
             let remaining_budget = state.welfare_budget - state.rules.cover_food_rule.budget_cost;
             if budget_cost > remaining_budget {
-                return json!({
-                    "error": "Cannot cover food as the cost exceeds the welfare budget.",
-                });
+                return Err(Error::Danger("Cannot cover food as the cost exceeds the welfare budget.".to_string()));
             }
 
             state.rules.cover_food_unemployed_rule.people_count = people_count;
             state.rules.cover_food_unemployed_rule.budget_cost = budget_cost;
 
-            return json!({
+            return Ok(json!({
                 "budget_cost": budget_cost,
-            });
+            }));
         },
         _ => unreachable!(),
     };
 
-    json!({})
+    Ok(json!({}))
 }
 
 pub fn update_app(app: App, payload: serde_json::Value, app_handle: &AppHandle) {

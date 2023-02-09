@@ -1,10 +1,10 @@
-use std::{collections::HashMap, vec};
+use std::{collections::HashMap};
 
 use maplit::hashmap;
 use rand::Rng;
 use uuid::Uuid;
 
-use crate::{common::config::Config, common::util::{percentage_based_output_int, float_range, generate_unemployed_salary, SlotArray}, game::{generation::{generate_education_level, get_expected_salary_range}, structs::{BusinessTaxRule, BusinessFundingRule}}, as_decimal_percent, percentage_of};
+use crate::{common::config::Config, common::{util::{percentage_based_output_int, float_range, generate_unemployed_salary}, errors::{IncResult, Error}}, game::{generation::{generate_education_level, get_expected_salary_range}, structs::{BusinessTaxRule, BusinessFundingRule}}, as_decimal_percent, percentage_of};
 
 use super::person::person::{EducationLevel::{*, self}, Person, Job};
 
@@ -66,7 +66,7 @@ impl Business {
 
 impl Business {
     /// Generates a business based on demand
-    pub fn generate(&mut self, config: &Config, product_type: ProductType, product_demand: f32, remaining_market_percentage: &mut f32, people: &mut HashMap<Uuid, Person>, idx: usize, tax_rate: f32) -> bool {
+    pub fn generate(&mut self, config: &Config, product_type: ProductType, product_demand: f32, remaining_market_percentage: &mut f32, people: &mut HashMap<Uuid, Person>, tax_rate: f32) -> bool {
         self.id = Uuid::new_v4();
         let mut rng = rand::thread_rng();
 
@@ -216,20 +216,21 @@ impl Business {
     }
 
     /// This function assigns the business to a new market with a new market percentage. This runs monthly.
-    pub fn get_new_market(&mut self, market_percentage: f32, cost_per_percent: f32, people: &mut HashMap<Uuid, Person>, unemployed_people: &mut Vec<&mut Person>, demand: f32, purchase_rate: f32) {
+    pub fn get_new_market(&mut self, market_percentage: f32, cost_per_percent: f32, people: &mut HashMap<Uuid, Person>, unemployed_people: &mut Vec<&mut Person>, demand: f32, purchase_rate: f32) -> IncResult<()> {
         self.expected_income = self.assign_to_people(as_decimal_percent!(market_percentage) * demand, people, purchase_rate) as i64 * self.product_price as i64;
         let employee_diff = self.calculate_expected_employee_count() - self.employees.len() as i32;
 
         if employee_diff > 0 && unemployed_people.len() > 0 {
             self.assign_employees(unemployed_people, employee_diff);
         } else if employee_diff < 0 {
-            self.remove_employees(employee_diff, people);
+            self.remove_employees(employee_diff, people)?;
         }
 
         self.balance -= (self.get_production_cost() + (market_percentage * cost_per_percent)) as f64;
+        Ok(())
     }
 
-    pub fn remove_employees(&mut self, amount: i32, people: &mut HashMap<Uuid, Person>) {
+    pub fn remove_employees(&mut self, amount: i32, people: &mut HashMap<Uuid, Person>) -> IncResult<()> {
         // Sort employees by lowest welfare to highest
 
         let mut sorted_employees: Vec<_> = self.employees.clone();
@@ -243,27 +244,34 @@ impl Business {
         for _ in 0..amount {
             let per_id = sorted_employees.remove(0);
 
-            let emp_idx = self.employees.iter().position(|emp_id| *emp_id == per_id).unwrap();
+            let emp_idx = self.employees.iter().position(|emp_id| *emp_id == per_id).ok_or(
+                Error::Warning(format!("Failed to remove employee with id {} - could not find in employees array.", per_id))
+            )?;
+
             self.employees.remove(emp_idx);
 
-            let per = people.get_mut(&per_id).unwrap();
+            let per = people.get_mut(&per_id).ok_or(
+                Error::Warning(format!("Could not find person with id {}", per_id))
+            )?;
             per.job = Job::Unemployed;
             per.set_salary(generate_unemployed_salary());
         }
+
+        Ok(())
     }
 
     /// This is run on a monthly basis
-    pub fn pay_owner(&mut self, owner: &mut Person) {
-        let month_profits = self.balance - self.last_month_balance; // The profit percentage earned in the current month
+    // pub fn pay_owner(&mut self, owner: &mut Person) {
+    //     let month_profits = self.balance - self.last_month_balance; // The profit percentage earned in the current month
 
-        let owner_expected_income = month_profits / 2.;
-        if owner_expected_income < (self.employee_salary as f64 / 12.) {
-            owner.business_pay(self, self.employee_salary as f64);
-            return;
-        }
+    //     let owner_expected_income = month_profits / 2.;
+    //     if owner_expected_income < (self.employee_salary as f64 / 12.) {
+    //         owner.business_pay(self, self.employee_salary as f64);
+    //         return;
+    //     }
 
-        owner.business_pay(self, owner_expected_income);
-    }
+    //     owner.business_pay(self, owner_expected_income);
+    // }
 
     pub fn pay_tax(&mut self, government_balance: &mut i64, amount: f64) {
         if amount <= 0. { return }

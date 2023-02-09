@@ -2,10 +2,10 @@ use std::{ops::Range, collections::HashMap};
 use maplit::hashmap;
 use rand::{Rng};
 use uuid::Uuid;
-use crate::{common::util::{float_range, percentage_based_output_int, Date, percentage_chance, chance_one_in, generate_unemployed_salary}, common::{config::Config, util::get_healthcare_group}, game::{generation::{generate_education_level, get_expected_salary_range}, structs::{TaxRule, HealthcareState, GameStateRules}}, entities::business::{ProductType, Business}, percentage_of, as_decimal_percent};
+use crate::{common::{util::{float_range, percentage_based_output_int, Date, percentage_chance, chance_one_in, generate_unemployed_salary}, errors::{Error, IncResult}}, common::{config::Config, util::get_healthcare_group}, game::{generation::{generate_education_level, get_expected_salary_range}, structs::{TaxRule, HealthcareState, GameStateRules}}, entities::business::{ProductType, Business}, percentage_of, as_decimal_percent};
 use EducationLevel::*;
 
-use super::{debt::{Debt}, welfare::{WelfareMachine, WELFARE_IMPACT_FOUR, WELFARE_IMPACT_FIVE, WELFARE_IMPACT_THREE, WELFARE_IMPACT_TWO, WELFARE_IMPACT_ONE}};
+use super::{debt::{Debt}, welfare::{WelfareMachine, WELFARE_IMPACT_FOUR, WELFARE_IMPACT_FIVE, WELFARE_IMPACT_THREE, WELFARE_IMPACT_TWO}};
 
 #[derive(Default, Clone)]
 pub struct Birthday {
@@ -84,7 +84,7 @@ pub struct Person {
 // Static methods
 impl Person {
     /// Generates a randomly aged person based on statistics
-    pub fn new_generate(config: &Config, product_demand: &mut HashMap<ProductType, f32>, tax_rate: f32, tax_rule: &TaxRule) -> Self {
+    pub fn new_generate(config: &Config, product_demand: &mut HashMap<ProductType, f32>, tax_rate: f32, tax_rule: &TaxRule) -> IncResult<Self> {
         let mut person = Self {
             id: Uuid::new_v4(),
             gender: Self::generate_gender(),
@@ -117,10 +117,10 @@ impl Person {
             person.daily_food_spending = 0;
         }
 
-        person.calculate_demand(expected_salary, Some(product_demand), tax_rate);
+        person.calculate_demand(expected_salary, Some(product_demand), tax_rate)?;
         person.generate_health();
 
-        person
+        Ok(person)
     }
 
     pub fn get_tax_rate(rule: &TaxRule, standard_tax_rate: f32, salary: i32) -> f32 {
@@ -132,7 +132,7 @@ impl Person {
     }
 
     /// Adds a new baby to the population
-    pub fn new_infant(birthday: Birthday, config: &Config, tax_rate: f32, tax_rule: &TaxRule) -> Self {
+    pub fn new_infant(birthday: Birthday, config: &Config, tax_rate: f32, tax_rule: &TaxRule) -> IncResult<Self> {
         let mut infant = Self {
             id: Uuid::new_v4(),
             birthday,
@@ -150,9 +150,9 @@ impl Person {
         let tax_rate = Self::get_tax_rate(tax_rule, tax_rate, expected_salary);
 
         infant.generate_spending_behaviour();
-        infant.calculate_demand(0, None, tax_rate);
+        infant.calculate_demand(0, None, tax_rate)?;
 
-        infant
+        Ok(infant)
     }
 
     fn generate_gender() -> Gender {
@@ -249,10 +249,10 @@ impl Person {
         self.balance = float_range(4., 90., 1);
     }
 
-    pub fn calculate_demand(&mut self, salary: i32, product_demand: Option<&mut HashMap<ProductType, f32>>, tax_rate: f32) {
+    pub fn calculate_demand(&mut self, salary: i32, product_demand: Option<&mut HashMap<ProductType, f32>>, tax_rate: f32) -> IncResult<()> {
         if salary == 0 {
             *self.demand.entry(ProductType::Leisure).or_insert(0.) = 0.;
-            return;
+            return Ok(());
         }
 
         let mut rng = rand::thread_rng();
@@ -274,8 +274,11 @@ impl Person {
         *self.demand.entry(ProductType::Leisure).or_insert(total_demand) += total_demand;
 
         if let Some(prod_dem) = product_demand {
-            *prod_dem.get_mut(&ProductType::Leisure).unwrap() += total_demand; 
+            let product_demand = prod_dem.get_mut(&ProductType::Leisure).ok_or(Error::DangerUnexpected)?;
+            *product_demand += total_demand; 
         }
+
+        Ok(())
     }
 
     pub fn calculate_daily_food_spending(&self) -> i32 {
@@ -354,7 +357,7 @@ impl Person {
         }
     }
 
-    pub fn day_pass(&mut self, day: i32, healthcare: &mut HealthcareState, date: &Date, death_queue: &mut Vec<Uuid>, businesses: &mut HashMap<Uuid, Business>, purchases: &mut u32, total_possible_purchases: &mut u32, rules: &GameStateRules, food_coverage: &mut i32, unemployed_food_coverage: &mut i32) {
+    pub fn day_pass(&mut self, day: i32, healthcare: &mut HealthcareState, date: &Date, death_queue: &mut Vec<Uuid>, businesses: &mut HashMap<Uuid, Business>, purchases: &mut u32, total_possible_purchases: &mut u32, rules: &GameStateRules, food_coverage: &mut i32, unemployed_food_coverage: &mut i32) -> IncResult<()> {
         self.check_birthday(date);
 
         let mut rng = rand::thread_rng();
@@ -399,7 +402,7 @@ impl Person {
             *days -= 1;
             if *days <= 0 {
                 death_queue.push(self.id);
-                return;
+                return Ok(());
             }
         }
 
@@ -423,7 +426,8 @@ impl Person {
         let mut not_afford_wanted_item = false;
 
         if let Some(quantity) = quantity_opt {
-            let business = businesses.get_mut(&self.business_this_month.unwrap()).unwrap();
+            let business_this_month = &self.business_this_month.ok_or(Error::DangerUnexpected)?;
+            let business = businesses.get_mut(business_this_month).ok_or(Error::Warning("Could not find business that was expected to purchase from.".to_string()))?;
             let item_cost = (business.product_price * quantity) as f32;
             *total_possible_purchases += quantity as u32;
 
@@ -432,7 +436,7 @@ impl Person {
                     *purchases += 1;
 
                     self.balance -= item_cost;
-                    let demand = self.demand.get_mut(&business.product_type).unwrap();
+                    let demand = self.demand.get_mut(&business.product_type).ok_or(Error::DangerUnexpected)?;
                     *demand -= item_cost;
                     if *demand < 0. { *demand = 0. }
 
@@ -452,6 +456,8 @@ impl Person {
 
         self.welfare_machine.remove_welfare_if(WELFARE_IMPACT_THREE, day, not_afford_wanted_item);
         self.welfare_machine.remove_welfare_if(WELFARE_IMPACT_FOUR, day, no_business_this_month);
+
+        Ok(())
     }
 
     pub fn get_welfare(&mut self) {

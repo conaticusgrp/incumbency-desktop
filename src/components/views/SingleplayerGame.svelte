@@ -14,7 +14,7 @@
 
   // The invoke call is in onMount because the backend could potentially instantly create the game,
   // which will lead to other frontend events ignored
-  onMount(() => {
+  onMount(async () => {
     invoke("create_game");
   });
   

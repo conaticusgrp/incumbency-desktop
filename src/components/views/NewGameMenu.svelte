@@ -13,7 +13,7 @@
   const createGame = async () => {
     if (name.length === 0 || saveAlreadyExists) return;
     await invoke("create_game", { name });
-  }
+  } 
   
 </script>
 

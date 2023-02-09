@@ -1,9 +1,9 @@
 use std::{sync::{Mutex, Arc}, collections::HashMap};
 use serde_json::json;
 use uuid::Uuid;
-use crate::{entities::{business::{Business, ProductType}, person::{person::{Person, Job, Birthday}, debt::{Debt, DebtType}}}, as_decimal_percent, common::{util::{Date, SlotArray, set_decimal_count, chance_one_in, generate_unemployed_salary, get_healthcare_group}, config::Config}};
+use crate::{entities::{business::{Business, ProductType}, person::{person::{Person, Job, Birthday}, debt::{Debt, DebtType}}}, as_decimal_percent, common::{util::{Date, SlotArray, set_decimal_count, chance_one_in, generate_unemployed_salary, get_healthcare_group}, config::Config, errors::{IncResult, Error}}};
 use tauri::{Manager, AppHandle};
-use super::{structs::{GameState, GameStateRules, HealthcareState, FinanceData, BusinessData}, events::{update_app, App}};
+use super::{structs::{GameState, GameStateRules, HealthcareState, FinanceData, BusinessData}, events::{update_app, App, json_get_i64}};
 
 const GOVERNMENT_START_BALANCE: u32 = 12000000; // TODO: changeme
 const POPULATION_DAILY_INCREASE_PERCENTAGE: f32 = 1e-4; // Based on real world statistics - TODO: make me more dynamic
@@ -66,7 +66,7 @@ impl GameState {
         self.government_balance - (self.healthcare.budget + self.welfare_budget + self.business_budget) 
     }
 
-    pub fn day_pass(&mut self, day: i32, app_handle: Option<&tauri::AppHandle>, config: &Config) {
+    pub fn day_pass(&mut self, day: i32, app_handle: Option<&tauri::AppHandle>, config: &Config) -> IncResult<()> {
         let mut death_queue: Vec<Uuid> = Vec::new(); // Queue of people who are going to die :) - we need this because rust memory
 
         let date = self.date.clone();
@@ -99,10 +99,12 @@ impl GameState {
                 _ => "85+",
             };
 
-            let int64 = self.healthcare.age_ranges.get(key).unwrap().as_i64().unwrap();
-            *self.healthcare.age_ranges.get_mut(key).unwrap() = json!(int64 + 1);
+            let int64 = json_get_i64(&self.healthcare.age_ranges, key)?;
+            *self.healthcare.age_ranges.get_mut(key).ok_or(
+                Error::Danger(format!("Could not find age range '{}' in age ranges.", key))
+            )? = json!(int64 + 1);
 
-            per.day_pass(day, &mut self.healthcare, &date, &mut death_queue, &mut self.businesses, &mut self.purchases, &mut self.total_possible_purchases, &self.rules, &mut food_coverage, &mut unemployed_food_coverage);
+            per.day_pass(day, &mut self.healthcare, &date, &mut death_queue, &mut self.businesses, &mut self.purchases, &mut self.total_possible_purchases, &self.rules, &mut food_coverage, &mut unemployed_food_coverage)?;
 
             total_monthly_income += (per.salary / 12) as i64;
 
@@ -167,7 +169,7 @@ impl GameState {
         }
 
         for _ in 0..new_birth_count {
-            let infant = Person::new_infant(Birthday::from(&date), config, self.tax_rate, &self.rules.tax_rule);
+            let infant = Person::new_infant(Birthday::from(&date), config, self.tax_rate, &self.rules.tax_rule)?;
             self.people.insert(infant.id, infant);
         }
 
@@ -231,16 +233,18 @@ impl GameState {
                 "Unemployed Count": unemployed_count,
             })).unwrap();
         }
+
+        Ok(())
     }
 
-    pub fn month_pass(&mut self, app_handle: &AppHandle) {
+    pub fn month_pass(&mut self, app_handle: &AppHandle) -> IncResult<()> {
         self.finance_data.expected_person_income = 0;
 
         for person in self.people.values_mut() {
             person.business_this_month = None;
 
             let tax_rate = Person::get_tax_rate(&self.rules.tax_rule, self.tax_rate, person.salary);
-            person.calculate_demand(person.salary, None, tax_rate);
+            person.calculate_demand(person.salary, None, tax_rate)?;
 
             match person.job {
                 Job::BusinessOwner(bid) | Job::Employee(bid) => {
@@ -371,9 +375,11 @@ impl GameState {
                 assigned_percent = remaining_market_percentage;
             }
 
-            let business = self.businesses.get_mut(&bid).unwrap();
+            let business = self.businesses.get_mut(&bid).ok_or(
+                Error::Danger("Could not get business from reinvestment budgets list.".to_string())
+            )?;
 
-            business.get_new_market(assigned_percent, cost_per_percent, &mut self.people, &mut unemployed_people, demand, purchase_rate);
+            business.get_new_market(assigned_percent, cost_per_percent, &mut self.people, &mut unemployed_people, demand, purchase_rate)?;
             business.last_month_balance = business.balance;
 
             remaining_market_percentage -= assigned_percent;
@@ -412,5 +418,7 @@ impl GameState {
         self.healthcare.month_unhospitalised_count = 0;
         self.total_possible_purchases = 0;
         self.purchases = 0;
+
+        Ok(())
     }
 }

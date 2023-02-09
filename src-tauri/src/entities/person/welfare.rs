@@ -4,7 +4,7 @@ pub const WELFARE_IMPACT_THREE: i32 = 10;
 pub const WELFARE_IMPACT_FOUR: i32 = 20;
 pub const WELFARE_IMPACT_FIVE: i32 = 45;
 pub const WELFARE_IMPACT_SIX: i32 = 70;
-pub const WELFARE_IMPACT_SEVEN: i32 = 100;  
+pub const WELFARE_IMPACT_SEVEN: i32 = 100;
 
 #[derive(Default, Clone)]
 pub struct WelfareDay {

@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use serde::{Serialize, Deserialize};
-use serde_json::json;
 use uuid::Uuid;
 use crate::{entities::{business::Business, person::person::Person}, common::util::{Date, SlotArray}};
 

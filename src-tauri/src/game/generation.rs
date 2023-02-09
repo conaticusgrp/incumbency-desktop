@@ -4,9 +4,9 @@ use rand::Rng;
 use serde_json::json;
 use tauri::{AppHandle, Manager};
 
-use crate::{common::{config::{Config}, util::percentage_based_output_int}, entities::{person::{person::{EducationLevel::{*, self}, Person, Job}, health}, business::{ProductType, Business}}};
+use crate::{common::{config::{Config}, util::percentage_based_output_int, errors::IncResult}, entities::{person::{person::{EducationLevel::{*, self}, Person, Job}}, business::{ProductType, Business}}};
 
-use super::{state_manager::GameStateSafe, structs::{HealthcareGroup, GameState}, events::App};
+use super::{state_manager::GameStateSafe, structs::{HealthcareGroup}};
 
 pub fn generate_education_level(config: &Config) -> EducationLevel {
     percentage_based_output_int::<EducationLevel>(hashmap! {
@@ -30,7 +30,7 @@ pub fn get_expected_salary_range(config: &Config, education_level: &EducationLev
     }
 }
 
-pub fn generate_game(state_mux: &GameStateSafe, config: &Config, app_handle: &AppHandle) {
+pub fn generate_game(state_mux: &GameStateSafe, config: &Config, app_handle: &AppHandle) -> IncResult<()> {
     let mut state = state_mux.lock().unwrap();
 
     let mut product_demand: HashMap<ProductType, f32> = HashMap::new();
@@ -47,7 +47,7 @@ pub fn generate_game(state_mux: &GameStateSafe, config: &Config, app_handle: &Ap
     })).unwrap();
 
     for _ in 0..config.starting_population {
-        let person = Person::new_generate(&config, &mut product_demand, state.tax_rate, &state.rules.tax_rule);
+        let person = Person::new_generate(&config, &mut product_demand, state.tax_rate, &state.rules.tax_rule)?;
         state.people.insert(person.id, person);
     }
 
@@ -66,12 +66,10 @@ pub fn generate_game(state_mux: &GameStateSafe, config: &Config, app_handle: &Ap
     loop {
         let mut business = Business::default();
         
-        let idx = state.businesses.len();
-
         let bus_tax_rate = state.business_tax_rate;
 
-        let sufficient_businesses = business.generate(&config, ProductType::Leisure, product_demand[&ProductType::Leisure], &mut remaning_market_percentage, &mut state.people, idx, bus_tax_rate);
-        let owner = Person { job: Job::BusinessOwner(business.id), age: rand::thread_rng().gen_range(20..70), ..Person::new_generate(&config, &mut product_demand, state.tax_rate, &state.rules.tax_rule) };
+        let sufficient_businesses = business.generate(&config, ProductType::Leisure, product_demand[&ProductType::Leisure], &mut remaning_market_percentage, &mut state.people, bus_tax_rate);
+        let owner = Person { job: Job::BusinessOwner(business.id), age: rand::thread_rng().gen_range(20..70), ..Person::new_generate(&config, &mut product_demand, state.tax_rate, &state.rules.tax_rule)? };
         business.owner_id = owner.id;
 
         state.people.insert(owner.id, owner);
@@ -88,13 +86,14 @@ pub fn generate_game(state_mux: &GameStateSafe, config: &Config, app_handle: &Ap
     }
 
     state.population_counter = state.people.len() as f64;
+    Ok(())
 }
 
 /// Runs 1 month of the game to prepare the economy and get all the required values
-pub fn stabilize_game(state_mux: &GameStateSafe, config: &Config, app_handle: &AppHandle) {
+pub fn stabilize_game(state_mux: &GameStateSafe, config: &Config, app_handle: &AppHandle) -> IncResult<()> {
     let mut state = state_mux.lock().unwrap();
     for day in 1..=30 {
-        state.day_pass(day, None, config);
+        state.day_pass(day, None, config)?;
     }
 
     let government_balance = state.government_balance;
@@ -117,5 +116,6 @@ pub fn stabilize_game(state_mux: &GameStateSafe, config: &Config, app_handle: &A
     healthcare.adultcare = budget.clone();
     healthcare.eldercare = budget.clone();
 
-    state.month_pass(app_handle);
+    state.month_pass(app_handle)?;
+    Ok(())
 }

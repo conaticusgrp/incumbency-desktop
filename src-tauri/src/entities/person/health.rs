@@ -1,6 +1,6 @@
 use maplit::hashmap;
 use rand::Rng;
-use crate::{common::util::{percentage_based_output_int, get_healthcare_group}, game::structs::{HealthcareState, HealthcareGroup, GameStateRules}};
+use crate::{common::util::{percentage_based_output_int, get_healthcare_group}, game::structs::{HealthcareState, GameStateRules}};
 use super::{person::Person, debt::Debt};
 
 impl Person {
