@@ -2,7 +2,6 @@
 
   // TODO: only iconPath is optional
   export interface NotificationData {
-    iconPath?: string,
     app?: string,
     header?: string,
     content?: string,
@@ -14,14 +13,17 @@
 
 <script lang="ts">
   
-  import { NOTIFICATION_WIDTH, NOTIFICATION_HEIGHT } from "../../../scripts/desktopConstants";
+  import { NOTIFICATION_WIDTH, NOTIFICATION_HEIGHT, NOTIFICATION_MARGIN_Y, NOTIFICATION_MARGIN_X } from "../../../scripts/desktopConstants";
 
   export let data: NotificationData;
 
 </script>
 
 <main
-  style="width: {NOTIFICATION_WIDTH}px; height: {NOTIFICATION_HEIGHT}px;"
+  style="
+    width: {NOTIFICATION_WIDTH}px; height: {NOTIFICATION_HEIGHT}px;
+    margin: {NOTIFICATION_MARGIN_Y}em 0 {NOTIFICATION_MARGIN_X}em 0;
+  "
 >
 
   <div class="header">
@@ -33,12 +35,6 @@
   </div>
 
   <div class="content">
-
-    {#if data.iconPath != undefined}
-
-    <img src={data.iconPath} alt="Status icon" />
-
-    {/if}
 
     <h3>{data.header}</h3>
 
@@ -89,11 +85,12 @@
 
   .content {
     height: 100%;
-    padding: 1em 1em 0 1em;
+    padding: 0 1em 0 1em;
     text-align: left;
   }
 
   .content > h3 {
+    margin-top: 0.5em;
     font-size: 12px;
   }
 
@@ -104,6 +101,10 @@
 
   .actions {
     border-top: 1px solid var(--notification-color);
+  }
+  
+  .actions > button {
+    padding: 0.5em;
   }
   
 </style>

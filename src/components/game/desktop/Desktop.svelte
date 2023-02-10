@@ -16,7 +16,7 @@
 <script lang="ts">
   import { listen } from "@tauri-apps/api/event";
   import Notification, { type NotificationData } from "./Notification.svelte";
-  import { APP_LIST_MIN_WIDTH, APP_LIST_WIDTH_PERCENT, DATE_TIME_HEIGHT, TOOLBAR_HEIGHT } from "../../../scripts/desktopConstants";
+  import { APP_LIST_MIN_WIDTH, APP_LIST_WIDTH_PERCENT, DATE_TIME_HEIGHT, NOTIFICATION_MARGIN_X, NOTIFICATION_WIDTH, TOOLBAR_HEIGHT } from "../../../scripts/desktopConstants";
   import { WINDOW_AQUIRE_FOCUS, WINDOW_CLOSE, WINDOW_MINIMIZE } from "../../../scripts/windowEvent";
 
   import DebuggerApp from "../windows/DebuggerApp.svelte";
@@ -47,7 +47,8 @@
       app: "debug",
       header: "Test",
       content: "Test notification",
-      date: "now"
+      date: "now",
+      iconPath: "https://w7.pngwing.com/pngs/821/338/png-transparent-warning-sign-computer-icons-warning-icon-angle-triangle-warning-sign-thumbnail.png"
     }
   ];
 
@@ -238,7 +239,10 @@
       {/each}
 
       {#if notificationSectionExpanded}
-      <div class="notifications-section">
+      <div
+        class="notifications-section"
+        style="width: calc({NOTIFICATION_WIDTH}px + {NOTIFICATION_MARGIN_X}em * 2);"
+      >
         
         {#each notifications as notif}
 
@@ -409,11 +413,12 @@
   }
 
   .notifications-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     position: absolute;
     top: 0;
     right: 0;
-    /* padding: 1em; */
-    width: 25%;
     height: 100%;
     background-color: var(--color-bg);
     border-left: 1px solid var(--color-accent);
