@@ -45,6 +45,7 @@ impl Default for GameState {
             average_welfare_unemployed: 100.,
 
             business_data: BusinessData::default(),
+            unemployed_count: 0,
         }
     }
 }
@@ -67,8 +68,6 @@ impl GameState {
     }
 
     pub fn day_pass(&mut self, day: i32, app_handle: Option<&tauri::AppHandle>, config: &Config) -> IncResult<()> {
-        let mut death_queue: Vec<Uuid> = Vec::new(); // Queue of people who are going to die :) - we need this because rust memory
-
         let date = self.date.clone();
         let mut food_coverage = 0;
         let mut unemployed_food_coverage = 0;
@@ -86,8 +85,10 @@ impl GameState {
 
         let mut total_welfare = 0;
         let mut total_welfare_unemployed = 0;
-        let mut unemployed_count = 0; // Does not include the homeless
-        let mut homeless_count = 0;
+        self.unemployed_count = 0; // Does not include the homeless
+        let mut death_ages_total = 0;
+
+        let mut death_queue: Vec<Uuid> = Vec::new();
 
         for per in self.people.values_mut() {
             let key = match per.age {
@@ -102,42 +103,27 @@ impl GameState {
             let int64 = json_get_i64(&self.healthcare.age_ranges, key)?;
             *self.healthcare.age_ranges.get_mut(key).ok_or(
                 Error::Danger(format!("Could not find age range '{}' in age ranges.", key))
-            )? = json!(int64 + 1);
+            )? = json!(int64 + 1); // Increment counter of age ranges for state
 
-            per.day_pass(day, &mut self.healthcare, &date, &mut death_queue, &mut self.businesses, &mut self.purchases, &mut self.total_possible_purchases, &self.rules, &mut food_coverage, &mut unemployed_food_coverage)?;
+            let die = per.day_pass(day, &mut self.healthcare, &date, &mut self.businesses, &mut self.purchases, &mut self.total_possible_purchases, &self.rules, &mut food_coverage, &mut unemployed_food_coverage)?;
 
             total_monthly_income += (per.salary / 12) as i64;
 
-            if per.age >= 18 && per.job == Job::Unemployed {
-                // TODO: make this be affected by other factors
-                if !per.homeless && chance_one_in(500 * 365) { // 1 in 500 chance every year
-                    per.homeless = true;
-                }
+            if die {
+                death_queue.push(per.id);
+                continue;
             }
-
-            if per.homeless {
-                homeless_count += 1;
-            }
-
-            per.get_welfare();
 
             total_welfare += per.welfare;
             if per.job == Job::Unemployed && !per.homeless && per.age >= 18 {
                 total_welfare_unemployed += per.welfare; 
-                unemployed_count += 1;
+                self.unemployed_count += 1;
             }
         }
 
-        self.welfare_owed += ((food_coverage + unemployed_food_coverage) * 4) as i64;
-        self.finance_data.average_monthly_income = (total_monthly_income / self.people.len() as i64) as i32;
-
-        let population_before_deaths = self.people.len() as i32;
-
-        let mut ages_total = 0;
-
-        for id in &death_queue {
-            let per = self.people.get(&id).unwrap();
-            ages_total += per.age;
+        for id in death_queue.iter() {
+            let per = self.people.get_mut(id).ok_or(Error::DangerUnexpected)?;
+            death_ages_total += per.age;
 
             let healthcare_group = get_healthcare_group(per.age, &mut self.healthcare);
             healthcare_group.current_capacity += 1;
@@ -151,16 +137,20 @@ impl GameState {
                 }
             }
 
-            self.people.remove(&id);
+            self.people.remove(id);
             self.population_counter -= 1.;
         }
 
+        self.welfare_owed += ((food_coverage + unemployed_food_coverage) * 4) as i64;
+        self.finance_data.average_monthly_income = (total_monthly_income / self.people.len() as i64) as i32;
+
+        let population_before_deaths = self.people.len() as i32;
+
         if death_queue.len() > 0 {
-            self.healthcare.life_expectancy = ages_total / death_queue.len() as i32;
+            self.healthcare.life_expectancy = death_ages_total / death_queue.len() as i32;
         }
         
         self.deaths_in_last_month.push(death_queue.len());
-
         self.population_counter += (self.people.len() as f32 * POPULATION_DAILY_INCREASE_PERCENTAGE) as f64;
 
         let mut new_birth_count = self.population_counter.floor() as i32 - population_before_deaths;
@@ -186,55 +176,58 @@ impl GameState {
             self.healthcare.deaths_per_month += *day_amount as i32;
         }
 
-        if let Some(app) = app_handle {
-            self.average_welfare = total_welfare as f32 / self.people.len() as f32;
-            self.average_welfare = set_decimal_count(self.average_welfare, 2);
+        self.average_welfare = total_welfare as f32 / self.people.len() as f32;
+        self.average_welfare = set_decimal_count(self.average_welfare, 2);
 
-            self.average_welfare_unemployed = total_welfare_unemployed as f32 / unemployed_count as f32;
-            self.average_welfare_unemployed = set_decimal_count(self.average_welfare_unemployed, 3);
+        self.average_welfare_unemployed = total_welfare_unemployed as f32 / self.unemployed_count as f32;
+        self.average_welfare_unemployed = set_decimal_count(self.average_welfare_unemployed, 3);
 
-            self.spare_budget = self.get_spare_budget();
-
-            update_app(App::Finance, json!({
-                "government_balance": self.government_balance,
-                "spare_budget": self.spare_budget,
-                "used_hospital_capacity": self.healthcare.get_current_capacity(),
-            }), &app);
-
-            update_app(App::Healthcare, json!({
-                "population": self.people.len() as i32,
-                "used_capacity": self.healthcare.get_current_capacity(),
-                "total_capacity": self.healthcare.total_capacity,
-                "age_ranges": self.healthcare.age_ranges,
-                "child_care": self.healthcare.childcare,
-                "adult_care": self.healthcare.adultcare,
-                "elder_care": self.healthcare.eldercare,
-                "births_per_month": self.healthcare.births_per_month,
-                "deaths_per_month": self.healthcare.deaths_per_month
-            }), &app);
-
-            update_app(App::Welfare, json!({
-                "average_welfare": self.average_welfare,
-                "average_unemployed_welfare": self.average_welfare_unemployed,
-            }), &app);
-
-            update_app(App::Business, json!({
-                "business_count": self.businesses.len() as i32,
-            }), &app);
-
-            // TODO - send me daily
-            app.emit_all("debug_payload",  json! ({
-                "Population": self.people.len(),
-                "Average Welfare": self.average_welfare,
-                "Government Balance": self.government_balance,
-                "Monthly Births": self.healthcare.births_per_month,
-                "Monthly Deaths": self.healthcare.deaths_per_month,
-                "Homeless Count": homeless_count,
-                "Unemployed Count": unemployed_count,
-            })).unwrap();
-        }
+        self.spare_budget = self.get_spare_budget();
+        self.emit_daily_events(app_handle);
 
         Ok(())
+    }
+
+    pub fn emit_daily_events(&self, app_handle: Option<&AppHandle>) {
+        if app_handle.is_none() { return }
+        
+        let app_handle = app_handle.unwrap();
+
+        update_app(App::Finance, json!({
+            "government_balance": self.government_balance,
+            "spare_budget": self.spare_budget,
+            "used_hospital_capacity": self.healthcare.get_current_capacity(),
+        }), &app_handle);
+
+        update_app(App::Healthcare, json!({
+            "population": self.people.len() as i32,
+            "used_capacity": self.healthcare.get_current_capacity(),
+            "total_capacity": self.healthcare.total_capacity,
+            "age_ranges": self.healthcare.age_ranges,
+            "child_care": self.healthcare.childcare,
+            "adult_care": self.healthcare.adultcare,
+            "elder_care": self.healthcare.eldercare,
+            "births_per_month": self.healthcare.births_per_month,
+            "deaths_per_month": self.healthcare.deaths_per_month
+        }), &app_handle);
+
+        update_app(App::Welfare, json!({
+            "average_welfare": self.average_welfare,
+            "average_unemployed_welfare": self.average_welfare_unemployed,
+        }), &app_handle);
+
+        update_app(App::Business, json!({
+            "business_count": self.businesses.len() as i32,
+        }), &app_handle);
+
+        app_handle.emit_all("debug_payload",  json! ({
+            "Population": self.people.len(),
+            "Average Welfare": self.average_welfare,
+            "Government Balance": self.government_balance,
+            "Monthly Births": self.healthcare.births_per_month,
+            "Monthly Deaths": self.healthcare.deaths_per_month,
+            "Unemployed Count": self.unemployed_count,
+        })).unwrap();
     }
 
     pub fn month_pass(&mut self, app_handle: &AppHandle) -> IncResult<()> {

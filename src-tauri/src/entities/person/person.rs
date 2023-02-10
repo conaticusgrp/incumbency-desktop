@@ -357,10 +357,24 @@ impl Person {
         }
     }
 
-    pub fn day_pass(&mut self, day: i32, healthcare: &mut HealthcareState, date: &Date, death_queue: &mut Vec<Uuid>, businesses: &mut HashMap<Uuid, Business>, purchases: &mut u32, total_possible_purchases: &mut u32, rules: &GameStateRules, food_coverage: &mut i32, unemployed_food_coverage: &mut i32) -> IncResult<()> {
+    pub fn day_pass(&mut self, day: i32, healthcare: &mut HealthcareState, date: &Date, businesses: &mut HashMap<Uuid, Business>, purchases: &mut u32, total_possible_purchases: &mut u32, rules: &GameStateRules, food_coverage: &mut i32, unemployed_food_coverage: &mut i32) -> IncResult<bool> {
         self.check_birthday(date);
 
+        if let Some(ref mut days) = self.days_until_death {
+            *days -= 1;
+            if *days <= 0 {
+                return Ok(true);
+            }
+        }
+
         let mut rng = rand::thread_rng();
+
+        if !self.homeless && self.age >= 18 && self.job == Job::Unemployed {
+            // TODO: affect this by other factors
+            if chance_one_in(500 * 365) { // 1 in 500 chance each year 
+                self.homeless = true;
+            } 
+        }
 
         if chance_one_in(7300) { // Average person has minor accident every 20 years
             self.remove_health(rng.gen_range(15..=25), healthcare, rules);
@@ -395,14 +409,6 @@ impl Person {
 
             if percentage_chance(health_loss_chance) {
                 self.remove_health(1, healthcare, rules);
-            }
-        }
-
-        if let Some(ref mut days) = self.days_until_death {
-            *days -= 1;
-            if *days <= 0 {
-                death_queue.push(self.id);
-                return Ok(());
             }
         }
 
@@ -457,7 +463,9 @@ impl Person {
         self.welfare_machine.remove_welfare_if(WELFARE_IMPACT_THREE, day, not_afford_wanted_item);
         self.welfare_machine.remove_welfare_if(WELFARE_IMPACT_FOUR, day, no_business_this_month);
 
-        Ok(())
+        self.get_welfare();
+
+        Ok(false)
     }
 
     pub fn get_welfare(&mut self) {
