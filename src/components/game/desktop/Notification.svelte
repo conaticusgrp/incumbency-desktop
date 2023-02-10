@@ -21,8 +21,8 @@
 
 <main
   style="
-    width: {NOTIFICATION_WIDTH}px; height: {NOTIFICATION_HEIGHT}px;
-    margin: {NOTIFICATION_MARGIN_Y}em 0 {NOTIFICATION_MARGIN_X}em 0;
+    width: {NOTIFICATION_WIDTH}; height: {NOTIFICATION_HEIGHT};
+    margin: {NOTIFICATION_MARGIN_Y} 0 {NOTIFICATION_MARGIN_X} 0;
   "
 >
 

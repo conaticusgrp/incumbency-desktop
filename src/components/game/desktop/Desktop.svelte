@@ -16,7 +16,7 @@
 <script lang="ts">
   import { listen } from "@tauri-apps/api/event";
   import Notification, { type NotificationData } from "./Notification.svelte";
-  import { APP_LIST_MIN_WIDTH, APP_LIST_WIDTH_PERCENT, DATE_TIME_HEIGHT, NOTIFICATION_MARGIN_X, NOTIFICATION_WIDTH, TOOLBAR_HEIGHT } from "../../../scripts/desktopConstants";
+  import { APP_LIST_MIN_WIDTH, APP_LIST_WIDTH, TOP_PANEL_HEIGHT, NOTIFICATION_MARGIN_X, NOTIFICATION_WIDTH, TOOLBAR_HEIGHT } from "../../../scripts/desktopConstants";
   import { WINDOW_AQUIRE_FOCUS, WINDOW_CLOSE, WINDOW_MINIMIZE } from "../../../scripts/windowEvent";
 
   import DebuggerApp from "../windows/DebuggerApp.svelte";
@@ -150,7 +150,7 @@
 <main>
   <div
     class="app-list-section"
-    style="width: {APP_LIST_WIDTH_PERCENT}%; min-width: {APP_LIST_MIN_WIDTH}px;"
+    style="width: {APP_LIST_WIDTH}; min-width: {APP_LIST_MIN_WIDTH};"
   >
     <h2>Installed Software</h2>
 
@@ -176,11 +176,11 @@
 
   <div
     class="content"
-    style="width: calc({100 - APP_LIST_WIDTH_PERCENT}%);"
+    style="width: calc(100% - {APP_LIST_WIDTH});"
   >
     <div
       class="top-panel"
-      style="height: {DATE_TIME_HEIGHT}em;"
+      style="height: {TOP_PANEL_HEIGHT};"
       on:click={openStartMenu}
       on:keydown={() => {}}
     >
@@ -216,7 +216,7 @@
     <div
       class="windows"
       style="
-        height: calc(100% - {DATE_TIME_HEIGHT}em - {TOOLBAR_HEIGHT}em);
+        height: calc(100% - {TOP_PANEL_HEIGHT} - {TOOLBAR_HEIGHT});
         background-image: {wallpaperPath != null
         ? `url(${wallpaperPath})`
         : 'none'};
@@ -241,7 +241,7 @@
       {#if notificationSectionExpanded}
       <div
         class="notifications-section"
-        style="width: calc({NOTIFICATION_WIDTH}px + {NOTIFICATION_MARGIN_X}em * 2);"
+        style="width: calc({NOTIFICATION_WIDTH} + {NOTIFICATION_MARGIN_X} * 2);"
       >
         
         {#each notifications as notif}
@@ -255,7 +255,7 @@
 
     </div>
 
-    <div class="toolbar" style="height: {TOOLBAR_HEIGHT}em;">
+    <div class="toolbar" style="height: {TOOLBAR_HEIGHT};">
       {#each apps as shortcut, i}
         {#if apps[i].opened}
           <!-- !! to cast (boolean | undefined) to boolean -->
