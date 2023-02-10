@@ -1,40 +1,58 @@
+<script lang="ts" context="module">
+
+  interface LoadingStatus {
+    main: string,
+    substatuses: string[]
+  }
+
+</script>
+
 <script lang="ts">
 
   import { listen } from "@tauri-apps/api/event";
-  import { onMount, onDestroy } from "svelte";
   
   const LOADING_STAGE_COUNT = 4;
+  const MIN_LOG_DELAY = 250;
+  const MAX_LOG_DELAY = 500;
   
   let details: HTMLElement;
-  let timerId: NodeJS.Timer;
+  let timerResolve: (() => void) | null = null;
   let progress = -100 / LOADING_STAGE_COUNT;    // %
-  let status: { main: string, substatuses: string[] } = { main: "", substatuses: [] };
-  let currentSubstatusIndex: number = 0;
+  let status: LoadingStatus = { main: "", substatuses: [] };
+
+  const randomDelay = async () => {
+    await new Promise<void>(resolve => {
+      setTimeout(resolve, MIN_LOG_DELAY + (MAX_LOG_DELAY - MIN_LOG_DELAY) * Math.random());
+    });
+  }
+
+  const log = (msg: string): void => {
+    details.innerText += `${msg}\n`;
+  }
 
   listen('loading_status', (e) => {
+    if (timerResolve != null) {
+      timerResolve();
+      status.substatuses.forEach(m => log(m));
+    }
+
     //@ts-ignore
     status.main = Object.keys(e.payload)[0];
     //@ts-ignore
     status.substatuses = e.payload[status.main];
-    currentSubstatusIndex = 0;
 
     progress += 100 / LOADING_STAGE_COUNT;
-  });
 
-  onMount(() => {
-    timerId = setInterval(() => {
-      if (status == undefined || status.substatuses == undefined || status.substatuses.length === 0) {
-        return;
+    new Promise<void>(async (resolve, reject) => {
+      timerResolve = resolve;
+      for (let i = 0; i < status.substatuses.length; i++) {
+        await randomDelay();
+        log(status.substatuses.splice(i, 1)[0]);
       }
-      currentSubstatusIndex = (currentSubstatusIndex + 1) % status.substatuses.length;
-      details.innerText = status.substatuses[currentSubstatusIndex];
-    }, 5_000);
+      timerResolve = null;
+      resolve();
+    });
   });
-
-  onDestroy(() => {
-    clearInterval(timerId);
-  });
-  
 
 </script>
 
@@ -44,17 +62,20 @@
 
     <h1>{status.main}</h1>
 
-    <section>
+    <div class="content">
 
-      <span>Progress</span>
-      <div class="progress" style="--bar-width: {Math.min(Math.max(progress, 0), 100)}%;"></div>
+      <div class="progress">
+        <span>Progress</span>
+        <div class="progress-bar" style="--bar-width: {Math.min(Math.max(progress, 0), 100)}%;"></div>
+      </div>
 
+      <span style="margin-top: 2em;">Details:</span>
       <div
         class="details"
         bind:this={details}
       ></div>
 
-    </section>
+    </div>
 
   </div>
 
@@ -76,9 +97,11 @@
   }
 
   .loading-panel {
+    display: flex;
+    flex-direction: column;
+    min-width: 400px;
     width: 50%;
-    height: 35%;
-    min-height: 300px;
+    aspect-ratio: 5 / 2;
     margin: auto;
     border: 1px solid var(--color-accent);
     border-radius: 0.5rem;
@@ -100,21 +123,22 @@
     font-size: 20px;
   }
 
-  section {
-    width: calc(100% - 2 * 1em);
-    height: calc(100% - 2 * 0.25em - 1em);
+  .content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
     margin: 1em;
     text-align: left;
   }
 
-  .progress {
+  .progress-bar {
     position: relative;
     width: 100%;
     height: 5px;
     margin-top: 0.5em;
   }
 
-  .progress:after {
+  .progress-bar:after {
     content: '';
     position: absolute;
     top: 0;
@@ -126,14 +150,16 @@
   }
 
   .details {
-    width: calc(100% - 2 * 2em);
-    margin-top: 2em;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+    width: calc(100% - 1em);
+    height: calc(100% - 2em - 1em);
+    border: 1px solid var(--color-accent);
+    border-radius: 1em;
+    padding-left: 1em;
+    overflow-y: scroll;
   }
 
-  .details:before {
-    content: 'Details: ';
+  .details::-webkit-scrollbar {
+    display: none;
   }
 
 </style>

@@ -6,8 +6,7 @@
 <script lang="ts">
   
   import { createEventDispatcher } from "svelte";
-  import type { CriticalWindowData } from "../../../scripts/criticalWindowData";
-  import Window from "./Window.svelte"
+  import Window, { type CriticalWindowData } from "./Window.svelte"
 
   export let windowData: CriticalWindowData;
 

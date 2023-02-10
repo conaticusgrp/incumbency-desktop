@@ -15,9 +15,11 @@
 
 <script lang="ts">
   import { listen } from "@tauri-apps/api/event";
-  import { invoke } from "@tauri-apps/api/tauri";
-  import { APP_LIST_MIN_WIDTH, APP_LIST_WIDTH_PERCENT, DATE_TIME_HEIGHT, TOOLBAR_HEIGHT } from "../../../scripts/desktopConstants";
+  import Notification, { type NotificationData } from "./Notification.svelte";
+  import { APP_LIST_MIN_WIDTH, APP_LIST_WIDTH, TOP_PANEL_HEIGHT, NOTIFICATION_MARGIN_X, NOTIFICATION_WIDTH, TOOLBAR_HEIGHT } from "../../../scripts/desktopConstants";
   import { WINDOW_AQUIRE_FOCUS, WINDOW_CLOSE, WINDOW_MINIMIZE } from "../../../scripts/windowEvent";
+
+  import DebuggerApp from "../windows/DebuggerApp.svelte";
 
   import Email from "../windows/Email.svelte";
   import Finance from "../windows/Finance.svelte";
@@ -25,10 +27,9 @@
   import Welfare from "../windows/Welfare.svelte";
   import Business from "../windows/Business.svelte";
   
-  // DEBUG
-  import { onMount } from "svelte";
-  import DebuggerApp from "../windows/DebuggerApp.svelte";
-
+  let startMenu: HTMLElement;
+  let startMenuExpanded: boolean = false;
+  let notificationSectionExpanded = false;
   let date: string = "undefined date";
   let wallpaperPath: string | null = "./src/assets/Wallpaper.png";
   let apps: DesktopAppShortcut[] = [
@@ -41,7 +42,15 @@
   ];
   let focusedApp: number | null = null;
 
-  //let notifications: NotificationData[] = [];
+  let notifications: NotificationData[] = [
+    {
+      app: "debug",
+      header: "Test",
+      content: "Test notification",
+      date: "now",
+      iconPath: "https://w7.pngwing.com/pngs/821/338/png-transparent-warning-sign-computer-icons-warning-icon-angle-triangle-warning-sign-thumbnail.png"
+    }
+  ];
 
   const handleOpenApp = (index: number): void => {
     if (index < 0 || index >= apps.length) return;
@@ -100,6 +109,22 @@
     }
   };
 
+  const openStartMenu = (): void => {
+    startMenuExpanded = true;
+
+    document.addEventListener('click', closeStartMenuIfClickedAway);
+  }
+
+  const toggleNotificationsSection = (): void => {
+    notificationSectionExpanded = !notificationSectionExpanded;
+  }
+
+  const closeStartMenuIfClickedAway = (e: MouseEvent): void => {
+    if (e.target == null || startMenu.contains(e.target as HTMLElement)) return;
+
+    startMenuExpanded = false;
+  }
+
   listen("new_day", (d) => {
     //@ts-ignore
     date = d.payload.date as string;
@@ -119,12 +144,13 @@
       e.preventDefault();
     }
   });
+
 </script>
 
 <main>
   <div
     class="app-list-section"
-    style="width: {APP_LIST_WIDTH_PERCENT}%; min-width: {APP_LIST_MIN_WIDTH}px;"
+    style="width: {APP_LIST_WIDTH}; min-width: {APP_LIST_MIN_WIDTH};"
   >
     <h2>Installed Software</h2>
 
@@ -148,15 +174,49 @@
     </div>
   </div>
 
-  <div class="content" style="width: calc({100 - APP_LIST_WIDTH_PERCENT}%);">
-    <div class="date-time" style="height: {DATE_TIME_HEIGHT}em;">
-      {date}
+  <div
+    class="content"
+    style="width: calc(100% - {APP_LIST_WIDTH});"
+  >
+    <div
+      class="top-panel"
+      style="height: {TOP_PANEL_HEIGHT};"
+      on:click={openStartMenu}
+      on:keydown={() => {}}
+    >
+
+      <div
+        class="start-menu"
+        aria-expanded={startMenuExpanded}
+        bind:this={startMenu}
+      >
+        {#if !startMenuExpanded}
+
+        {date}
+        
+        {:else}
+        
+        <button>{date}</button>
+        <button>Shut down</button>
+        <button>Logoff</button>
+        <button>Restart</button>
+        
+        {/if}
+      </div>
+
+      <button
+        class="notification-section-toggle"
+        on:click={toggleNotificationsSection}
+      >
+        Notifications
+      </button>
+
     </div>
 
     <div
       class="windows"
       style="
-        height: calc(100% - {DATE_TIME_HEIGHT}em - {TOOLBAR_HEIGHT}em);
+        height: calc(100% - {TOP_PANEL_HEIGHT} - {TOOLBAR_HEIGHT});
         background-image: {wallpaperPath != null
         ? `url(${wallpaperPath})`
         : 'none'};
@@ -177,9 +237,25 @@
           on:criticalWindowEvent={(e) => handleCriticalEvent(i, e)}
         />
       {/each}
+
+      {#if notificationSectionExpanded}
+      <div
+        class="notifications-section"
+        style="width: calc({NOTIFICATION_WIDTH} + {NOTIFICATION_MARGIN_X} * 2);"
+      >
+        
+        {#each notifications as notif}
+
+        <Notification data={notif} />
+        
+        {/each}
+
+      </div>
+      {/if}
+
     </div>
 
-    <div class="toolbar" style="height: {TOOLBAR_HEIGHT}em;">
+    <div class="toolbar" style="height: {TOOLBAR_HEIGHT};">
       {#each apps as shortcut, i}
         {#if apps[i].opened}
           <!-- !! to cast (boolean | undefined) to boolean -->
@@ -196,6 +272,7 @@
       {/each}
     </div>
   </div>
+
 </main>
 
 <style>
@@ -249,13 +326,54 @@
     display: flex;
     flex-direction: column;
   }
-
-  .date-time {
+  
+  .top-panel {
     display: flex;
     justify-content: center;
-    align-items: center;
+    /* align-items: center; */
+    position: relative;
     min-height: min-content;
     border-bottom: 1px solid green;
+  }
+
+  .start-menu {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: min-content;
+    height: min-content;
+    cursor: pointer;
+  }
+  
+  .start-menu[aria-expanded="false"] {
+    align-self: center;
+  }
+
+  .start-menu[aria-expanded="true"] {
+    width: 30%;
+    z-index: 2;
+    background-color: var(--color-bg);
+    border: 1px solid var(--color-accent);
+    border-top: none;
+  }
+
+  .start-menu[aria-expanded="true"] > button {
+    width: 100%;
+  }
+
+  .start-menu[aria-expanded="true"] > button:hover {
+    background-color: var(--color-accent);
+    color: var(--color-bg);
+    font-weight: bold;
+  }
+
+  .notification-section-toggle {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    border-left: 1px solid var(--color-accent);
   }
 
   .windows {
@@ -292,5 +410,18 @@
     background-color: unset;
     color: unset;
     font-weight: unset;
+  }
+
+  .notifications-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    background-color: var(--color-bg);
+    border-left: 1px solid var(--color-accent);
+    z-index: 10000;
   }
 </style>

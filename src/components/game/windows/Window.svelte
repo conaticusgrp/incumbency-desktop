@@ -169,12 +169,12 @@
 
       const untilRightBorder = getParentBox().width - pos.x;
       const x = e.clientX - getParentBox().x - pos.x;
-      size.width = Math.max(Math.min(x, untilRightBorder - 2), MIN_WINDOW_WIDTH);
+      size.width = Math.max(Math.min(x, untilRightBorder - 2), MIN_WINDOW_WIDTH.value);
 
     } else if (resizeType.w === 'l') {
 
       const x = e.clientX - getParentBox().x;
-      const untilMinWidth = pos.x + size.width - MIN_WINDOW_WIDTH;
+      const untilMinWidth = pos.x + size.width - MIN_WINDOW_WIDTH.value;
       const newX = Math.max(Math.min(x, untilMinWidth - 2), 0);
       size.width = size.width + (pos.x - newX);
       pos.x = newX;
@@ -185,11 +185,11 @@
 
       const untilParentHeight = getParentBox().height - pos.y;
       const y = e.clientY - getParentBox().y - pos.y;
-      size.height = Math.max(Math.min(y, untilParentHeight), MIN_WINDOW_HEIGHT);
+      size.height = Math.max(Math.min(y, untilParentHeight), MIN_WINDOW_HEIGHT.value);
 
     } else if (resizeType.h === 't') {
 
-      const untilMinHeight = pos.y + size.height - MIN_WINDOW_HEIGHT;
+      const untilMinHeight = pos.y + size.height - MIN_WINDOW_HEIGHT.value;
       const y = e.clientY - getParentBox().y;
       const newY = Math.max(Math.min(y, untilMinHeight), 0);
       size.height = size.height + (pos.y - newY);
@@ -225,7 +225,7 @@
 
   <div
     class="header"
-    style="height: {WINDOW_HEADER_HEIGHT}px;"
+    style="height: {WINDOW_HEADER_HEIGHT};"
     on:mousedown={handleDragStart}
   >
 
@@ -262,7 +262,7 @@
   <!-- Viewport -->
   <div
     class="viewport"
-    style="width: 100%; height: calc(100% - {WINDOW_HEADER_HEIGHT}px);"
+    style="width: 100%; height: calc(100% - {WINDOW_HEADER_HEIGHT});"
   >
 
     <slot />
@@ -270,36 +270,36 @@
     <div
       class="resize-bar-left"
       style="
-        width: {RESIZE_BAR_SIZE}px;
-        height: calc(100% - {RESIZE_BAR_SIZE}px * 2);
-        top: {RESIZE_BAR_SIZE}px;
+        width: {RESIZE_BAR_SIZE};
+        height: calc(100% - {RESIZE_BAR_SIZE} * 2);
+        top: {RESIZE_BAR_SIZE};
       "
       on:mousedown={handleResizeStart}
     />
     <div
       class="resize-bar-right"
       style="
-        width: {RESIZE_BAR_SIZE}px;
-        height: calc(100% - {RESIZE_BAR_SIZE}px * 2);
-        top: {RESIZE_BAR_SIZE}px;
+        width: {RESIZE_BAR_SIZE};
+        height: calc(100% - {RESIZE_BAR_SIZE} * 2);
+        top: {RESIZE_BAR_SIZE};
       "
       on:mousedown={handleResizeStart}
     />
     <div
       class="resize-bar-top"
       style="
-        width: calc(100% - {RESIZE_BAR_SIZE}px * 2);
-        height: {RESIZE_BAR_SIZE}px;
-        left: {RESIZE_BAR_SIZE}px;
+        width: calc(100% - {RESIZE_BAR_SIZE} * 2);
+        height: {RESIZE_BAR_SIZE};
+        left: {RESIZE_BAR_SIZE};
         "
         on:mousedown={handleResizeStart}
     />
     <div
       class="resize-bar-bottom"
       style="
-        width: calc(100% - {RESIZE_BAR_SIZE}px * 2);
-        height: {RESIZE_BAR_SIZE}px;
-        left: {RESIZE_BAR_SIZE}px;
+        width: calc(100% - {RESIZE_BAR_SIZE} * 2);
+        height: {RESIZE_BAR_SIZE};
+        left: {RESIZE_BAR_SIZE};
       "
       on:mousedown={handleResizeStart}
     />
@@ -307,32 +307,32 @@
     <div
       class="resize-bar-top resize-bar-left"
       style="
-        width: {RESIZE_BAR_SIZE}px;
-        height: {RESIZE_BAR_SIZE}px;
+        width: {RESIZE_BAR_SIZE};
+        height: {RESIZE_BAR_SIZE};
       "
       on:mousedown={handleResizeStart}
     />
     <div
       class="resize-bar-bottom resize-bar-right"
       style="
-        width: {RESIZE_BAR_SIZE}px;
-        height: {RESIZE_BAR_SIZE}px;
+        width: {RESIZE_BAR_SIZE};
+        height: {RESIZE_BAR_SIZE};
       "
       on:mousedown={handleResizeStart}
     />
     <div
       class="resize-bar-bottom resize-bar-left"
       style="
-        width: {RESIZE_BAR_SIZE}px;
-        height: {RESIZE_BAR_SIZE}px;
+        width: {RESIZE_BAR_SIZE};
+        height: {RESIZE_BAR_SIZE};
       "
       on:mousedown={handleResizeStart}
     />
     <div
       class="resize-bar-top resize-bar-right"
       style="
-        width: {RESIZE_BAR_SIZE}px;
-        height: {RESIZE_BAR_SIZE}px;
+        width: {RESIZE_BAR_SIZE};
+        height: {RESIZE_BAR_SIZE};
       "
       on:mousedown={handleResizeStart}
     />
