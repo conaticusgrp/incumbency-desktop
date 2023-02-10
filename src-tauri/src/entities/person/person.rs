@@ -1,6 +1,7 @@
 use std::{ops::Range, collections::HashMap};
 use maplit::hashmap;
 use rand::{Rng};
+use tauri::http::header::LAST_MODIFIED;
 use uuid::Uuid;
 use crate::{common::{util::{float_range, percentage_based_output_int, Date, percentage_chance, chance_one_in, generate_unemployed_salary}, errors::{Error, IncResult}}, common::{config::Config, util::get_healthcare_group}, game::{generation::{generate_education_level, get_expected_salary_range}, structs::{TaxRule, HealthcareState, GameStateRules}}, entities::business::{ProductType, Business}, percentage_of, as_decimal_percent};
 use EducationLevel::*;
@@ -9,8 +10,8 @@ use super::{debt::{Debt}, welfare::{WelfareMachine, WELFARE_IMPACT_FOUR, WELFARE
 
 #[derive(Default, Clone)]
 pub struct Birthday {
-    day: i32, // 1-30
-    month: i32, // 1-12
+    pub day: i32, // 1-30
+    pub month: i32, // 1-12
 }
 
 impl Birthday {
@@ -32,7 +33,7 @@ impl Birthday {
     }
 }
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Eq, PartialEq)]
 pub enum Gender {
     #[default]
     Male,
@@ -79,19 +80,21 @@ pub struct Person {
     pub welfare_machine: WelfareMachine,
     pub welfare: i32,
 
+    pub birth_date: Option<Date>, // Date the person will have a baby child
 }
 
 // Static methods
 impl Person {
     /// Generates a randomly aged person based on statistics
-    pub fn new_generate(config: &Config, product_demand: &mut HashMap<ProductType, f32>, tax_rate: f32, tax_rule: &TaxRule) -> IncResult<Self> {
+    pub fn new_generate(config: &Config, product_demand: &mut HashMap<ProductType, f32>, tax_rate: f32, tax_rule: &TaxRule, date: Date) -> IncResult<Self> {
         let mut person = Self {
             id: Uuid::new_v4(),
-            gender: Self::generate_gender(),
             age: Self::generate_age(),
             birthday: Birthday::generate(),
             ..Self::default()
         };
+
+        person.generate_gender(date);
 
         person.education_level = generate_education_level(config);
         person.expected_salary_range = get_expected_salary_range(config, &person.education_level);
@@ -132,16 +135,17 @@ impl Person {
     }
 
     /// Adds a new baby to the population
-    pub fn new_infant(birthday: Birthday, config: &Config, tax_rate: f32, tax_rule: &TaxRule) -> IncResult<Self> {
+    pub fn new_infant(config: &Config, tax_rate: f32, tax_rule: &TaxRule, date: Date) -> IncResult<Self> {
         let mut infant = Self {
             id: Uuid::new_v4(),
-            birthday,
+            birthday: Birthday::from(&date),
             health_percentage: 100,
             hospitalisation_percentage: 8,
             maximum_health: 100,
-            gender: Self::generate_gender(),
             ..Self::default()
         };
+
+        infant.generate_gender(date);
 
         infant.education_level = generate_education_level(config);
         infant.expected_salary_range = get_expected_salary_range(config, &infant.education_level);
@@ -153,14 +157,6 @@ impl Person {
         infant.calculate_demand(0, None, tax_rate)?;
 
         Ok(infant)
-    }
-
-    fn generate_gender() -> Gender {
-        if percentage_chance(50.) {
-            return Gender::Male;
-        }
-
-        Gender::Female
     }
 
     fn generate_age() -> i32 {
@@ -180,6 +176,49 @@ impl Person {
 
 // Dynamic methods
 impl Person {
+    fn generate_gender(&mut self, date: Date) {
+        if percentage_chance(50.) {
+            self.gender = Gender::Male;
+        }
+
+        let mut rng = rand::thread_rng();
+
+        if date.is_generation_day() && self.age <= 35 && percentage_chance(1.2) {
+            let day = rng.gen_range(1..=30);
+            let month = rng.gen_range(1..=12);
+
+            self.birth_date = Some(Date::new(day, month, 0));
+            return self.gender = Gender::Female;
+        }
+
+        if self.age <= 35 && percentage_chance(42.) { // 42% chance of having a newborn (based on real worl statistic)
+            let mut latest_birthday_year = date.year + (35 - self.age) - 1;
+            if latest_birthday_year < 0 { latest_birthday_year = 0; }
+
+            let day = rng.gen_range(1..=30);
+            let month = rng.gen_range(1..=12);
+            let year = rng.gen_range(date.year..=latest_birthday_year);
+
+            self.birth_date = Some(Date::new(day, month, year));
+        }
+
+        self.gender = Gender::Female;
+    }
+
+    pub fn due_birth(&mut self, date: &Date, healthcare: &mut HealthcareState, rules: &GameStateRules) -> bool {
+        if self.gender == Gender::Male || self.birth_date.is_none() {
+            return false;
+        }
+
+        let birth_date = self.birth_date.clone().unwrap();
+        if !date.is_eq(birth_date) {
+            return false;
+        }
+
+        self.remove_health(rand::thread_rng().gen_range(20..40), healthcare, rules);
+        true
+    }
+
     fn generate_spending_behaviour(&mut self) {
         if matches!(self.job, Job::BusinessOwner(_)) {
             self.spending_behaviour = percentage_based_output_int::<SpendingBehaviour>(hashmap! {

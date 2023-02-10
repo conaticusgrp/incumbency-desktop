@@ -86,8 +86,7 @@ pub struct GameState {
   pub date: Date,
 
   pub government_balance: i64, // This is expected to be quite large
-  pub population_counter: f64,
-
+  
   pub total_possible_purchases: u32,
   pub purchases: u32,
 

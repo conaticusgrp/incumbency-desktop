@@ -6,7 +6,6 @@ use tauri::{Manager, AppHandle};
 use super::{structs::{GameState, GameStateRules, HealthcareState, FinanceData, BusinessData}, events::{update_app, App, json_get_i64}};
 
 const GOVERNMENT_START_BALANCE: u32 = 12000000; // TODO: changeme
-const POPULATION_DAILY_INCREASE_PERCENTAGE: f32 = 1e-4; // Based on real world statistics - TODO: make me more dynamic
 
 pub type GameStateSafe = Arc<Mutex<GameState>>;
 
@@ -20,7 +19,6 @@ impl Default for GameState {
             date: Date::default(),
 
             government_balance: GOVERNMENT_START_BALANCE as i64,
-            population_counter: 0.,
 
             births_in_last_month: SlotArray::new(30),
             deaths_in_last_month: SlotArray::new(30),
@@ -89,6 +87,7 @@ impl GameState {
         let mut death_ages_total = 0;
 
         let mut death_queue: Vec<Uuid> = Vec::new();
+        let mut new_birth_count: i32 = 0;
 
         for per in self.people.values_mut() {
             let key = match per.age {
@@ -119,7 +118,14 @@ impl GameState {
                 total_welfare_unemployed += per.welfare; 
                 self.unemployed_count += 1;
             }
+
+            if per.due_birth(&date, &mut self.healthcare, &self.rules) {
+                new_birth_count += 1;
+            }
         }
+
+        self.welfare_owed += ((food_coverage + unemployed_food_coverage) * 4) as i64;
+        self.finance_data.average_monthly_income = (total_monthly_income / self.people.len() as i64) as i32;
 
         for id in death_queue.iter() {
             let per = self.people.get_mut(id).ok_or(Error::DangerUnexpected)?;
@@ -138,28 +144,16 @@ impl GameState {
             }
 
             self.people.remove(id);
-            self.population_counter -= 1.;
         }
-
-        self.welfare_owed += ((food_coverage + unemployed_food_coverage) * 4) as i64;
-        self.finance_data.average_monthly_income = (total_monthly_income / self.people.len() as i64) as i32;
-
-        let population_before_deaths = self.people.len() as i32;
 
         if death_queue.len() > 0 {
             self.healthcare.life_expectancy = death_ages_total / death_queue.len() as i32;
         }
         
         self.deaths_in_last_month.push(death_queue.len());
-        self.population_counter += (self.people.len() as f32 * POPULATION_DAILY_INCREASE_PERCENTAGE) as f64;
-
-        let mut new_birth_count = self.population_counter.floor() as i32 - population_before_deaths;
-        if new_birth_count < 0 {
-            new_birth_count = 0;
-        }
 
         for _ in 0..new_birth_count {
-            let infant = Person::new_infant(Birthday::from(&date), config, self.tax_rate, &self.rules.tax_rule)?;
+            let infant = Person::new_infant(config, self.tax_rate, &self.rules.tax_rule, date.clone())?;
             self.people.insert(infant.id, infant);
         }
 
@@ -190,7 +184,7 @@ impl GameState {
 
     pub fn emit_daily_events(&self, app_handle: Option<&AppHandle>) {
         if app_handle.is_none() { return }
-        
+
         let app_handle = app_handle.unwrap();
 
         update_app(App::Finance, json!({

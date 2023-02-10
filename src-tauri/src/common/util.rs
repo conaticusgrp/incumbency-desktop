@@ -2,7 +2,7 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, ops::{Index, IndexMut}};
 
-use crate::game::structs::{HealthcareGroup, HealthcareState};
+use crate::{game::structs::{HealthcareGroup, HealthcareState}, entities::person::person::Birthday};
 
 #[macro_export]
 macro_rules! percentage_of {
@@ -109,6 +109,27 @@ impl Default for Date {
 }
 
 impl Date {
+    pub fn new(day: i32, month: i32, year: i32) -> Self {
+        Self {
+            day,
+            month,
+            year,
+            on_new_month: false,
+        }
+    }
+
+    pub fn is_eq(&self, date: Date) -> bool {
+        if date.day == self.day && date.month == self.month && date.year == self.year {
+            return true;
+        }
+
+        false
+    }
+
+    pub fn is_generation_day(&self) -> bool {
+        return self.day == 1 && self.month == 1 && self.year == 0
+    }
+
     pub fn new_day(&mut self) {
         self.on_new_month = false;
         self.day += 1;
