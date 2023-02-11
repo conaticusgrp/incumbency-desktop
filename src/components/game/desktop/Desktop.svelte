@@ -42,15 +42,8 @@
   ];
   let focusedApp: number | null = null;
 
-  let notifications: NotificationData[] = [
-    {
-      app: "debug",
-      header: "Test",
-      content: "Test notification",
-      date: "now",
-      iconPath: "https://w7.pngwing.com/pngs/821/338/png-transparent-warning-sign-computer-icons-warning-icon-angle-triangle-warning-sign-thumbnail.png"
-    }
-  ];
+  let notifications: NotificationData[] = [];
+  let showLatestNotification = true;
 
   const handleOpenApp = (index: number): void => {
     if (index < 0 || index >= apps.length) return;
@@ -117,12 +110,19 @@
 
   const toggleNotificationsSection = (): void => {
     notificationSectionExpanded = !notificationSectionExpanded;
+    showLatestNotification = false;
   }
 
   const closeStartMenuIfClickedAway = (e: MouseEvent): void => {
     if (e.target == null || startMenu.contains(e.target as HTMLElement)) return;
 
     startMenuExpanded = false;
+  }
+
+  const receiveNotification = (n: NotificationData): void => {
+    notifications.push(n);
+    showLatestNotification = true;
+    updateUI();
   }
 
   listen("new_day", (d) => {
@@ -143,6 +143,13 @@
       }
       e.preventDefault();
     }
+  });
+
+  receiveNotification({
+    app: "debug",
+    header: "Test",
+    content: "Test notification",
+    date: "now"
   });
 
 </script>
@@ -237,6 +244,17 @@
           on:criticalWindowEvent={(e) => handleCriticalEvent(i, e)}
         />
       {/each}
+
+      {#if showLatestNotification}
+      <div
+        class="single-notification-container"
+        style="right: {NOTIFICATION_MARGIN_X};"
+      >
+
+        <Notification data={notifications[notifications.length - 1]} />
+
+      </div>
+      {/if}
 
       {#if notificationSectionExpanded}
       <div
@@ -366,6 +384,11 @@
     background-color: var(--color-accent);
     color: var(--color-bg);
     font-weight: bold;
+  }
+
+  .single-notification-container {
+    position: absolute;
+    top: 0;
   }
 
   .notification-section-toggle {
