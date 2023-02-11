@@ -183,7 +183,7 @@ impl Person {
 
         let mut rng = rand::thread_rng();
 
-        if date.is_generation_day() && self.age <= 35 && percentage_chance(1.2) {
+        if date.is_generation_day() && self.age <= 35 && self.age >= 18 && percentage_chance(1.2) {
             let day = rng.gen_range(1..=30);
             let month = rng.gen_range(1..=12);
 
@@ -191,13 +191,18 @@ impl Person {
             return self.gender = Gender::Female;
         }
 
-        if self.age <= 35 && percentage_chance(42.) { // 42% chance of having a newborn (based on real worl statistic)
+        if self.age <= 35 && percentage_chance(42.) { // 42% chance of having a newborn (based on real world statistic)
             let mut latest_birthday_year = date.year + (35 - self.age) - 1;
             if latest_birthday_year < 0 { latest_birthday_year = 0; }
 
+            let mut earliest_birth_year = date.year;
+            if self.age < 18 {
+                earliest_birth_year += 18 - self.age;
+            }
+
             let day = rng.gen_range(1..=30);
             let month = rng.gen_range(1..=12);
-            let year = rng.gen_range(date.year..=latest_birthday_year);
+            let year = rng.gen_range(earliest_birth_year..=latest_birthday_year);
 
             self.birth_date = Some(Date::new(day, month, year));
         }
@@ -216,7 +221,8 @@ impl Person {
         }
 
         self.remove_health(rand::thread_rng().gen_range(20..40), healthcare, rules);
-        true
+
+        !self.days_until_death.is_some() // Returns false if the person died during birth
     }
 
     fn generate_spending_behaviour(&mut self) {
