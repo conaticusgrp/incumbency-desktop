@@ -24,7 +24,8 @@
     WINDOW_MAXIMIZE,
     WINDOW_MINIMIZE,
     WINDOW_OPENED,
-    WINDOW_RESIZE
+    WINDOW_RESIZE,
+    WINDOW_SEND_NOTIFICATION
   } from "../../../scripts/windowEvent";
 
   export let title: string = "?";
@@ -43,7 +44,14 @@
 
   $: if (windowData.opened) {
     dispatcher('windowEvent', { type: WINDOW_OPENED });
-    invoke('app_open', { appId: windowData.index });
+    invoke('app_open', { appId: windowData.index }).catch(e => {
+      dispatcher('criticalWindowEvent', { type: WINDOW_SEND_NOTIFICATION, data: {
+        app: title,
+        header: "App open error",
+        content: "Error occured while opening the app",
+        severity: 'error'
+      }});
+    });
   }
   
   let dispatcher = createEventDispatcher();

@@ -17,7 +17,7 @@
   import { listen } from "@tauri-apps/api/event";
   import Notification, { type NotificationData } from "./Notification.svelte";
   import { APP_LIST_MIN_WIDTH, APP_LIST_WIDTH, TOP_PANEL_HEIGHT, NOTIFICATION_MARGIN_X, NOTIFICATION_WIDTH, TOOLBAR_HEIGHT } from "../../../scripts/desktopConstants";
-  import { WINDOW_AQUIRE_FOCUS, WINDOW_CLOSE, WINDOW_MINIMIZE } from "../../../scripts/windowEvent";
+  import { WINDOW_AQUIRE_FOCUS, WINDOW_CLOSE, WINDOW_MINIMIZE, WINDOW_SEND_NOTIFICATION } from "../../../scripts/windowEvent";
 
   import DebuggerApp from "../windows/DebuggerApp.svelte";
 
@@ -97,6 +97,12 @@
         }
         break;
 
+      case WINDOW_SEND_NOTIFICATION:
+        {
+          receiveNotification(e.detail.data);
+        }
+        break;
+
       default:
         break;
     }
@@ -120,6 +126,7 @@
   }
 
   const receiveNotification = (n: NotificationData): void => {
+    n.date = date;
     notifications.push(n);
     showLatestNotification = true;
     updateUI();
@@ -149,7 +156,6 @@
     app: "debug",
     header: "Test",
     content: "Test notification",
-    date: "now",
     severity: 'error'
   });
 

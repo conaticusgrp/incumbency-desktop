@@ -89,6 +89,11 @@
     text-transform: uppercase;
   }
 
+  .header > span {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
   .content {
     height: 100%;
     padding: 0 1em 0 1em;
