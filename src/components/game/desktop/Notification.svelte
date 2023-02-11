@@ -1,13 +1,20 @@
 <script lang="ts" context="module">
 
-  // TODO: only iconPath is optional
+  export type Severity = 'normal' | 'warning' | 'error';
+
   export interface NotificationData {
     app?: string,
     header?: string,
     content?: string,
     date?: string,
+    severity?: Severity,
     action?: () => void
   }
+
+  export const severityColors = new Map<Severity, string>()
+    .set('normal', 'var(--color-accent)')
+    .set('warning', '#D47A21')
+    .set('error', '#C82525');
 
 </script>
 
@@ -21,6 +28,7 @@
 
 <main
   style="
+    --notification-color: {severityColors.get(data.severity ?? 'normal')};
     width: {NOTIFICATION_WIDTH}; height: {NOTIFICATION_HEIGHT};
     margin: {NOTIFICATION_MARGIN_Y} 0 {NOTIFICATION_MARGIN_X} 0;
   "
@@ -29,16 +37,16 @@
   <div class="header">
     <button>Dismiss</button>
 
-    <h2>{data.app}</h2>
+    <h2>{data.app ?? ""}</h2>
 
-    <span>{data.date}</span>
+    <span>{data.date ?? ""}</span>
   </div>
 
   <div class="content">
 
-    <h3>{data.header}</h3>
+    <h3>{data.header ?? "Notification"}</h3>
 
-    <p>{data.content}</p>
+    <p>{data.content ?? ""}</p>
 
   </div>
 
@@ -51,8 +59,6 @@
 <style>
 
   main {
-    --notification-color: var(--color-accent);
-
     display: flex;
     flex-direction: column;
     border: 1px solid var(--notification-color);

@@ -149,7 +149,8 @@
     app: "debug",
     header: "Test",
     content: "Test notification",
-    date: "now"
+    date: "now",
+    severity: 'error'
   });
 
 </script>
