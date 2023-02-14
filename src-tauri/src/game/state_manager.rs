@@ -1,7 +1,7 @@
 use std::{sync::{Mutex, Arc}, collections::HashMap};
 use serde_json::json;
 use uuid::Uuid;
-use crate::{entities::{business::{Business, ProductType}, person::{person::{Person, Job, Birthday}, debt::{Debt, DebtType}}}, as_decimal_percent, common::{util::{Date, SlotArray, set_decimal_count, chance_one_in, generate_unemployed_salary, get_healthcare_group}, config::Config, errors::{IncResult, Error}}};
+use crate::{entities::{business::{Business, ProductType}, person::{person::{Person, Job}, debt::{Debt, DebtType}}}, as_decimal_percent, common::{util::{Date, SlotArray, set_decimal_count, chance_one_in, generate_unemployed_salary, get_healthcare_group}, config::Config, errors::{IncResult, Error}}};
 use tauri::{Manager, AppHandle};
 use super::{structs::{GameState, GameStateRules, HealthcareState, FinanceData, BusinessData}, events::{update_app, App, json_get_i64}};
 
@@ -100,7 +100,7 @@ impl GameState {
             };
 
             let int64 = json_get_i64(&self.healthcare.age_ranges, key)?;
-            *self.healthcare.age_ranges.get_mut(key).ok_or(
+            *self.healthcare.age_ranges.get_mut(key).ok_or_else(||
                 Error::Danger(format!("Could not find age range '{}' in age ranges.", key))
             )? = json!(int64 + 1); // Increment counter of age ranges for state
 
@@ -136,17 +136,17 @@ impl GameState {
 
             if let Job::Employee(bid) = per.job {
                 let business = self.businesses.get_mut(&bid);
-                if business.is_some() {
-                    let business = business.unwrap();
-                    let employee_idx = business.employees.iter().position(|emp_id| per.id == *emp_id).unwrap();
-                    business.employees.remove(employee_idx);
+
+                if let Some(bus) = business {
+                    let employee_idx = bus.employees.iter().position(|emp_id| per.id == *emp_id).unwrap();
+                    bus.employees.remove(employee_idx);
                 }
             }
 
             self.people.remove(id);
         }
 
-        if death_queue.len() > 0 {
+        if !death_queue.is_empty() {
             self.healthcare.life_expectancy = death_ages_total / death_queue.len() as i32;
         }
         
@@ -191,7 +191,7 @@ impl GameState {
             "government_balance": self.government_balance,
             "spare_budget": self.spare_budget,
             "used_hospital_capacity": self.healthcare.get_current_capacity(),
-        }), &app_handle);
+        }), app_handle);
 
         update_app(App::Healthcare, json!({
             "population": self.people.len() as i32,
@@ -203,16 +203,16 @@ impl GameState {
             "elder_care": self.healthcare.eldercare,
             "births_per_month": self.healthcare.births_per_month,
             "deaths_per_month": self.healthcare.deaths_per_month
-        }), &app_handle);
+        }), app_handle);
 
         update_app(App::Welfare, json!({
             "average_welfare": self.average_welfare,
             "average_unemployed_welfare": self.average_welfare_unemployed,
-        }), &app_handle);
+        }), app_handle);
 
         update_app(App::Business, json!({
             "business_count": self.businesses.len() as i32,
-        }), &app_handle);
+        }), app_handle);
 
         app_handle.emit_all("debug_payload",  json! ({
             "Population": self.people.len(),
@@ -236,9 +236,7 @@ impl GameState {
             match person.job {
                 Job::BusinessOwner(bid) | Job::Employee(bid) => {
                     let business = self.businesses.get_mut(&bid);
-                    if business.is_some() {
-                        let business = business.unwrap();
-
+                    if let Some(business) = business {
                         let tax_payment = (person.salary as f32 / 12.) * tax_rate;
                         self.finance_data.expected_person_income += tax_payment as i64;
 
@@ -251,8 +249,7 @@ impl GameState {
                             person.job = Job::Retired;
 
                             let emp_idx = business.employees.iter().position(|&id| id == person.id);
-                            if emp_idx.is_some() {
-                                let idx = emp_idx.unwrap();
+                            if let Some(idx) = emp_idx {
                                 business.employees.remove(idx);
                             }
                         }
@@ -269,7 +266,7 @@ impl GameState {
 
             for i in 0..person.debts.len() {
                 // TODO: Add functionality based on spending behaviour
-                if !Debt::required_to_pay(&person) {
+                if !Debt::required_to_pay(person) {
                     break
                 }
 
@@ -345,11 +342,9 @@ impl GameState {
         }
 
         let people_cpy = &mut self.people.clone();
-        let mut unemployed_people: &mut Vec<&mut Person> = &mut people_cpy.values_mut().filter(|p| p.job == Job::Unemployed && p.age >= 18).collect();
+        let unemployed_people: &mut Vec<&mut Person> = &mut people_cpy.values_mut().filter(|p| p.job == Job::Unemployed && p.age >= 18).collect();
 
-        for i in 0..reinvestment_budgets.len() {
-            let (bid, budget) = &reinvestment_budgets[i];
-
+        for (i, (bid, budget)) in reinvestment_budgets.iter().enumerate() {
             let maximum_percentage = (budget / total_reinvestment_budget) * 100.;
         
             if i == 0 {
@@ -362,11 +357,11 @@ impl GameState {
                 assigned_percent = remaining_market_percentage;
             }
 
-            let business = self.businesses.get_mut(&bid).ok_or(
+            let business = self.businesses.get_mut(bid).ok_or_else(||
                 Error::Danger("Could not get business from reinvestment budgets list.".to_string())
             )?;
 
-            business.get_new_market(assigned_percent, cost_per_percent, &mut self.people, &mut unemployed_people, demand, purchase_rate)?;
+            business.get_new_market(assigned_percent, cost_per_percent, &mut self.people, unemployed_people, demand, purchase_rate)?;
             business.last_month_balance = business.balance;
 
             remaining_market_percentage -= assigned_percent;

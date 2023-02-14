@@ -176,18 +176,18 @@ impl Business {
         (met_demand as f32 * purchase_rate) as i32 // Expect roughly 5% of people not afford items
     }
 
-    fn assign_employees(&mut self, unemployed_people: &mut Vec<&mut Person>, new_employee_count: i32) {
+    fn assign_employees(&mut self, unemployed_people: &mut [&mut Person], new_employee_count: i32) {
         let minimum_education_level = &self.minimum_education_level;
 
         let educated_people: Vec<_> = unemployed_people.iter_mut().filter(|p| {
-            p.job == Job::Unemployed && p.age >= 18 && (&p.education_level == minimum_education_level || ((p.education_level.clone() as u8) > (minimum_education_level.clone() as u8)))
+            p.job == Job::Unemployed && p.age >= 18 && (&p.education_level == minimum_education_level || ((p.education_level as u8) > (*minimum_education_level as u8)))
         }).take(new_employee_count as usize).collect();
 
-        if educated_people.len() == 0 {
+        if educated_people.is_empty() {
             return;
         }
 
-        let people_ids = educated_people.iter().map(|p| p.id.clone());
+        let people_ids = educated_people.iter().map(|p| p.id);
         self.employees.extend(people_ids);
 
         educated_people.into_iter().for_each(|p| {
@@ -220,7 +220,7 @@ impl Business {
         self.expected_income = self.assign_to_people(as_decimal_percent!(market_percentage) * demand, people, purchase_rate) as i64 * self.product_price as i64;
         let employee_diff = self.calculate_expected_employee_count() - self.employees.len() as i32;
 
-        if employee_diff > 0 && unemployed_people.len() > 0 {
+        if employee_diff > 0 && !unemployed_people.is_empty() {
             self.assign_employees(unemployed_people, employee_diff);
         } else if employee_diff < 0 {
             self.remove_employees(employee_diff, people)?;
@@ -244,13 +244,13 @@ impl Business {
         for _ in 0..amount {
             let per_id = sorted_employees.remove(0);
 
-            let emp_idx = self.employees.iter().position(|emp_id| *emp_id == per_id).ok_or(
+            let emp_idx = self.employees.iter().position(|emp_id| *emp_id == per_id).ok_or_else(||
                 Error::Warning(format!("Failed to remove employee with id {} - could not find in employees array.", per_id))
             )?;
 
             self.employees.remove(emp_idx);
 
-            let per = people.get_mut(&per_id).ok_or(
+            let per = people.get_mut(&per_id).ok_or_else(||
                 Error::Warning(format!("Could not find person with id {}", per_id))
             )?;
             per.job = Job::Unemployed;

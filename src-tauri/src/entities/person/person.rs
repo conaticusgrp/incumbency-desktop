@@ -1,7 +1,6 @@
 use std::{ops::Range, collections::HashMap};
 use maplit::hashmap;
 use rand::{Rng};
-use tauri::http::header::LAST_MODIFIED;
 use uuid::Uuid;
 use crate::{common::{util::{float_range, percentage_based_output_int, Date, percentage_chance, chance_one_in, generate_unemployed_salary}, errors::{Error, IncResult}}, common::{config::Config, util::get_healthcare_group}, game::{generation::{generate_education_level, get_expected_salary_range}, structs::{TaxRule, HealthcareState, GameStateRules}}, entities::business::{ProductType, Business}, percentage_of, as_decimal_percent};
 use EducationLevel::*;
@@ -221,8 +220,7 @@ impl Person {
         }
 
         self.remove_health(rand::thread_rng().gen_range(20..40), healthcare, rules);
-
-        !self.days_until_death.is_some() // Returns false if the person died during birth
+        self.days_until_death.is_none() // Returns false if the person died during birth
     }
 
     fn generate_spending_behaviour(&mut self) {
@@ -478,7 +476,7 @@ impl Person {
 
         if let Some(quantity) = quantity_opt {
             let business_this_month = &self.business_this_month.ok_or(Error::DangerUnexpected)?;
-            let business = businesses.get_mut(business_this_month).ok_or(Error::Warning("Could not find business that was expected to purchase from.".to_string()))?;
+            let business = businesses.get_mut(business_this_month).ok_or_else(|| Error::Warning("Could not find business that was expected to purchase from.".to_string()))?;
             let item_cost = (business.product_price * quantity) as f32;
             *total_possible_purchases += quantity as u32;
 
@@ -500,10 +498,7 @@ impl Person {
             }
         }
 
-        let no_business_this_month = match self.business_this_month {
-            Some(_) => false,
-            None => true,
-        };
+        let no_business_this_month = self.business_this_month.is_none();
 
         self.welfare_machine.remove_welfare_if(WELFARE_IMPACT_THREE, day, not_afford_wanted_item);
         self.welfare_machine.remove_welfare_if(WELFARE_IMPACT_FOUR, day, no_business_this_month);
@@ -553,7 +548,7 @@ pub enum EducationLevel {
     AdvancedDegree
 }
 
-#[derive(Default, Clone, PartialEq)]
+#[derive(Default, Clone, PartialEq, Eq)]
 pub enum Job {
     BusinessOwner(Uuid), // usize refers to index of the business in the game state
     Employee(Uuid),

@@ -30,7 +30,7 @@ pub struct Debt {
     pub debt_type: DebtType,
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Eq)]
 pub enum DebtType {
     Education,
 }

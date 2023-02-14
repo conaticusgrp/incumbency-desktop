@@ -50,32 +50,24 @@ pub async fn start_game_loop(state_mux: &GameStateSafe, app_handle: &tauri::AppH
 
         let day = state.date.day;
         let day_res = state.day_pass(day, Some(app_handle), config);
-        
-        match day_res {
-            Err(err) => {
-                if err.severity() == Severity::Fatal as u8 {
-                    break;
-                }
 
-                emit_error(&app_handle, &err);
-            },
+        if let Err(err) = day_res {
+            emit_error(app_handle, &err);
 
-            Ok(_) => (),
+            if err.severity() == Severity::Fatal as u8 { // TODO: wait before quitting
+                break;
+            }
         }
 
         if state.date.on_new_month {
             let month_res = state.month_pass(app_handle);
 
-            match month_res {
-                Err(err) => {
-                    if err.severity() == Severity::Fatal as u8 {
-                        break;
-                    }
+            if let Err(err) = month_res {
+                emit_error(app_handle, &err);
 
-                    emit_error(&app_handle, &err);
-                },
-
-                Ok(_) => (),
+                if err.severity() == Severity::Fatal as u8 { // TODO: wait before quitting
+                    break;
+                }
             }
         }
     }

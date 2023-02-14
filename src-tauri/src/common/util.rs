@@ -2,7 +2,7 @@ use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, ops::{Index, IndexMut}};
 
-use crate::{game::structs::{HealthcareGroup, HealthcareState}, entities::person::person::Birthday};
+use crate::{game::structs::{HealthcareGroup, HealthcareState}};
 
 #[macro_export]
 macro_rules! percentage_of {
@@ -127,7 +127,7 @@ impl Date {
     }
 
     pub fn is_generation_day(&self) -> bool {
-        return self.day == 1 && self.month == 1 && self.year == 0
+        self.day == 1 && self.month == 1 && self.year == 0
     }
 
     pub fn new_day(&mut self) {
@@ -228,13 +228,13 @@ impl<T: Default + Clone> SlotArray<T> {
 
 impl<T> Index<usize> for SlotArray<T> {
     type Output = T;
-    fn index<'a>(&'a self, i: usize) -> &'a T {
+    fn index(&self, i: usize) -> &T {
         &self.array[i]
     }
 }
 
 impl<T> IndexMut<usize> for SlotArray<T> {
-    fn index_mut<'a>(&'a mut self, i: usize) -> &'a mut T {
+    fn index_mut(&mut self, i: usize) -> &mut T {
         &mut self.array[i]
     }
 }

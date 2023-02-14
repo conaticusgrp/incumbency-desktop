@@ -207,13 +207,13 @@ pub fn disable_rule(state_mux: State<'_, GameStateSafe>, rule_id: i32) {
 }
 
 pub fn json_get_f64(json: &serde_json::Value, key: &str) -> IncResult<f64> {
-    let val = json.get(key).ok_or(Error::Danger(format!("Expected '{}', was not found.", key)))?;
-    Ok(val.as_f64().ok_or(Error::Danger(format!("Failed to convert '{}' to f64.", val)))?)
+    let val = json.get(key).ok_or_else(|| Error::Danger(format!("Expected '{}', was not found.", key)))?;
+    val.as_f64().ok_or_else(|| Error::Danger(format!("Failed to convert '{}' to f64.", val)))
 }
 
 pub fn json_get_i64(json: &serde_json::Value, key: &str) -> IncResult<i64> {
-    let val = json.get(key).ok_or(Error::Danger(format!("Expected '{}', was not found.", key)))?;
-    Ok(val.as_i64().ok_or(Error::Danger(format!("Failed to convert '{}' to i64.", val)))?)
+    let val = json.get(key).ok_or_else(|| Error::Danger(format!("Expected '{}', was not found.", key)))?;
+    val.as_i64().ok_or_else(|| Error::Danger(format!("Failed to convert '{}' to i64.", val)))
 }
 
 #[tauri::command]
