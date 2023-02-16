@@ -60,7 +60,7 @@ pub async fn start_game_loop(state_mux: &GameStateSafe, app_handle: &tauri::AppH
         }
 
         if state.date.on_new_month {
-            let month_res = state.month_pass(app_handle);
+            let month_res = state.month_pass(app_handle, config);
 
             if let Err(err) = month_res {
                 emit_error(app_handle, &err);

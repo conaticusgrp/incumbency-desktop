@@ -67,14 +67,7 @@ impl Business {
 impl Business {
     /// Generates a business based on demand
     pub fn generate(&mut self, config: &Config, product_type: ProductType, product_demand: f32, remaining_market_percentage: &mut f32, people: &mut HashMap<Uuid, Person>, tax_rate: f32) -> bool {
-        self.id = Uuid::new_v4();
-        let mut rng = rand::thread_rng();
-
-        self.product_type = product_type;
-        self.minimum_education_level = generate_education_level(config);
-        self.marketing_cost_percentage = rng.gen_range(1..=2);
-        self.product_price = rng.gen_range(2..100); // TODO: determine this price more accurately?
-        self.production_cost_per_product = self.product_price as f32 * float_range(0.03, 0.05, 3);
+        self.generate_start_values(product_type, config);
 
         let (sufficient_businesses, marketing_reach_percentage) = self.generate_marketing_reach(remaining_market_percentage);
         if sufficient_businesses { return sufficient_businesses }
@@ -101,6 +94,28 @@ impl Business {
         self.set_starting_balance();
 
         false
+    }
+
+    /// This is for businesses that need to be generated mid-game
+    pub fn generate_midgame(&mut self, product_type: ProductType, config: &Config, start_balance: f64) {
+        self.generate_start_values(product_type, config);
+
+        self.employee_salary = rand::thread_rng().gen_range(get_expected_salary_range(config, &self.minimum_education_level));
+        self.employee_budget_allocation = float_range(0.53, 0.63, 3);
+
+        self.balance = start_balance;
+        self.last_month_balance = self.balance;
+    }
+
+    pub fn generate_start_values(&mut self, product_type: ProductType, config: &Config) {
+        self.id = Uuid::new_v4();
+        let mut rng = rand::thread_rng();
+
+        self.product_type = product_type;
+        self.minimum_education_level = generate_education_level(config);
+        self.marketing_cost_percentage = rng.gen_range(1..=2);
+        self.product_price = rng.gen_range(2..100); // TODO: determine this price more accurately?
+        self.production_cost_per_product = self.product_price as f32 * float_range(0.03, 0.05, 3);
     }
 
     fn set_starting_balance(&mut self) {

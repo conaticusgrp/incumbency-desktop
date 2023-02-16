@@ -49,6 +49,18 @@ impl Default for GameState {
 }
 
 impl GameState {
+    /// Resign from employed position, if the individual is employed
+    pub fn resign_if_employed(&mut self, per: Person) {
+        if let Job::Employee(bid) = per.job {
+            let business = self.businesses.get_mut(&bid);
+
+            if let Some(bus) = business {
+                let employee_idx = bus.employees.iter().position(|emp_id| per.id == *emp_id).unwrap();
+                bus.employees.remove(employee_idx);
+            }
+        }
+    }
+
     pub fn check_healthcare_capacity(&self, new_total_capacity: i32, error_checker_failed: &mut bool) {
         if new_total_capacity > self.healthcare.total_capacity {
             return;
@@ -134,15 +146,8 @@ impl GameState {
             let healthcare_group = get_healthcare_group(per.age, &mut self.healthcare);
             healthcare_group.current_capacity += 1;
 
-            if let Job::Employee(bid) = per.job {
-                let business = self.businesses.get_mut(&bid);
-
-                if let Some(bus) = business {
-                    let employee_idx = bus.employees.iter().position(|emp_id| per.id == *emp_id).unwrap();
-                    bus.employees.remove(employee_idx);
-                }
-            }
-
+            let per_cpy = per.clone();
+            self.resign_if_employed(per_cpy);
             self.people.remove(id);
         }
 
@@ -224,7 +229,7 @@ impl GameState {
         })).unwrap();
     }
 
-    pub fn month_pass(&mut self, app_handle: &AppHandle) -> IncResult<()> {
+    pub fn month_pass(&mut self, app_handle: &AppHandle, config: &Config) -> IncResult<()> {
         self.finance_data.expected_person_income = 0;
 
         for person in self.people.values_mut() {
@@ -302,6 +307,33 @@ impl GameState {
         let mut total_employees: u64 = 0;
 
         let funded_businesses = &mut 0;
+
+        // 0.5% or above unemployed - generate new businesses
+        let portion = self.people.len() as f32 * 0.005;
+        let required_new_businesses = (self.unemployed_count as f32 / portion) as usize;
+        
+        if required_new_businesses != 0 {
+            let owners: Vec<_> = self.people.values_mut().filter(|p| p.balance >= 15000. && p.age >= 18).take(required_new_businesses).collect();
+            for bus_owner in owners {
+                let mut business = Business::default();
+                let start_balance = bus_owner.balance * 0.45; // TODO: improve me
+
+                business.generate_midgame(ProductType::Leisure, config, start_balance as f64); // TODO: support multiple product types
+
+                business.owner_id = bus_owner.id;
+
+                // TODO: resign from old job
+
+                // let owner_cpy = bus_owner.clone();
+
+                // self.resign_if_employed(owner_cpy);
+
+                // bus_owner.set_salary(0);
+                // bus_owner.job = Job::BusinessOwner(business.id);
+
+                self.businesses.insert(business.id, business);
+            }
+        }
 
         for business in self.businesses.values_mut() {
             Business::check_funding(&self.rules.business_funding_rule, business, funded_businesses);

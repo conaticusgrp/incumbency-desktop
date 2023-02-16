@@ -63,10 +63,10 @@ pub fn generate_game(state_mux: &GameStateSafe, config: &Config, app_handle: &Ap
         ]
     })).unwrap();
 
+    let bus_tax_rate = state.business_tax_rate;
+
     loop {
         let mut business = Business::default();
-        
-        let bus_tax_rate = state.business_tax_rate;
 
         let sufficient_businesses = business.generate(config, ProductType::Leisure, product_demand[&ProductType::Leisure], &mut remaning_market_percentage, &mut state.people, bus_tax_rate);
         let owner = Person { job: Job::BusinessOwner(business.id), age: rand::thread_rng().gen_range(20..70), ..Person::new_generate(config, &mut product_demand, state.tax_rate, &state.rules.tax_rule, state.date.clone())? };
@@ -115,6 +115,6 @@ pub fn stabilize_game(state_mux: &GameStateSafe, config: &Config, app_handle: &A
     healthcare.adultcare = budget;
     healthcare.eldercare = budget;
 
-    state.month_pass(app_handle)?;
+    state.month_pass(app_handle, config)?;
     Ok(())
 }
