@@ -2,9 +2,9 @@
   
   import { createEventDispatcher } from "svelte";
   import { listen } from "@tauri-apps/api/event";
-  import type { CriticalWindowData } from "../../../scripts/criticalWindowData";
-  import Window from "./Window.svelte"
-  import DebugValueDisplay from "../debug/DebugValueDisplay.svelte";
+  import type { CriticalWindowData } from "../Window.svelte";
+  import Window from "../Window.svelte"
+  import DebugValueDisplay from "./DebugValueDisplay.svelte";
 
   export let windowData: CriticalWindowData;
 

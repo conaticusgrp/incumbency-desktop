@@ -17,7 +17,7 @@
   import { APP_LIST_MIN_WIDTH, APP_LIST_WIDTH, TOP_PANEL_HEIGHT, NOTIFICATION_MARGIN_X, NOTIFICATION_WIDTH, TOOLBAR_HEIGHT } from "../../../scripts/desktopConstants";
   import { WINDOW_AQUIRE_FOCUS, WINDOW_CLOSE, WINDOW_MINIMIZE, WINDOW_SEND_NOTIFICATION } from "../../../scripts/windowEvent";
 
-  import DebuggerApp from "../windows/DebuggerApp.svelte";
+  import DebuggerApp from "../windows/DebuggerApp/DebuggerApp.svelte";
 
   import Email from "../windows/Email.svelte";
   import Finance from "../windows/Finance/Finance.svelte";
@@ -31,12 +31,12 @@
   let date: string = "undefined date";
   let wallpaperPath: string | null = "./src/assets/Wallpaper.png";
   let apps: DesktopAppShortcut[] = [
-    { componentConstructor: DebuggerApp, name: "DEBUG" },
-    { componentConstructor: Email, name: "Email", badgeCount: 2 },
-    { componentConstructor: Finance, name: "Finance", badgeCount: 1 },
-    { componentConstructor: Healthcare, name: "Healthcare" },
-    { componentConstructor: Welfare, name: "Welfare" },
-    { componentConstructor: Business, name: "Business" },
+    { componentConstructor: DebuggerApp,  name: "DEBUG" },
+    { componentConstructor: Email,        name: "Email", badgeCount: 2 },
+    { componentConstructor: Finance,      name: "Finance", badgeCount: 1 },
+    { componentConstructor: Healthcare,   name: "Healthcare" },
+    { componentConstructor: Welfare,      name: "Welfare" },
+    { componentConstructor: Business,     name: "Business" },
   ];
   let focusedApp: number | null = null;
 
