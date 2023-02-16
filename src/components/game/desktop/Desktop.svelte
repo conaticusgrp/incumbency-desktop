@@ -1,32 +1,41 @@
 <script lang="ts" context="module">
-
   interface DesktopAppShortcut {
-    componentConstructor: any,
-    name: string,
+    componentConstructor: any;
+    name: string;
 
-    component?: any,
-    props?: any,
-    badgeCount?: number,
-    opened?: boolean,
-    minimized?: boolean
-  };
-
+    component?: any;
+    props?: any;
+    badgeCount?: number;
+    opened?: boolean;
+    minimized?: boolean;
+  }
 </script>
 
 <script lang="ts">
   import { listen } from "@tauri-apps/api/event";
   import Notification, { type NotificationData } from "./Notification.svelte";
-  import { APP_LIST_MIN_WIDTH, APP_LIST_WIDTH, TOP_PANEL_HEIGHT, NOTIFICATION_MARGIN_X, NOTIFICATION_WIDTH, TOOLBAR_HEIGHT } from "../../../scripts/desktopConstants";
-  import { WINDOW_AQUIRE_FOCUS, WINDOW_CLOSE, WINDOW_MINIMIZE } from "../../../scripts/windowEvent";
+  import {
+    APP_LIST_MIN_WIDTH,
+    APP_LIST_WIDTH,
+    TOP_PANEL_HEIGHT,
+    NOTIFICATION_MARGIN_X,
+    NOTIFICATION_WIDTH,
+    TOOLBAR_HEIGHT,
+  } from "../../../scripts/desktopConstants";
+  import {
+    WINDOW_AQUIRE_FOCUS,
+    WINDOW_CLOSE,
+    WINDOW_MINIMIZE,
+  } from "../../../scripts/windowEvent";
 
   import DebuggerApp from "../windows/DebuggerApp.svelte";
 
   import Email from "../windows/Email.svelte";
-  import Finance from "../windows/Finance.svelte";
-  import Healthcare from "../windows/Healthcare.svelte";
-  import Welfare from "../windows/Welfare.svelte";
-  import Business from "../windows/Business.svelte";
-  
+  import Finance from "../windows/Finance/Finance.svelte";
+  import Healthcare from "../windows/Healthcare/Healthcare.svelte";
+  import Welfare from "../windows/Welfare/Welfare.svelte";
+  import Business from "../windows/Business/Business.svelte";
+
   let startMenu: HTMLElement;
   let startMenuExpanded: boolean = false;
   let notificationSectionExpanded = false;
@@ -34,11 +43,11 @@
   let wallpaperPath: string | null = "./src/assets/Wallpaper.png";
   let apps: DesktopAppShortcut[] = [
     { componentConstructor: DebuggerApp, name: "DEBUG" },
-    { componentConstructor: Email,       name: "Email", badgeCount: 2 },
-    { componentConstructor: Finance,     name: "Finance", badgeCount: 1 },
-    { componentConstructor: Healthcare,  name: "Healthcare" },
-    { componentConstructor: Welfare,     name: "Welfare" },
-    { componentConstructor: Business,    name: "Business" }
+    { componentConstructor: Email, name: "Email", badgeCount: 2 },
+    { componentConstructor: Finance, name: "Finance", badgeCount: 1 },
+    { componentConstructor: Healthcare, name: "Healthcare" },
+    { componentConstructor: Welfare, name: "Welfare" },
+    { componentConstructor: Business, name: "Business" },
   ];
   let focusedApp: number | null = null;
 
@@ -48,8 +57,9 @@
       header: "Test",
       content: "Test notification",
       date: "now",
-      iconPath: "https://w7.pngwing.com/pngs/821/338/png-transparent-warning-sign-computer-icons-warning-icon-angle-triangle-warning-sign-thumbnail.png"
-    }
+      iconPath:
+        "https://w7.pngwing.com/pngs/821/338/png-transparent-warning-sign-computer-icons-warning-icon-angle-triangle-warning-sign-thumbnail.png",
+    },
   ];
 
   const handleOpenApp = (index: number): void => {
@@ -112,18 +122,18 @@
   const openStartMenu = (): void => {
     startMenuExpanded = true;
 
-    document.addEventListener('click', closeStartMenuIfClickedAway);
-  }
+    document.addEventListener("click", closeStartMenuIfClickedAway);
+  };
 
   const toggleNotificationsSection = (): void => {
     notificationSectionExpanded = !notificationSectionExpanded;
-  }
+  };
 
   const closeStartMenuIfClickedAway = (e: MouseEvent): void => {
     if (e.target == null || startMenu.contains(e.target as HTMLElement)) return;
 
     startMenuExpanded = false;
-  }
+  };
 
   listen("new_day", (d) => {
     //@ts-ignore
@@ -144,7 +154,6 @@
       e.preventDefault();
     }
   });
-
 </script>
 
 <main>
@@ -174,33 +183,25 @@
     </div>
   </div>
 
-  <div
-    class="content"
-    style="width: calc(100% - {APP_LIST_WIDTH});"
-  >
+  <div class="content" style="width: calc(100% - {APP_LIST_WIDTH});">
     <div
       class="top-panel"
       style="height: {TOP_PANEL_HEIGHT};"
       on:click={openStartMenu}
       on:keydown={() => {}}
     >
-
       <div
         class="start-menu"
         aria-expanded={startMenuExpanded}
         bind:this={startMenu}
       >
         {#if !startMenuExpanded}
-
-        {date}
-        
+          {date}
         {:else}
-        
-        <button>{date}</button>
-        <button>Shut down</button>
-        <button>Logoff</button>
-        <button>Restart</button>
-        
+          <button>{date}</button>
+          <button>Shut down</button>
+          <button>Logoff</button>
+          <button>Restart</button>
         {/if}
       </div>
 
@@ -210,7 +211,6 @@
       >
         Notifications
       </button>
-
     </div>
 
     <div
@@ -239,20 +239,15 @@
       {/each}
 
       {#if notificationSectionExpanded}
-      <div
-        class="notifications-section"
-        style="width: calc({NOTIFICATION_WIDTH} + {NOTIFICATION_MARGIN_X} * 2);"
-      >
-        
-        {#each notifications as notif}
-
-        <Notification data={notif} />
-        
-        {/each}
-
-      </div>
+        <div
+          class="notifications-section"
+          style="width: calc({NOTIFICATION_WIDTH} + {NOTIFICATION_MARGIN_X} * 2);"
+        >
+          {#each notifications as notif}
+            <Notification data={notif} />
+          {/each}
+        </div>
       {/if}
-
     </div>
 
     <div class="toolbar" style="height: {TOOLBAR_HEIGHT};">
@@ -272,7 +267,6 @@
       {/each}
     </div>
   </div>
-
 </main>
 
 <style>
@@ -326,7 +320,7 @@
     display: flex;
     flex-direction: column;
   }
-  
+
   .top-panel {
     display: flex;
     justify-content: center;
@@ -345,7 +339,7 @@
     height: min-content;
     cursor: pointer;
   }
-  
+
   .start-menu[aria-expanded="false"] {
     align-self: center;
   }

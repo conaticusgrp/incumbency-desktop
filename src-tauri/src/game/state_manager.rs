@@ -357,7 +357,7 @@ impl GameState {
             }
 
             total_business_income += business.last_month_income as u128;
-            total_employees = business.employees.len() as u64;
+            total_employees += business.employees.len() as u64;
         }
 
         self.business_data.average_monthly_income = (total_business_income / self.businesses.len() as u128) as i64;

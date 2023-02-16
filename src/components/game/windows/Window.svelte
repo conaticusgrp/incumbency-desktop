@@ -9,6 +9,8 @@
 </script>
 
 <script lang="ts">
+  import { listen } from "@tauri-apps/api/event";
+
   
   import { invoke } from "@tauri-apps/api/tauri";
   import { createEventDispatcher } from "svelte";
@@ -19,6 +21,7 @@
     WINDOW_HEADER_HEIGHT,
   } from "../../../scripts/desktopConstants";
   import {
+  APP_UPDATE,
     WINDOW_AQUIRE_FOCUS,
     WINDOW_CLOSE,
     WINDOW_MAXIMIZE,
@@ -42,9 +45,16 @@
   let boundsBeforeMaximizing: { x: number, y: number, width: number, height: number };
 
   $: if (windowData.opened) {
-    dispatcher('windowEvent', { type: WINDOW_OPENED });
-    invoke('app_open', { appId: windowData.index });
+    (async () => {
+      const d = await invoke("app_open", { appId: windowData.index });
+      dispatcher("windowEvent", { type: WINDOW_OPENED, data: d });
+    })()
   }
+
+  listen("update_app", ({ payload }: any) => {
+    if (payload.app_id !== windowData.index) return;
+    dispatcher("windowEvent", { type: APP_UPDATE, data: payload });
+  });
   
   let dispatcher = createEventDispatcher();
 

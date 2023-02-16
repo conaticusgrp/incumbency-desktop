@@ -12,3 +12,19 @@ export const WINDOW_AQUIRE_FOCUS = 'windowAquireFocus';
 export const WINDOW_MAXIMIZE = 'windowMaximize';
 export const WINDOW_RESIZE = 'windowResize';
 export const WINDOW_OPENED = 'windowOpened';
+
+// Apps
+export const APP_UPDATE = 'appUpdate';
+
+export const handleAppWindowEvents = ({ detail: { data, type } }: any, appData: any): any => {
+    switch (type) {
+      case WINDOW_OPENED:
+        return JSON.parse(data);
+      case APP_UPDATE:
+        return {
+          ...appData,
+          ...data.data,
+        }
+      default: break;
+    }
+}
