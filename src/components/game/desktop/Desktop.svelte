@@ -14,19 +14,8 @@
 <script lang="ts">
   import { listen } from "@tauri-apps/api/event";
   import Notification, { type NotificationData } from "./Notification.svelte";
-  import {
-    APP_LIST_MIN_WIDTH,
-    APP_LIST_WIDTH,
-    TOP_PANEL_HEIGHT,
-    NOTIFICATION_MARGIN_X,
-    NOTIFICATION_WIDTH,
-    TOOLBAR_HEIGHT,
-  } from "../../../scripts/desktopConstants";
-  import {
-    WINDOW_AQUIRE_FOCUS,
-    WINDOW_CLOSE,
-    WINDOW_MINIMIZE,
-  } from "../../../scripts/windowEvent";
+  import { APP_LIST_MIN_WIDTH, APP_LIST_WIDTH, TOP_PANEL_HEIGHT, NOTIFICATION_MARGIN_X, NOTIFICATION_WIDTH, TOOLBAR_HEIGHT } from "../../../scripts/desktopConstants";
+  import { WINDOW_AQUIRE_FOCUS, WINDOW_CLOSE, WINDOW_MINIMIZE, WINDOW_SEND_NOTIFICATION } from "../../../scripts/windowEvent";
 
   import DebuggerApp from "../windows/DebuggerApp.svelte";
 
@@ -51,16 +40,8 @@
   ];
   let focusedApp: number | null = null;
 
-  let notifications: NotificationData[] = [
-    {
-      app: "debug",
-      header: "Test",
-      content: "Test notification",
-      date: "now",
-      iconPath:
-        "https://w7.pngwing.com/pngs/821/338/png-transparent-warning-sign-computer-icons-warning-icon-angle-triangle-warning-sign-thumbnail.png",
-    },
-  ];
+  let notifications: NotificationData[] = [];
+  let showLatestNotification = true;
 
   const handleOpenApp = (index: number): void => {
     if (index < 0 || index >= apps.length) return;
@@ -114,6 +95,12 @@
         }
         break;
 
+      case WINDOW_SEND_NOTIFICATION:
+        {
+          receiveNotification(e.detail.data);
+        }
+        break;
+
       default:
         break;
     }
@@ -127,6 +114,7 @@
 
   const toggleNotificationsSection = (): void => {
     notificationSectionExpanded = !notificationSectionExpanded;
+    showLatestNotification = false;
   };
 
   const closeStartMenuIfClickedAway = (e: MouseEvent): void => {
@@ -134,6 +122,13 @@
 
     startMenuExpanded = false;
   };
+
+  const receiveNotification = (n: NotificationData): void => {
+    n.date = date;
+    notifications.push(n);
+    showLatestNotification = true;
+    updateUI();
+  }
 
   listen("new_day", (d) => {
     //@ts-ignore
@@ -154,6 +149,14 @@
       e.preventDefault();
     }
   });
+
+  receiveNotification({
+    app: "debug",
+    header: "Test",
+    content: "Test notification",
+    severity: 'error'
+  });
+
 </script>
 
 <main>
@@ -237,6 +240,17 @@
           on:criticalWindowEvent={(e) => handleCriticalEvent(i, e)}
         />
       {/each}
+
+      {#if showLatestNotification}
+      <div
+        class="single-notification-container"
+        style="right: {NOTIFICATION_MARGIN_X};"
+      >
+
+        <Notification data={notifications[notifications.length - 1]} />
+
+      </div>
+      {/if}
 
       {#if notificationSectionExpanded}
         <div
@@ -360,6 +374,11 @@
     background-color: var(--color-accent);
     color: var(--color-bg);
     font-weight: bold;
+  }
+
+  .single-notification-container {
+    position: absolute;
+    top: 0;
   }
 
   .notification-section-toggle {
