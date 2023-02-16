@@ -70,7 +70,7 @@
       });
 
       dispatcher("windowEvent", { type: WINDOW_OPENED, data: d });
-    })()
+    })();
   }
 
   listen("update_app", ({ payload }: any) => {

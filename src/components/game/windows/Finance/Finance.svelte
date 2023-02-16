@@ -1,7 +1,7 @@
 <script lang="ts">
 
   import { createEventDispatcher } from "svelte";
-  import AppWindow from "../utility/AppWindow.svelte";
+  import AppWindow from "../TabWindow.svelte";
   import type { CriticalWindowData } from "../Window.svelte";
   
   import Overview from "./Overview.svelte";

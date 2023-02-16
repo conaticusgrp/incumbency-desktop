@@ -19,9 +19,9 @@
   
   import { listen } from "@tauri-apps/api/event";
   import { createEventDispatcher, tick } from "svelte";
-  import Window, { type CriticalWindowData } from "./Window.svelte"
-  import { countLines, getLineHeight } from "../../../scripts/text";
-  import { WINDOW_MAXIMIZE, WINDOW_OPENED, WINDOW_RESIZE } from "../../../scripts/windowEvent";
+  import Window, { type CriticalWindowData } from "../Window.svelte"
+  import { countLines, getLineHeight } from "../../../../scripts/text";
+  import { WINDOW_MAXIMIZE, WINDOW_OPENED, WINDOW_RESIZE } from "../../../../scripts/windowEvent";
 
   export let windowData: CriticalWindowData;
 
@@ -125,7 +125,7 @@
   on:windowEvent={handleWindowEvents}
   on:criticalWindowEvent={(e) => dispatcher('criticalWindowEvent', e.detail)}
 >
-  <main class="content">
+  <main>
 
     <div
       class="left-section"
