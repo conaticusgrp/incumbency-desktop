@@ -8,8 +8,10 @@
   export let pos: Pos;
   export let size: Size;
   export let windowData: CriticalWindowData;
-  export let tabComponent: typeof SvelteComponent;
-  export let tabData: any[] = [];
+
+  export let tabButtonComponent: typeof SvelteComponent;
+  export let tabButtonData: any[] = [];
+  export let tabs: { c: typeof SvelteComponent, data: any }[];
   
   export let currentTabIndex: number = 0;
   
@@ -17,7 +19,7 @@
 
   const selectTab = (e: CustomEvent): void => {
     const i = e.detail.index;
-    if (i < 0 || i >= tabData.length) return;
+    if (i < 0 || i >= tabButtonData.length) return;
     currentTabIndex = i;
   }
 
@@ -43,26 +45,32 @@
 
       <div class="tab-list">
 
-        {#each tabData as data, i}
+        {#each tabButtonData as data, i}
 
         <svelte:component
-          this={tabComponent}
+          this={tabButtonComponent}
           index={i}
+          selected={i === currentTabIndex}
           {data}
           on:selectTab={selectTab}
         />
 
         {/each}
-
-        {#if false}
-        <p></p>
-        {/if}
     
       </div>
 
     </section>
 
     <section>
+
+      {#if currentTabIndex >= 0 && currentTabIndex < tabs.length}
+
+      <svelte:component
+        this={tabs[currentTabIndex].c}
+        data={tabs[currentTabIndex].data}
+      />
+
+      {/if}
 
     </section>
 
@@ -97,9 +105,8 @@
     display: none;
   }
 
-  .tab-list > * {
-    margin: var(--tab-list-entry-margin);
-    /* box-sizing: border-box; */
+  main > section:last-of-type {
+    width: calc(100% - max(var(--tab-list-width), var(--tab-list-min-width)));
   }
 
 </style>

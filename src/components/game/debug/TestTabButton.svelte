@@ -1,9 +1,10 @@
 <script lang="ts">
     
     import { createEventDispatcher } from "svelte";
-
+    import { TAB_LIST_ENTRY_MARGIN } from "../../../scripts/desktopConstants";
 
     export let index: number;
+    export let selected: boolean = false;
     export let data: any;
 
     let dispatcher = createEventDispatcher();
@@ -14,9 +15,13 @@
 
 </script>
 
-<button>
+<button
+    style="margin: {TAB_LIST_ENTRY_MARGIN};"
+    data-selected={selected}
+    on:click={select}
+>
 
-    {index}
+    [{index}]
     :
     {data}
 
@@ -26,6 +31,12 @@
 
     button {
         border: 1px solid var(--color-accent);
+    }
+
+    button[data-selected="true"] {
+        background-color: var(--color-accent);
+        color: var(--color-bg);
+        font-weight: bold;
     }
 
 </style>
