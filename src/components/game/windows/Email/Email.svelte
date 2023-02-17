@@ -22,6 +22,7 @@
   import Window, { type CriticalWindowData } from "../Window.svelte"
   import { countLines, getLineHeight } from "../../../../scripts/text";
   import { WINDOW_MAXIMIZE, WINDOW_OPENED, WINDOW_RESIZE } from "../../../../scripts/windowEvent";
+  import { USERNAME } from "../../../../scripts/desktopConstants";
 
   export let windowData: CriticalWindowData;
 
@@ -30,8 +31,6 @@
   const EMAIL_MARGIN = 0.5;           // em
   const EMAIL_HEIGHT = 6;             // em
   const USERNAME_HEIGHT = 3.5;        // em
-
-  const USERNAME = "Joe";
 
   let dispatcher = createEventDispatcher();
   let emailHeader: HTMLElement;

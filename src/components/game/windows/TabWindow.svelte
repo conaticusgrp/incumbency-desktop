@@ -2,7 +2,7 @@
   
   import { createEventDispatcher, SvelteComponent } from "svelte";
   import Window, { type CriticalWindowData, type Pos, type Size } from "./Window.svelte";
-  import { TAB_LIST_ENTRY_MARGIN, TAB_LIST_MIN_WIDTH, TAB_LIST_WIDTH } from "../../../scripts/desktopConstants";
+  import { TAB_LIST_ENTRY_MARGIN, TAB_LIST_MIN_WIDTH, TAB_LIST_WIDTH, USERNAME, USERNAME_HEIGHT } from "../../../scripts/desktopConstants";
   
   export let title: string;
   export let pos: Pos;
@@ -38,6 +38,7 @@
       --tab-list-width: {TAB_LIST_WIDTH};
       --tab-list-min-width: {TAB_LIST_MIN_WIDTH};
       --tab-list-entry-margin: {TAB_LIST_ENTRY_MARGIN};
+      --username-height: {USERNAME_HEIGHT};
     "
   >
 
@@ -57,6 +58,11 @@
 
         {/each}
     
+      </div>
+
+      <div class="username" >
+        Authenticated as:
+        <div>{USERNAME}</div>
       </div>
 
     </section>
@@ -97,12 +103,22 @@
     display: flex;
     flex-direction: column;
     width: 100%;
-    height: 100%;
+    height: calc(100% - var(--username-height));
     overflow-y: scroll;
   }
 
  .tab-list::-webkit-scrollbar {
     display: none;
+  }
+
+  .username {
+    width: 100%;
+    height: var(--username-height);
+    border-top: 1px solid var(--color-accent);
+  }
+
+  .username > div {
+    color: var(--color-accent);
   }
 
   main > section:last-of-type {

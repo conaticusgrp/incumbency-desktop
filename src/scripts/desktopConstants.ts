@@ -43,9 +43,9 @@ export const TAB_LIST_WIDTH = new CssNumericalValue(35, '%');
 export const TAB_LIST_MIN_WIDTH = new CssNumericalValue(250, 'px');
 export const TAB_LIST_ENTRY_MARGIN = new CssNumericalValue(0.5, 'em');
 
-// Will we have the username in all the apps?
-// Taken from Email.svelte
-// const USERNAME_HEIGHT = 3.5;        // em
+export const USERNAME = "Joe";
+export const USERNAME_HEIGHT = new CssNumericalValue(3.5, 'em');
+
 
 // DEBUG, to be used
 export const KEEP_NOTIFICATIONS_DISPLAYED = false;
