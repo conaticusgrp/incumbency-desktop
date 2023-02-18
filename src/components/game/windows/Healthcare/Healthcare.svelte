@@ -1,5 +1,6 @@
 <script lang="ts">
-
+  
+  import { createEventDispatcher } from "svelte";
   import TabWindow from "../TabWindow.svelte";
   import type { CriticalWindowData } from "../Window.svelte";
   
@@ -7,6 +8,8 @@
   import Overview from "./Overview.svelte";
   
   export let windowData: CriticalWindowData;
+
+  let dispatcher = createEventDispatcher();
 
 </script>
 
@@ -20,4 +23,5 @@
   tabs={[
     { c: Overview, data: null }
   ]}
+  on:criticalWindowEvent={(e) => dispatcher('criticalWindowEvent', e.detail)}
 />

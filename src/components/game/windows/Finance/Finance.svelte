@@ -11,6 +11,7 @@
 
   export let windowData: CriticalWindowData;
 
+  let dispatcher = createEventDispatcher();
   let data: any = {};
 
 </script>
@@ -27,4 +28,5 @@
     { c: Budgets, data },
     { c: Rules, data }
   ]}
+  on:criticalWindowEvent={(e) => dispatcher('criticalWindowEvent', e.detail)}
 />
