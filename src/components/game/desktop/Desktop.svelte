@@ -24,7 +24,9 @@
   import Healthcare from "../windows/Healthcare/Healthcare.svelte";
   import Welfare from "../windows/Welfare/Welfare.svelte";
   import Business from "../windows/Business/Business.svelte";
-  import TestApp from "../debug/TestApp.svelte";
+  
+  // import TestApp from "../debug/TestApp.svelte";
+  // import OldEmail from "../debug/OldEmail.svelte";
 
   let startMenu: HTMLElement;
   let startMenuExpanded: boolean = false;
@@ -38,7 +40,9 @@
     { componentConstructor: Healthcare,   name: "Healthcare" },
     { componentConstructor: Welfare,      name: "Welfare" },
     { componentConstructor: Business,     name: "Business" },
-    { componentConstructor: TestApp, name: "test"}
+
+    // { componentConstructor: TestApp,      name: "test" },
+    // { componentConstructor: OldEmail,     name: "old email" },
   ];
   let focusedApp: number | null = null;
 

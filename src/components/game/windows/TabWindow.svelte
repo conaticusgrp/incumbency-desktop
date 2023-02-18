@@ -13,7 +13,7 @@
   export let tabButtonData: any[] = [];
   export let tabs: { c: typeof SvelteComponent, data: any }[];
   
-  export let currentTabIndex: number = 0;
+  export let currentTabIndex: number = -1;
   
   let dispatcher = createEventDispatcher();
 

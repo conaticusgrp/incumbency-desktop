@@ -17,6 +17,10 @@
       index: number
   }
 
+  export const defaultCriticalWindowData = (): CriticalWindowData => {
+    return { opened: false, focused: false, index: -1 };
+  }
+
 </script>
 
 <script lang="ts">
@@ -24,6 +28,7 @@
   import { listen } from "@tauri-apps/api/event";
   import { invoke } from "@tauri-apps/api/tauri";
   import { createEventDispatcher } from "svelte";
+  import { tick } from "svelte";
   import {
     MIN_WINDOW_HEIGHT,
     MIN_WINDOW_WIDTH,
@@ -48,7 +53,8 @@
     height: 400,
     maximized: false
   };
-  export let windowData: CriticalWindowData = { opened: false, focused: false, index: -1 };
+  export let windowData: CriticalWindowData = defaultCriticalWindowData();
+  let prevWindowData: CriticalWindowData = defaultCriticalWindowData();
   
   let thisObj: HTMLElement;
   let dragOffset: { dx: number; dy: number };
@@ -56,11 +62,10 @@
   let boundsBeforeMaximizing: { x: number, y: number, width: number, height: number };
   let dispatcher = createEventDispatcher();
 
-  $: if (windowData.opened) {
+  $: if (windowData.opened && !prevWindowData.opened) {
     (async () => {
       const d = await invoke("app_open", { appId: windowData.index }).catch(e => {
-        // TODO: delete?
-        console.log(e);
+        console.error(e);
         dispatcher('criticalWindowEvent', { type: WINDOW_SEND_NOTIFICATION, data: {
           app: title,
           header: "App open error",
@@ -70,6 +75,13 @@
       });
 
       dispatcher("windowEvent", { type: WINDOW_OPENED, data: d });
+    })();
+  }
+
+  $: {
+    (async ()=> {
+      await tick();
+      prevWindowData = { ...windowData };
     })();
   }
 
@@ -92,7 +104,7 @@
     return box; 
   }
 
-  const requestFocus = (): void => {
+  const requestFocus = () => {
     dispatcher('criticalWindowEvent', { type: WINDOW_AQUIRE_FOCUS });
   }
 
