@@ -9,12 +9,14 @@
     opened?: boolean;
     minimized?: boolean;
   }
+
+  type ModalState = 'closed' | 'log off' | 'shut down';
 </script>
 
 <script lang="ts">
   import { listen } from "@tauri-apps/api/event";
   import Notification, { type NotificationData } from "./Notification.svelte";
-  import { APP_LIST_MIN_WIDTH, APP_LIST_WIDTH, TOP_PANEL_HEIGHT, NOTIFICATION_MARGIN_X, NOTIFICATION_WIDTH, TOOLBAR_HEIGHT } from "../../../scripts/desktopConstants";
+  import { APP_LIST_MIN_WIDTH, APP_LIST_WIDTH, TOP_PANEL_HEIGHT, NOTIFICATION_MARGIN_X, NOTIFICATION_WIDTH, TOOLBAR_HEIGHT, MODAL_TIMER_DELAY } from "../../../scripts/desktopConstants";
   import { WINDOW_AQUIRE_FOCUS, WINDOW_CLOSE, WINDOW_MINIMIZE, WINDOW_SEND_NOTIFICATION } from "../../../scripts/windowEvent";
 
   import DebuggerApp from "../windows/DebuggerApp/DebuggerApp.svelte";
@@ -48,6 +50,25 @@
 
   let notifications: NotificationData[] = [];
   let showLatestNotification = true;
+
+  let modalState: ModalState = 'closed';
+  let modalTimerResolve: (() => void) | null = null;
+  let modalTimerCountdown = 0;
+
+  $: if (modalState !== 'closed') {
+    new Promise<void>(async (resolve, reject) => {
+      modalTimerResolve = resolve;
+      for (let i = 0; i < MODAL_TIMER_DELAY; i++) {
+        modalTimerCountdown = MODAL_TIMER_DELAY - i;
+        await new Promise<void>((res0) => {
+          setTimeout(res0, 1_000);
+        });
+      }
+      modalTimerResolve = null;
+      modalResolve();
+      resolve();
+    });
+  }
 
   const handleOpenApp = (index: number): void => {
     if (index < 0 || index >= apps.length) return;
@@ -136,6 +157,52 @@
     updateUI();
   }
 
+  const getModalTitle = (): string => {
+    switch (modalState) {
+      case 'log off':   return "logoff";
+      case 'shut down': return "shutdown";
+      default:          return "";
+    }
+  }
+
+  const getModalAutoAction = (): string => {
+    switch (modalState) {
+      case 'log off':   return "Logging off";
+      case 'shut down': return "Shutting down";
+      default:          return "";
+    }
+  }
+
+  const getModalAction = (): string => {
+    switch (modalState) {
+      case 'log off':   return "Log off";
+      case 'shut down': return "Shut down";
+      default:          return "";
+    }
+  }
+
+  const modalResolve = (): void => {
+    if (modalTimerResolve != null) modalTimerResolve();
+    
+    switch (modalState) {
+      case 'log off':   break;
+      case 'shut down': break;
+      default:          break;
+    }
+    modalState = 'closed';
+  }
+  
+  const modalReject = (): void => {
+    if (modalTimerResolve != null) modalTimerResolve();
+    
+    switch (modalState) {
+      case 'log off':   break;
+      case 'shut down': break;
+      default:          break;
+    }
+    modalState = 'closed';
+  }
+
   listen("new_day", (d) => {
     //@ts-ignore
     date = d.payload.date as string;
@@ -208,9 +275,9 @@
           {date}
         {:else}
           <button>{date}</button>
-          <button>Shut down</button>
-          <button>Logoff</button>
-          <button>Restart</button>
+          <button on:click={() => {}}>Shut down</button>
+          <button on:click={() => { modalState = 'log off' }}>Logoff</button>
+          <button on:click={() => {}}>Restart</button>
         {/if}
       </div>
 
@@ -287,6 +354,27 @@
       {/each}
     </div>
   </div>
+
+  {#if modalState !== 'closed'}
+  
+  <div class="modal">
+    <div class="modal-label">
+
+      <div class="content">
+        <h1>{getModalTitle()}</h1>
+        <span>{getModalAutoAction()} automatically in {modalTimerCountdown}s</span>
+      </div>
+
+      <div class="actions">
+        <button on:click={modalResolve}>{getModalAction()}</button>
+        <button on:click={modalReject}>Cancel</button>
+      </div>
+      
+    </div>
+  </div>
+  
+  {/if}
+
 </main>
 
 <style>
@@ -443,4 +531,60 @@
     border-left: 1px solid var(--color-accent);
     z-index: 10000;
   }
+
+  .modal {
+    display: flex;
+    align-items: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 99999;
+  }
+
+  .modal-label {
+    display: flex;
+    flex-direction: column;
+    width: 640px;
+    aspect-ratio: 5 / 0.6;
+    margin: auto;
+    background-color: var(--color-bg);
+    border: 1px solid var(--color-accent);
+    border-radius: 1rem;
+  }
+
+  .modal-label > .content {
+    height: 100%;
+    border-radius: 0.5em;
+    background-color: var(--color-accent);
+    color: var(--color-bg);
+    font-weight: bold;
+  }
+
+  .modal-label > .content > h1 {
+    padding: 1em 0 0.5em 0;
+    letter-spacing: 0.25em;
+    text-align: center;
+    text-transform: uppercase;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-weight: bold;
+    font-size: 20px;
+  }
+
+  .modal-label > .actions {
+    display: flex;
+  }
+
+  .modal-label > .actions > button {
+    width: 100%;
+  }
+
+  .modal-label > .actions > button:last-of-type {
+    border-left: 1px solid var(--color-accent);
+    color: grey;
+  }
+
 </style>
