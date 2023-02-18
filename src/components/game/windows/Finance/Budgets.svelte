@@ -1,3 +1,18 @@
-<script lang="ts"></script>
+<script lang="ts">
 
-<main>Budgets Panel</main>
+  export let data: any;
+
+</script>
+
+<main>
+  Budgets Panel
+</main>
+
+<style>
+  
+  main {
+    width: 100%;
+    height: 100%;
+  }
+  
+</style>
