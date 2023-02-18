@@ -1,12 +1,27 @@
 <script lang="ts">
+
   import { createEventDispatcher } from "svelte";
-  import Overview from "../Finance/Overview.svelte";
-  import AppWindow from "../TabWindow.svelte";
+  import TabWindow from "../TabWindow.svelte";
   import type { CriticalWindowData } from "../Window.svelte";
 
+  import WelfareTabButton from "./WelfareTabButton.svelte";
+  import Overview from "./Overview.svelte";
+
   export let windowData: CriticalWindowData;
+
+  let dispatcher = createEventDispatcher();
+
 </script>
 
-<AppWindow name="Welfare" windowData={windowData} tabs={{
-  Overview: Overview,
-}} dispatcher={createEventDispatcher()} />
+<TabWindow
+  title="Welfare"
+  pos={{ x: 100, y: 50 }}
+  size={{ width: 800, height: 600 }}
+  {windowData}
+  tabButtonComponent={WelfareTabButton}
+  tabButtonData={["Overview"]}
+  tabs={[
+    { c: Overview, data: null }
+  ]}
+  on:criticalWindowEvent={(e) => dispatcher('criticalWindowEvent', e.detail)}
+/>
