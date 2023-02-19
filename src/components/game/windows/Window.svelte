@@ -1,19 +1,34 @@
 <script lang="ts" context="module">
 
+  export interface Pos {
+    x: number,
+    y: number
+  }
+
+  export interface Size {
+    width: number,
+    height: number,
+    maximized?: boolean
+  }
+
   export interface CriticalWindowData {
       opened: boolean,
       focused: boolean,
       index: number
   }
 
+  export const defaultCriticalWindowData = (): CriticalWindowData => {
+    return { opened: false, focused: false, index: -1 };
+  }
+
 </script>
 
 <script lang="ts">
-  import { listen } from "@tauri-apps/api/event";
 
-  
+  import { listen } from "@tauri-apps/api/event";
   import { invoke } from "@tauri-apps/api/tauri";
   import { createEventDispatcher } from "svelte";
+  import { tick } from "svelte";
   import {
     MIN_WINDOW_HEIGHT,
     MIN_WINDOW_WIDTH,
@@ -32,23 +47,25 @@
   } from "../../../scripts/windowEvent";
 
   export let title: string = "?";
-  export let pos: { x: number; y: number } = { x: 0, y: 0 };
-  export let size: { width: number; height: number, maximized?: boolean } = {
+  export let pos: Pos = { x: 0, y: 0 };
+  export let size: Size = {
     width: 600,
     height: 400,
     maximized: false
   };
-  export let windowData: CriticalWindowData = { opened: false, focused: false, index: -1 };
+  export let windowData: CriticalWindowData = defaultCriticalWindowData();
+  let prevWindowData: CriticalWindowData = defaultCriticalWindowData();
   
   let thisObj: HTMLElement;
   let dragOffset: { dx: number; dy: number };
   let resizeType: { w?: 'r' | 'l', h?: 't' | 'b' };
   let boundsBeforeMaximizing: { x: number, y: number, width: number, height: number };
+  let dispatcher = createEventDispatcher();
 
-  $: if (windowData.opened) {
+  $: if (windowData.opened && !prevWindowData.opened) {
     (async () => {
       const d = await invoke("app_open", { appId: windowData.index }).catch(e => {
-        console.log(e);
+        console.error(e);
         dispatcher('criticalWindowEvent', { type: WINDOW_SEND_NOTIFICATION, data: {
           app: title,
           header: "App open error",
@@ -58,7 +75,14 @@
       });
 
       dispatcher("windowEvent", { type: WINDOW_OPENED, data: d });
-    })()
+    })();
+  }
+
+  $: {
+    (async ()=> {
+      await tick();
+      prevWindowData = { ...windowData };
+    })();
   }
 
   listen("update_app", ({ payload }: any) => {
@@ -66,7 +90,6 @@
     dispatcher("windowEvent", { type: APP_UPDATE, data: payload });
   });
   
-  let dispatcher = createEventDispatcher();
 
   const getParentBox = (): { x: number, y: number, width: number, height: number } => {
     const box = thisObj.parentElement?.getBoundingClientRect();
@@ -81,7 +104,7 @@
     return box; 
   }
 
-  const requestFocus = (): void => {
+  const requestFocus = () => {
     dispatcher('criticalWindowEvent', { type: WINDOW_AQUIRE_FOCUS });
   }
 

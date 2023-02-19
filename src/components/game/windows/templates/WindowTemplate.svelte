@@ -2,11 +2,12 @@
 <!-- How to add a new app: -->
 <!-- 1. Copy-paste this file and change its name -->
 <!-- 2. Add the component to [apps] in the Dekstop component -->
+<!-- Don't forget to check if all the import statements are correct! -->
 
 <script lang="ts">
   
   import { createEventDispatcher } from "svelte";
-  import Window, { type CriticalWindowData } from "./Window.svelte"
+  import Window, { type CriticalWindowData } from "../Window.svelte"
 
   export let windowData: CriticalWindowData;
 

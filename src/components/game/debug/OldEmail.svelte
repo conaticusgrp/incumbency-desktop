@@ -19,9 +19,10 @@
   
   import { listen } from "@tauri-apps/api/event";
   import { createEventDispatcher, tick } from "svelte";
-  import Window, { type CriticalWindowData } from "./Window.svelte"
+  import Window, { type CriticalWindowData } from "../windows/Window.svelte"
   import { countLines, getLineHeight } from "../../../scripts/text";
   import { WINDOW_MAXIMIZE, WINDOW_OPENED, WINDOW_RESIZE } from "../../../scripts/windowEvent";
+  import { USERNAME } from "../../../scripts/desktopConstants";
 
   export let windowData: CriticalWindowData;
 
@@ -30,8 +31,6 @@
   const EMAIL_MARGIN = 0.5;           // em
   const EMAIL_HEIGHT = 6;             // em
   const USERNAME_HEIGHT = 3.5;        // em
-
-  const USERNAME = "Joe";
 
   let dispatcher = createEventDispatcher();
   let emailHeader: HTMLElement;
@@ -125,7 +124,7 @@
   on:windowEvent={handleWindowEvents}
   on:criticalWindowEvent={(e) => dispatcher('criticalWindowEvent', e.detail)}
 >
-  <main class="content">
+  <main>
 
     <div
       class="left-section"
@@ -370,6 +369,5 @@
     color: var(--color-accent);
     background-color: var(--color-bg);
   }
-
   
 </style>

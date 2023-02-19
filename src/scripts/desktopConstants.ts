@@ -39,5 +39,14 @@ export const NOTIFICATION_HEIGHT = new CssNumericalValue(133, 'px');
 export const NOTIFICATION_MARGIN_X = new CssNumericalValue(2, 'em');
 export const NOTIFICATION_MARGIN_Y = new CssNumericalValue(1, 'em');
 
+export const TAB_LIST_WIDTH = new CssNumericalValue(35, '%');
+export const TAB_LIST_MIN_WIDTH = new CssNumericalValue(250, 'px');
+export const TAB_LIST_ENTRY_MARGIN = new CssNumericalValue(0.5, 'em');
+
+export const USERNAME = "Joe";
+export const USERNAME_HEIGHT = new CssNumericalValue(3.5, 'em');
+
+export const MODAL_TIMER_DELAY = 5; // s
+
 // DEBUG, to be used
 export const KEEP_NOTIFICATIONS_DISPLAYED = false;
