@@ -1,11 +1,9 @@
 <script lang="ts">
     
     export let data: any;
-
 </script>
 
 <main>
-
     {#if data != null}
         {#each Object.entries(data) as [name, val]}
             {#if typeof val !== "object"}
@@ -13,7 +11,6 @@
             {/if}
         {/each}
     {/if}
-
 </main>
   
 <style>

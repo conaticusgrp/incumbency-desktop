@@ -3,6 +3,7 @@
   import { createEventDispatcher, SvelteComponent } from "svelte";
   import Window, { type CriticalWindowData, type Pos, type Size } from "./Window.svelte";
   import { TAB_LIST_ENTRY_MARGIN, TAB_LIST_MIN_WIDTH, TAB_LIST_WIDTH, USERNAME, USERNAME_HEIGHT } from "../../../scripts/desktopConstants";
+  import { handleDataEvents } from "../../../scripts/windowEvent";
   
   export let title: string;
   export let pos: Pos;
@@ -11,7 +12,7 @@
 
   export let tabButtonComponent: typeof SvelteComponent;
   export let tabButtonData: any[] = [];
-  export let tabs: { c: typeof SvelteComponent, data: any }[];
+  export let tabs: { c: typeof SvelteComponent }[];
   
   export let currentTabIndex: number = -1;
   
@@ -23,6 +24,7 @@
     currentTabIndex = i;
   }
 
+  let appData: any;
 </script>
 
 <Window
@@ -32,6 +34,7 @@
   {windowData}
   on:criticalWindowEvent={(e) => dispatcher("criticalWindowEvent", e.detail)}
   on:windowEvent={(e) => dispatcher("windowEvent", e.detail)}
+  on:windowEvent={(e) => appData = handleDataEvents(e, appData)}
 >
   <main
     style="
@@ -73,7 +76,7 @@
 
       <svelte:component
         this={tabs[currentTabIndex].c}
-        data={tabs[currentTabIndex].data}
+        data={appData}
       />
 
       {/if}

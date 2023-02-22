@@ -13,7 +13,6 @@
 
   let dispatcher = createEventDispatcher();
   let data: any = {};
-
 </script>
 
 <AppWindow
@@ -24,9 +23,9 @@
   tabButtonComponent={FinanceTabButton}
   tabButtonData={["Overview", "Budgets", "Rules"]}
   tabs={[
-    { c: Overview, data },
-    { c: Budgets, data },
-    { c: Rules, data }
+    { c: Overview },
+    { c: Budgets },
+    { c: Rules }
   ]}
   on:criticalWindowEvent={(e) => dispatcher('criticalWindowEvent', e.detail)}
 />
