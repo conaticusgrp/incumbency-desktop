@@ -66,6 +66,7 @@
     (async () => {
       const d = await invoke("app_open", { appId: windowData.index }).catch(e => {
         console.error(e);
+        
         dispatcher('criticalWindowEvent', { type: WINDOW_SEND_NOTIFICATION, data: {
           app: title,
           header: "App open error",

@@ -34,7 +34,12 @@
   {windowData}
   on:criticalWindowEvent={(e) => dispatcher("criticalWindowEvent", e.detail)}
   on:windowEvent={(e) => dispatcher("windowEvent", e.detail)}
-  on:windowEvent={(e) => appData = handleDataEvents(e, appData)}
+  on:windowEvent={(e) => {
+    let newData = handleDataEvents(e, appData);
+    if (newData) {
+      appData = newData;
+    }
+  }}
 >
   <main
     style="
