@@ -1,8 +1,9 @@
 <script lang="ts">
     export let width: string;
+    export let onClick: () => any;
 </script>
 
-<button style="--width: {width}">
+<button on:click={onClick} style="--width: {width}">
   <slot></slot>
 </button>
 

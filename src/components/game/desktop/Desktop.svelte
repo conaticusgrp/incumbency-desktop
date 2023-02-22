@@ -394,7 +394,7 @@
     display: flex;
     flex-direction: column;
     align-items: center;
-    border-right: 1px solid green;
+    border-right: 1px solid var(--color-accent);
   }
 
   .app-list-section > h2 {
@@ -435,7 +435,7 @@
     /* align-items: center; */
     position: relative;
     min-height: min-content;
-    border-bottom: 1px solid green;
+    border-bottom: 1px solid var(--color-accent);
   }
 
   .start-menu {
@@ -497,7 +497,7 @@
     display: flex;
     flex-direction: row;
     min-height: min-content;
-    border-top: 1px solid green;
+    border-top: 1px solid var(--color-accent);
   }
 
   .toolbar > span {
@@ -506,7 +506,7 @@
     justify-content: center;
     align-items: center;
     padding: 0 2em 0 2em;
-    border: 1px solid green;
+    border: 1px solid var(--color-accent);
 
     background-color: var(--color-accent);
     color: var(--color-bg);
