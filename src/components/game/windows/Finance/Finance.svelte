@@ -18,6 +18,8 @@
       };
       tax: { enabled: boolean; minimum_salary: number; tax_rate: number };
     };
+    used_hospital_capacity: number;
+    total_hospital_capacity: number;
   }
 </script>
 

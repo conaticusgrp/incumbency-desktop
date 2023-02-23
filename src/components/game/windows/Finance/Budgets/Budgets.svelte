@@ -14,30 +14,64 @@
     SpareBudget,
   }
 
-  /*
-        TODO:
-            - Handle update tax rate return value
-    */
-
-  const updateGameValue = (gameValue: GameValue, newValue: any): any => {
+  const updateGameValue = async (gameValue: GameValue, newValue: any) => {
     if (!data) throw new Error("Data is undefined.");
 
     switch (gameValue) {
       case GameValue.TaxRate:
         data.tax_rate = newValue;
-        return invoke("update_tax_rate", { taxRate: newValue });
+        data.expected_person_income = await invoke("update_tax_rate", {
+          taxRate: newValue,
+        });
+        break;
       case GameValue.BusinessTaxRate:
         data.business_tax_rate = newValue;
-        return invoke("update_business_tax_rate", { taxRate: newValue });
+        data.expected_business_income = await invoke(
+          "update_business_tax_rate",
+          { taxRate: newValue }
+        );
+        break;
       case GameValue.HealthcareBudget:
+        const healthRes: any = await invoke("update_healthcare_budget", {
+          newBudget: newValue,
+        });
+
+        if (healthRes.error) {
+          // TODO: handle error in notifications
+          console.error(healthRes.error);
+          break;
+        }
+
         data.healthcare_budget = newValue;
-        return invoke("update_healthcare_budget", { newBudget: newValue });
+        data.used_hospital_capacity = healthRes.used_hospital_capacity;
+        data.total_hospital_capacity = healthRes.total_hospital_capacity;
+        break;
       case GameValue.WelfareBudget:
+        const welfareRes: any = await invoke("update_welfare_budget", {
+          newBudget: newValue,
+        });
+
+        if (welfareRes.error) {
+          // TODO: handle error in notifications
+          console.error(welfareRes.error);
+          break;
+        }
+
         data.welfare_budget = newValue;
-        return invoke("update_welfare_budget", { newBudget: newValue });
+        break;
       case GameValue.BusinessBudget:
+        const busRes: any = await invoke("update_business_budget", {
+          newBudget: newValue,
+        });
+
+        if (busRes.error) {
+          // TODO: handle error in notifications
+          console.error(busRes.error);
+          break;
+        }
+
         data.business_budget = newValue;
-        return invoke("update_business_budget", { newBudget: newValue });
+        break;
       default:
         break;
     }
@@ -54,7 +88,6 @@
       currentValue={data.tax_rate}
       data={{
         "Expected Tax Income": data.expected_person_income,
-        "Expected Business Tax Income": data.expected_business_income,
       }}
       assignValueFn={(val) => updateGameValue(GameValue.TaxRate, Number(val))}
     />
@@ -62,7 +95,9 @@
       title="Business Tax"
       appendValueEnd="%"
       currentValue={data.business_tax_rate}
-      data={{}}
+      data={{
+        "Expected Business Tax Income": data.expected_business_income,
+      }}
       assignValueFn={(val) =>
         updateGameValue(GameValue.BusinessTaxRate, Number(val))}
     />
@@ -73,7 +108,10 @@
       title="Healthcare"
       appendValueStart="$"
       currentValue={data.healthcare_budget}
-      data={{}}
+      data={{
+        "Used Capacity": data.used_hospital_capacity,
+        "Total Capacity": data.total_hospital_capacity,
+      }}
       assignValueFn={(val) =>
         updateGameValue(GameValue.HealthcareBudget, Number(val))}
     />

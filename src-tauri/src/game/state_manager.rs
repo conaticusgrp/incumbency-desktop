@@ -61,8 +61,8 @@ impl GameState {
         }
     }
 
-    pub fn check_healthcare_capacity(&self, new_total_capacity: i32, error_checker_failed: &mut bool) {
-        if new_total_capacity > self.healthcare.total_capacity {
+    pub fn check_healthcare_capacity(&self, current_capacity: i32, new_total_capacity: i32, error_checker_failed: &mut bool) {
+        if new_total_capacity >= current_capacity {
             return;
         }
 
