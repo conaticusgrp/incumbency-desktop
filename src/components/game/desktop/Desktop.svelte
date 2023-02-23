@@ -10,14 +10,27 @@
     minimized?: boolean;
   }
 
-  type ModalState = 'closed' | 'log off' | 'shut down';
+  type ModalState = "closed" | "log off" | "shut down";
 </script>
 
 <script lang="ts">
   import { listen } from "@tauri-apps/api/event";
   import Notification, { type NotificationData } from "./Notification.svelte";
-  import { APP_LIST_MIN_WIDTH, APP_LIST_WIDTH, TOP_PANEL_HEIGHT, NOTIFICATION_MARGIN_X, NOTIFICATION_WIDTH, TOOLBAR_HEIGHT, MODAL_TIMER_DELAY } from "../../../scripts/desktopConstants";
-  import { WINDOW_AQUIRE_FOCUS, WINDOW_CLOSE, WINDOW_MINIMIZE, WINDOW_SEND_NOTIFICATION } from "../../../scripts/windowEvent";
+  import {
+    APP_LIST_MIN_WIDTH,
+    APP_LIST_WIDTH,
+    TOP_PANEL_HEIGHT,
+    NOTIFICATION_MARGIN_X,
+    NOTIFICATION_WIDTH,
+    TOOLBAR_HEIGHT,
+    MODAL_TIMER_DELAY,
+  } from "../../../scripts/desktopConstants";
+  import {
+    WINDOW_AQUIRE_FOCUS,
+    WINDOW_CLOSE,
+    WINDOW_MINIMIZE,
+    WINDOW_SEND_NOTIFICATION,
+  } from "../../../scripts/windowEvent";
 
   import DebuggerApp from "../windows/DebuggerApp/DebuggerApp.svelte";
 
@@ -26,7 +39,7 @@
   import Healthcare from "../windows/Healthcare/Healthcare.svelte";
   import Welfare from "../windows/Welfare/Welfare.svelte";
   import Business from "../windows/Business/Business.svelte";
-  
+
   // import TestApp from "../debug/TestApp.svelte";
   // import OldEmail from "../debug/OldEmail.svelte";
 
@@ -36,12 +49,12 @@
   let date: string = "undefined date";
   let wallpaperPath: string | null = "./src/assets/Wallpaper.png";
   let apps: DesktopAppShortcut[] = [
-    { componentConstructor: DebuggerApp,  name: "DEBUG" },
-    { componentConstructor: Email,        name: "Email", badgeCount: 2 },
-    { componentConstructor: Finance,      name: "Finance", badgeCount: 1 },
-    { componentConstructor: Healthcare,   name: "Healthcare" },
-    { componentConstructor: Welfare,      name: "Welfare" },
-    { componentConstructor: Business,     name: "Business" },
+    { componentConstructor: DebuggerApp, name: "DEBUG" },
+    { componentConstructor: Email, name: "Email", badgeCount: 2 },
+    { componentConstructor: Finance, name: "Finance", badgeCount: 1 },
+    { componentConstructor: Healthcare, name: "Healthcare" },
+    { componentConstructor: Welfare, name: "Welfare" },
+    { componentConstructor: Business, name: "Business" },
 
     // { componentConstructor: TestApp,      name: "test" },
     // { componentConstructor: OldEmail,     name: "old email" },
@@ -51,11 +64,11 @@
   let notifications: NotificationData[] = [];
   let showLatestNotification = true;
 
-  let modalState: ModalState = 'closed';
+  let modalState: ModalState = "closed";
   let modalTimerResolve: (() => void) | null = null;
   let modalTimerCountdown = 0;
 
-  $: if (modalState !== 'closed') {
+  $: if (modalState !== "closed") {
     new Promise<void>(async (resolve, reject) => {
       modalTimerResolve = resolve;
       for (let i = 0; i < MODAL_TIMER_DELAY; i++) {
@@ -155,53 +168,68 @@
     notifications.push(n);
     showLatestNotification = true;
     updateUI();
-  }
+  };
 
   const getModalTitle = (): string => {
     switch (modalState) {
-      case 'log off':   return "logoff";
-      case 'shut down': return "shutdown";
-      default:          return "";
+      case "log off":
+        return "logoff";
+      case "shut down":
+        return "shutdown";
+      default:
+        return "";
     }
-  }
+  };
 
   const getModalAutoAction = (): string => {
     switch (modalState) {
-      case 'log off':   return "Logging off";
-      case 'shut down': return "Shutting down";
-      default:          return "";
+      case "log off":
+        return "Logging off";
+      case "shut down":
+        return "Shutting down";
+      default:
+        return "";
     }
-  }
+  };
 
   const getModalAction = (): string => {
     switch (modalState) {
-      case 'log off':   return "Log off";
-      case 'shut down': return "Shut down";
-      default:          return "";
+      case "log off":
+        return "Log off";
+      case "shut down":
+        return "Shut down";
+      default:
+        return "";
     }
-  }
+  };
 
   const modalResolve = (): void => {
     if (modalTimerResolve != null) modalTimerResolve();
-    
+
     switch (modalState) {
-      case 'log off':   break;
-      case 'shut down': break;
-      default:          break;
+      case "log off":
+        break;
+      case "shut down":
+        break;
+      default:
+        break;
     }
-    modalState = 'closed';
-  }
-  
+    modalState = "closed";
+  };
+
   const modalReject = (): void => {
     if (modalTimerResolve != null) modalTimerResolve();
-    
+
     switch (modalState) {
-      case 'log off':   break;
-      case 'shut down': break;
-      default:          break;
+      case "log off":
+        break;
+      case "shut down":
+        break;
+      default:
+        break;
     }
-    modalState = 'closed';
-  }
+    modalState = "closed";
+  };
 
   listen("new_day", (d) => {
     //@ts-ignore
@@ -227,9 +255,8 @@
     app: "debug",
     header: "Test",
     content: "Test notification",
-    severity: 'error'
+    severity: "error",
   });
-
 </script>
 
 <main>
@@ -276,7 +303,11 @@
         {:else}
           <button>{date}</button>
           <button on:click={() => {}}>Shut down</button>
-          <button on:click={() => { modalState = 'log off' }}>Logoff</button>
+          <button
+            on:click={() => {
+              modalState = "log off";
+            }}>Logoff</button
+          >
           <button on:click={() => {}}>Restart</button>
         {/if}
       </div>
@@ -315,14 +346,12 @@
       {/each}
 
       {#if showLatestNotification}
-      <div
-        class="single-notification-container"
-        style="right: {NOTIFICATION_MARGIN_X};"
-      >
-
-        <Notification data={notifications[notifications.length - 1]} />
-
-      </div>
+        <div
+          class="single-notification-container"
+          style="right: {NOTIFICATION_MARGIN_X};"
+        >
+          <Notification data={notifications[notifications.length - 1]} />
+        </div>
       {/if}
 
       {#if notificationSectionExpanded}
@@ -355,26 +384,23 @@
     </div>
   </div>
 
-  {#if modalState !== 'closed'}
-  
-  <div class="modal">
-    <div class="modal-label">
+  {#if modalState !== "closed"}
+    <div class="modal">
+      <div class="modal-label">
+        <div class="content">
+          <h1>{getModalTitle()}</h1>
+          <span
+            >{getModalAutoAction()} automatically in {modalTimerCountdown}s</span
+          >
+        </div>
 
-      <div class="content">
-        <h1>{getModalTitle()}</h1>
-        <span>{getModalAutoAction()} automatically in {modalTimerCountdown}s</span>
+        <div class="actions">
+          <button on:click={modalResolve}>{getModalAction()}</button>
+          <button on:click={modalReject}>Cancel</button>
+        </div>
       </div>
-
-      <div class="actions">
-        <button on:click={modalResolve}>{getModalAction()}</button>
-        <button on:click={modalReject}>Cancel</button>
-      </div>
-      
     </div>
-  </div>
-  
   {/if}
-
 </main>
 
 <style>
@@ -586,5 +612,4 @@
     border-left: 1px solid var(--color-accent);
     color: grey;
   }
-
 </style>

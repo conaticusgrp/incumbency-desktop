@@ -1,39 +1,39 @@
 <script lang="ts" context="module">
-
   interface LoadingStatus {
-    main: string,
-    substatuses: string[]
+    main: string;
+    substatuses: string[];
   }
-
 </script>
 
 <script lang="ts">
-
   import { listen } from "@tauri-apps/api/event";
-  
+
   const LOADING_STAGE_COUNT = 4;
   const MIN_LOG_DELAY = 250;
   const MAX_LOG_DELAY = 500;
-  
+
   let details: HTMLElement;
   let timerResolve: (() => void) | null = null;
-  let progress = -100 / LOADING_STAGE_COUNT;    // %
+  let progress = -100 / LOADING_STAGE_COUNT; // %
   let status: LoadingStatus = { main: "", substatuses: [] };
 
   const randomDelay = async () => {
-    await new Promise<void>(resolve => {
-      setTimeout(resolve, MIN_LOG_DELAY + (MAX_LOG_DELAY - MIN_LOG_DELAY) * Math.random());
+    await new Promise<void>((resolve) => {
+      setTimeout(
+        resolve,
+        MIN_LOG_DELAY + (MAX_LOG_DELAY - MIN_LOG_DELAY) * Math.random()
+      );
     });
-  }
+  };
 
   const log = (msg: string): void => {
     details.innerText += `${msg}\n`;
-  }
+  };
 
-  listen('loading_status', (e) => {
+  listen("loading_status", (e) => {
     if (timerResolve != null) {
       timerResolve();
-      status.substatuses.forEach(m => log(m));
+      status.substatuses.forEach((m) => log(m));
     }
 
     //@ts-ignore
@@ -53,36 +53,28 @@
       resolve();
     });
   });
-
 </script>
 
 <main>
-
   <div class="loading-panel">
-
     <h1>{status.main}</h1>
 
     <div class="content">
-
       <div class="progress">
         <span>Progress</span>
-        <div class="progress-bar" style="--bar-width: {Math.min(Math.max(progress, 0), 100)}%;"></div>
+        <div
+          class="progress-bar"
+          style="--bar-width: {Math.min(Math.max(progress, 0), 100)}%;"
+        />
       </div>
 
       <span style="margin-top: 2em;">Details:</span>
-      <div
-        class="details"
-        bind:this={details}
-      ></div>
-
+      <div class="details" bind:this={details} />
     </div>
-
   </div>
-
 </main>
 
 <style>
-
   main {
     display: flex;
     align-items: center;
@@ -139,7 +131,7 @@
   }
 
   .progress-bar:after {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
@@ -161,5 +153,4 @@
   .details::-webkit-scrollbar {
     display: none;
   }
-
 </style>

@@ -1,5 +1,4 @@
 <script lang="ts">
-    
   import { createEventDispatcher } from "svelte";
   import { TAB_LIST_ENTRY_MARGIN } from "../../../../scripts/desktopConstants";
 
@@ -10,9 +9,8 @@
   let dispatcher = createEventDispatcher();
 
   const select = (): void => {
-    dispatcher('selectTab', { index });
-  }
-
+    dispatcher("selectTab", { index });
+  };
 </script>
 
 <button
@@ -20,13 +18,10 @@
   data-selected={selected}
   on:click={select}
 >
-
   {data}
-
 </button>
 
 <style>
-
   button {
     border: 1px solid var(--color-accent);
   }
@@ -36,5 +31,4 @@
     color: var(--color-bg);
     font-weight: bold;
   }
-
 </style>
