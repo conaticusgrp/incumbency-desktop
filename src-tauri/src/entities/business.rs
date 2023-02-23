@@ -70,10 +70,9 @@ impl Business {
         self.generate_start_values(product_type, config);
 
         let (sufficient_businesses, marketing_reach_percentage) = self.generate_marketing_reach(remaining_market_percentage);
-        if sufficient_businesses { return sufficient_businesses }
+        if sufficient_businesses { return true }
 
-        let exp_purchases = self.assign_to_people(as_decimal_percent!(marketing_reach_percentage) * product_demand, people, 0.8) as i64;
-        self.expected_income = exp_purchases * self.product_price as i64;
+        self.expected_income = self.assign_to_people(as_decimal_percent!(marketing_reach_percentage) * product_demand, people, 0.8) as i64;
 
         // TODO: make this more varied & accurate, influence it by external factors
         let production_cost = self.get_production_cost();
@@ -114,7 +113,7 @@ impl Business {
         self.product_type = product_type;
         self.minimum_education_level = generate_education_level(config);
         self.marketing_cost_percentage = rng.gen_range(1..=2);
-        self.product_price = rng.gen_range(2..100); // TODO: determine this price more accurately?
+        self.product_price = rng.gen_range(2..150); // TODO: determine this price more accurately?
         self.production_cost_per_product = self.product_price as f32 * float_range(0.03, 0.05, 3);
     }
 
@@ -155,15 +154,16 @@ impl Business {
 
     fn generate_marketing_reach(&self, remaining_market_percentage: &mut f32) -> (bool, f32) {
         let marketing_reach_percentage = match self.minimum_education_level {
-            NoFormalEducation | HighSchoolDiploma | College => self.random_marketing_percentage_multiplyer(0.8, 0.35),
-            AssociateDegree | Bachelors | AdvancedDegree => self.random_marketing_percentage_multiplyer(0.2, 0.6),
+            NoFormalEducation | HighSchoolDiploma | College => self.random_marketing_percentage_multiplyer(remaining_market_percentage, 0.9, 1.5),
+            AssociateDegree | Bachelors | AdvancedDegree => self.random_marketing_percentage_multiplyer(remaining_market_percentage, 1.2, 2.8),
         };
 
-        if (*remaining_market_percentage - marketing_reach_percentage) < 0. {
+
+        *remaining_market_percentage -= marketing_reach_percentage;
+        if *remaining_market_percentage <= 0. {
             return (true, marketing_reach_percentage);
         }
 
-        *remaining_market_percentage -= marketing_reach_percentage;
         (false, marketing_reach_percentage)
     }
 
@@ -212,7 +212,7 @@ impl Business {
     }
 
     /// Multiplies the percentage target audience for the market based on educated odds 
-    pub fn random_marketing_percentage_multiplyer(&self, min: f32, max: f32) -> f32 {
+    pub fn random_marketing_percentage_multiplyer(&self, remaining_market_percentage: &mut f32, min: f32, max: f32) -> f32 {
         // 1 - smallest, 3 - largest
         let tier = percentage_based_output_int(hashmap! {
             1 => 82,
@@ -223,11 +223,16 @@ impl Business {
         let mut rng = rand::thread_rng();
         let increase_multiplyer = match tier {
             2 => float_range(0.5, 2., 2),
-            3 => rng.gen_range(5..10) as f32,
+            3 => rng.gen_range(3..5) as f32,
             _ => 1.,
         };
 
-        float_range(min * increase_multiplyer, max * increase_multiplyer, 2)
+        let market_percentage = float_range(min * increase_multiplyer, max * increase_multiplyer, 2);
+        if market_percentage > *remaining_market_percentage {
+            return *remaining_market_percentage;
+        }
+
+        market_percentage
     }
 
     /// This function assigns the business to a new market with a new market percentage. This runs monthly.

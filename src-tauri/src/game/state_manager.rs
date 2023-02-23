@@ -1,7 +1,7 @@
 use std::{sync::{Mutex, Arc}, collections::HashMap};
 use serde_json::json;
 use uuid::Uuid;
-use crate::{entities::{business::{Business, ProductType}, person::{person::{Person, Job}, debt::{Debt, DebtType}}}, as_decimal_percent, common::{util::{Date, SlotArray, set_decimal_count, chance_one_in, generate_unemployed_salary, get_healthcare_group}, config::Config, errors::{IncResult, Error}}};
+use crate::{entities::{business::{Business, ProductType}, person::{person::{Person, Job}, debt::{Debt, DebtType}}}, as_decimal_percent, common::{util::{Date, SlotArray, set_decimal_count, chance_one_in, generate_unemployed_salary, get_healthcare_group}, config::Config, errors::{IncResult, Error}}, game::structs::TaxRule};
 use tauri::{Manager, AppHandle};
 use super::{structs::{GameState, GameStateRules, HealthcareState, FinanceData, BusinessData}, events::{update_app, App, json_get_i64}};
 

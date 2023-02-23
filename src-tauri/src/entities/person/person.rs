@@ -389,7 +389,7 @@ impl Person {
     }
     
     pub fn pay_tax(&mut self, government_balance: &mut i64, amount: f32) {
-        if amount < 0. { return }
+        if amount <= 0. { return }
         self.balance -= amount;
         *government_balance += amount as i64;
     }
