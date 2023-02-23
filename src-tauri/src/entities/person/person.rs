@@ -5,7 +5,7 @@ use uuid::Uuid;
 use crate::{common::{util::{float_range, percentage_based_output_int, Date, percentage_chance, chance_one_in, generate_unemployed_salary}, errors::{Error, IncResult}}, common::{config::Config, util::get_healthcare_group}, game::{generation::{generate_education_level, get_expected_salary_range}, structs::{TaxRule, HealthcareState, GameStateRules}}, entities::business::{ProductType, Business}, percentage_of, as_decimal_percent};
 use EducationLevel::*;
 
-use super::{debt::{Debt}, welfare::{WelfareMachine, WELFARE_IMPACT_FOUR, WELFARE_IMPACT_FIVE, WELFARE_IMPACT_THREE, WELFARE_IMPACT_TWO}};
+use super::{debt::{Debt}, welfare::{WelfareMachine, WELFARE_IMPACT_FOUR, WELFARE_IMPACT_FIVE, WELFARE_IMPACT_THREE, WELFARE_IMPACT_TWO, WELFARE_IMPACT_SEVEN}};
 
 #[derive(Default, Clone)]
 pub struct Birthday {
@@ -353,7 +353,11 @@ impl Person {
             }
         }
 
-        1
+        if self.balance <= 0. {
+            0
+        } else {
+            1
+        }
     }
 
     /// This should be done every time the individual's salary changes, and every month.
@@ -416,10 +420,10 @@ impl Person {
             // TODO: affect this by other factors
             if chance_one_in(500 * 365) { // 1 in 500 chance each year 
                 self.homeless = true;
-            } 
+            }
         }
 
-        if chance_one_in(7300) { // Average person has minor accident every 20 years
+        if chance_one_in(7300) { // Average person has minor accident every 20 years (guessed)
             self.remove_health(rng.gen_range(15..=25), healthcare, rules);
         }
 
@@ -440,6 +444,7 @@ impl Person {
             self.balance -= self.daily_food_spending as f32;
 
             let (health_loss_chance, welfare_loss) = match self.daily_food_spending { // Chance that the individual will lose 1% of their health
+                0 => (98., WELFARE_IMPACT_SEVEN),
                 1 => (50., WELFARE_IMPACT_FIVE),
                 2 => (25., WELFARE_IMPACT_FOUR),
                 3 => (0.9, WELFARE_IMPACT_THREE),
