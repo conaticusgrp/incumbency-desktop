@@ -143,6 +143,8 @@ pub struct HealthcareState {
 
 impl HealthcareState {
   pub fn get_current_capacity(&self) -> i32 {
-    self.total_capacity - ((self.childcare.total_capacity - self.childcare.current_capacity) + (self.adultcare.total_capacity - self.adultcare.current_capacity) + ( self.eldercare.total_capacity - self.eldercare.current_capacity))
+    let total_capacity_relative = self.childcare.total_capacity + self.adultcare.total_capacity + self.eldercare.total_capacity;
+
+    total_capacity_relative - ((self.childcare.total_capacity - self.childcare.current_capacity) + (self.adultcare.total_capacity - self.adultcare.current_capacity) + ( self.eldercare.total_capacity - self.eldercare.current_capacity))
   }
 }

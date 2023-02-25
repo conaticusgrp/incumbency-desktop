@@ -109,8 +109,7 @@
       appendValueStart="$"
       currentValue={data.healthcare_budget}
       data={{
-        "Used Capacity": data.used_hospital_capacity,
-        "Total Capacity": data.total_hospital_capacity,
+        "Capacity": `${data.used_hospital_capacity}/${data.total_hospital_capacity} (${data ? Math.floor((data.used_hospital_capacity / data.total_hospital_capacity) * 100) : 0}%)`,
       }}
       assignValueFn={(val) =>
         updateGameValue(GameValue.HealthcareBudget, Number(val))}

@@ -339,15 +339,9 @@ pub fn update_healthcare_budget(state_mux: State<'_, GameStateSafe>, new_budget:
 
     let healthcare = &state.healthcare;
     let new_total_capacity = (new_budget as i64 / healthcare.cost_per_hospital_capacity as i64) as i32;
-
-    let childcare_percent = as_decimal_percent!(percentage_of!(healthcare.childcare.budget; / healthcare.budget));
-    let adultcare_percent = as_decimal_percent!(percentage_of!(healthcare.adultcare.budget; / healthcare.budget));
-    let eldercare_percent = as_decimal_percent!(percentage_of!(healthcare.eldercare.budget; / healthcare.budget));
-    
+ 
     let error_checker_failed = &mut false;
-    state.check_healthcare_capacity(healthcare.childcare.total_capacity, (new_total_capacity as f32 * childcare_percent) as i32, error_checker_failed);
-    state.check_healthcare_capacity(healthcare.adultcare.total_capacity, (new_total_capacity as f32 * adultcare_percent) as i32, error_checker_failed);
-    state.check_healthcare_capacity(healthcare.eldercare.total_capacity, (new_total_capacity as f32 * eldercare_percent) as i32, error_checker_failed);
+    state.check_healthcare_capacity(new_total_capacity, error_checker_failed);
 
     if *error_checker_failed {
         return json!({

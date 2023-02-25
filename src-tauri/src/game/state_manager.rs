@@ -61,7 +61,9 @@ impl GameState {
         }
     }
 
-    pub fn check_healthcare_capacity(&self, current_capacity: i32, new_total_capacity: i32, error_checker_failed: &mut bool) {
+    pub fn check_healthcare_capacity(&self, new_total_capacity: i32, error_checker_failed: &mut bool) {
+        let current_capacity = self.healthcare.get_current_capacity();
+
         if new_total_capacity >= current_capacity {
             return;
         }
@@ -347,8 +349,11 @@ impl GameState {
             }
 
             let tax_rate = Business::get_tax_rate(&self.rules.business_tax_rule, business.last_month_income, self.business_tax_rate);
-            let tax_cost = business.last_month_income * tax_rate as f64;
-            self.finance_data.expected_business_income += tax_cost as i64;
+
+            if business.last_month_income > 0. {
+                let tax_cost = business.last_month_income * tax_rate as f64;
+                self.finance_data.expected_business_income += tax_cost as i64;
+            }
 
             business.pay_tax(&mut self.government_balance, business.last_month_income * tax_rate as f64);
             let reinvesment_budget = business.balance * as_decimal_percent!(business.marketing_cost_percentage) as f64;
