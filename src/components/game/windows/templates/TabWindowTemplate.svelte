@@ -32,9 +32,9 @@
     3
   ]}
   tabs={[
-    { c: TestTab1 },
-    { c: TestTab1 },
-    { c: TestTab1 },
+    { c: TestTab1, data: "msg 1" },
+    { c: TestTab1, data: "msg 2" },
+    { c: TestTab1, data: "msg 3" },
   ]}
   on:criticalWindowEvent={(e) => dispatcher('criticalWindowEvent', e.detail)}
 />

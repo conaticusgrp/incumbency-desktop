@@ -12,7 +12,7 @@
 
   export let tabButtonComponent: typeof SvelteComponent;
   export let tabButtonData: any[] = [];
-  export let tabs: { c: typeof SvelteComponent }[];
+  export let tabs: { c: typeof SvelteComponent, data: any }[];
   
   export let currentTabIndex: number = -1;
   
@@ -24,7 +24,7 @@
     currentTabIndex = i;
   }
 
-  let appData: any;
+  let appData: any; 
 </script>
 
 <Window
@@ -79,12 +79,11 @@
     <section>
 
       {#if currentTabIndex >= 0 && currentTabIndex < tabs.length}
-
-      <svelte:component
-        this={tabs[currentTabIndex].c}
-        data={appData}
-      />
-
+        <svelte:component
+          this={tabs[currentTabIndex].c}
+          tabData={tabs[currentTabIndex].data}
+          data={appData}
+        />
       {/if}
 
     </section>

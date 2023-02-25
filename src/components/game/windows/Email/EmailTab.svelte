@@ -4,7 +4,7 @@
   import { countLines, getLineHeight } from "../../../../scripts/text";
   import { afterUpdate, onMount, tick } from "svelte";
 
-  export let data: EmailData;
+  export let tabData: EmailData;
 
   let mounted: boolean = false;
   let emailHeader: HTMLElement;
@@ -37,7 +37,7 @@
   // Is triggered when:
   // 1. The tab changes
   // 2. On window resize (see Email.svelte)
-  $: if (data != undefined && mounted) {
+  $: if (tabData != undefined && mounted) {
     (async () => {
       await tick();
       selectedEmailTotalLines = countLines(emailContentSection);
@@ -54,13 +54,13 @@
   >
 
     <div>
-      From: <span>{data.sender?.username ?? "Unknown sender"}</span>
-      &lt;{data.sender?.address ?? "unknown"}&gt;
+      From: <span>{tabData.sender?.username ?? "Unknown sender"}</span>
+      &lt;{tabData.sender?.address ?? "unknown"}&gt;
     </div>
 
     <div>
-      CC: <span>{data.cc?.username ?? "Unknown user"}</span>
-      &lt;{data.cc?.address ?? "unknown"}&gt;
+      CC: <span>{tabData.cc?.username ?? "Unknown user"}</span>
+      &lt;{tabData.cc?.address ?? "unknown"}&gt;
     </div>
     
   </div>
@@ -74,11 +74,11 @@
     on:scroll={handleContentScroll}
   >
 
-    <h2>{data.title}</h2>
+    <h2>{tabData.title}</h2>
     <section bind:this={emailContentSection}>
-      {data.content}
+      {tabData.content}
     </section>
-    <p>{data.sender?.username ?? ''}</p>
+    <p>{tabData.sender?.username ?? ''}</p>
     <div class="space-filler"></div>
         
     <div
