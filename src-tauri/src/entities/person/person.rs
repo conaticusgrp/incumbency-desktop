@@ -70,6 +70,7 @@ pub struct Person {
     pub hospitalisation_count: i32, // The amount of times the individual has been hospitalised
     pub days_until_death: Option<i32>, // If the person is predicted to die, use this as a counter
     pub days_left_in_hospital: Option<i32>, // Days left that the person is in hospitalisation
+    pub hospitalised_age: i32, // This is important to avoid capacity bugs
     pub maximum_health: i32,
 
     pub homeless: bool,
@@ -409,7 +410,7 @@ impl Person {
 
         if let Some(ref mut days) = self.days_until_death {
             *days -= 1;
-            if *days <= 0 {
+            if *days <= 0 { 
                 return Ok(true);
             }
         }
@@ -466,9 +467,9 @@ impl Person {
             in_hospital = true;
 
             *days -= 1;
-            if *days <= 0 {
+            if *days <= 0 && self.days_until_death.is_none() {
                 self.days_left_in_hospital = None;
-                let healthcare_group = get_healthcare_group(self.age, healthcare);
+                let healthcare_group = get_healthcare_group(self.hospitalised_age, healthcare);
                 healthcare_group.current_capacity += 1;
             }
         }

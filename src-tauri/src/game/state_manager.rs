@@ -144,7 +144,9 @@ impl GameState {
             death_ages_total += per.age;
 
             let healthcare_group = get_healthcare_group(per.age, &mut self.healthcare);
-            healthcare_group.current_capacity += 1;
+            if let Some(_) = per.days_left_in_hospital {
+                healthcare_group.current_capacity += 1;
+            }
 
             let per_cpy = per.clone();
             self.resign_if_employed(per_cpy);

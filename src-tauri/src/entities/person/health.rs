@@ -81,7 +81,10 @@ impl Person {
     pub fn hospitalize(&mut self, percentage_below_hospitalisation: i32, death_chance: i32, initial_health_loss: i32) {
         self.hospitalisation_count += 1;
         let mut rng = rand::thread_rng();
-        self.days_left_in_hospital = Some(death_chance / 2);
+
+        let hospital_days = death_chance / 2;
+        self.days_left_in_hospital = Some(hospital_days);
+        self.hospitalised_age = self.age;
 
         let increase_percent = rng.gen_range(0..=1) == 1;
 
@@ -94,7 +97,7 @@ impl Person {
 
         self.hospitalisation_percentage += hospitalisation_percent_increase;
 
-        self.die_based_on_chance(death_chance, rng.gen_range(0..=death_chance / 2));
+        self.die_based_on_chance(death_chance, hospital_days); // i swear my code gets worse every time i do this
 
         self.health_percentage = self.hospitalisation_percentage + (initial_health_loss / 2);
         if self.health_percentage > self.maximum_health { self.health_percentage = self.maximum_health }

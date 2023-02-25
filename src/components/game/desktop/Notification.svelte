@@ -15,7 +15,6 @@
     .set('normal', 'var(--color-accent)')
     .set('warning', '#D47A21')
     .set('error', '#C82525');
-
 </script>
 
 <script lang="ts">

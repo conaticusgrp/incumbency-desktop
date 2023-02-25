@@ -324,6 +324,8 @@ pub fn update_business_tax_rate(state_mux: State<'_, GameStateSafe>, tax_rate: i
 
     for bus in state.businesses.values() {
         let tax_rate = Business::get_tax_rate(&state.rules.business_tax_rule, bus.last_month_income, state.business_tax_rate);
+        if bus.last_month_income <= 0. { continue }
+        
         total_income += (bus.last_month_income * tax_rate as f64) as i64;
     }
 
