@@ -1,5 +1,4 @@
 <script lang="ts" context="module">
-
   export interface EmailUser {
       username: string,
       address?: string
@@ -12,7 +11,6 @@
       sender?: EmailUser,
       cc?: EmailUser
   }
-
 </script>
 
 <script lang="ts">
@@ -116,4 +114,3 @@
   on:windowEvent={handleWindowEvent}
   on:criticalWindowEvent={handleCriticalWindowEvent}
 />
-  

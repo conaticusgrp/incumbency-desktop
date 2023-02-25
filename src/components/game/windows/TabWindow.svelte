@@ -33,8 +33,9 @@
   {size}
   {windowData}
   on:criticalWindowEvent={(e) => dispatcher("criticalWindowEvent", e.detail)}
-  on:windowEvent={(e) => dispatcher("windowEvent", e.detail)}
   on:windowEvent={(e) => {
+    dispatcher("windowEvent", e.detail);
+
     let newData = handleDataEvents(e, appData);
     if (newData) {
       appData = newData;

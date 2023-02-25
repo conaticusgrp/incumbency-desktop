@@ -310,7 +310,7 @@ pub fn update_tax_rate(state_mux: State<'_, GameStateSafe>, tax_rate: i32) -> i6
         total_income += ((per.salary as f32 / 12.) * tax_rate) as i64;
     }
 
-    state.finance_data.expected_person_income = total_income / state.people.len() as i64;
+    state.finance_data.expected_person_income = total_income;
     state.finance_data.expected_person_income
 }
 
@@ -327,7 +327,7 @@ pub fn update_business_tax_rate(state_mux: State<'_, GameStateSafe>, tax_rate: i
         total_income += (bus.last_month_income * tax_rate as f64) as i64;
     }
 
-    state.finance_data.expected_business_income = total_income / state.businesses.len() as i64;
+    state.finance_data.expected_business_income = total_income;
     state.finance_data.expected_business_income
 }
 
