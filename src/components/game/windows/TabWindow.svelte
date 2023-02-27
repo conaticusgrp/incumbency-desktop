@@ -123,10 +123,11 @@
     width: 100%;
     height: var(--username-height);
     border-top: 1px solid var(--color-accent);
+    color: var(--color-accent);
   }
 
-  .username > div {
-    color: var(--color-accent);
+  .username div {
+    font-weight: bold;
   }
 
   main > section:last-of-type {

@@ -200,6 +200,8 @@ impl GameState {
             "government_balance": self.government_balance,
             "spare_budget": self.spare_budget,
             "used_hospital_capacity": self.healthcare.get_current_capacity(),
+            "average_welfare": self.average_welfare as i32,
+            "average_welfare_unemployed": self.average_welfare_unemployed as i32,
         }), app_handle);
 
         update_app(App::Healthcare, json!({

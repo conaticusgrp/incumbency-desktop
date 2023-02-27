@@ -10,6 +10,8 @@
     welfare_budget: number;
     spare_budget: number;
     tax_rate: number;
+    average_welfare: number;
+    average_welfare_unemployed: number;
     rules: {
       business_tax: {
         enabled: boolean;
@@ -36,7 +38,6 @@
   export let windowData: CriticalWindowData;
 
   let dispatcher = createEventDispatcher();
-  let data: any = {};
 </script>
 
 <TabWindow
@@ -46,6 +47,6 @@
   {windowData}
   tabButtonComponent={FinanceTabButton}
   tabButtonData={["Overview", "Budgets", "Rules"]}
-  tabs={[{ c: Overview }, { c: Budgets }, { c: Rules }]}
+  tabs={[{ c: Overview, data: {} }, { c: Budgets, data: {} }, { c: Rules, data: {} }]}
   on:criticalWindowEvent={(e) => dispatcher("criticalWindowEvent", e.detail)}
 />

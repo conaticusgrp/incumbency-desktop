@@ -87,7 +87,7 @@
       appendValueEnd="%"
       currentValue={data.tax_rate}
       data={{
-        "Expected Tax Income": data.expected_person_income,
+        "Expected Tax Income": `$${data.expected_person_income}`,
       }}
       assignValueFn={(val) => updateGameValue(GameValue.TaxRate, Number(val))}
     />
@@ -96,7 +96,7 @@
       appendValueEnd="%"
       currentValue={data.business_tax_rate}
       data={{
-        "Expected Business Tax Income": data.expected_business_income,
+        "Expected Business Tax Income": `$${data.expected_business_income}`,
       }}
       assignValueFn={(val) =>
         updateGameValue(GameValue.BusinessTaxRate, Number(val))}
@@ -118,7 +118,10 @@
       title="Welfare"
       appendValueStart="$"
       currentValue={data.welfare_budget}
-      data={{}}
+      data={{
+        "Average Welfare": `${data.average_welfare}%`,
+        "Average Unemployed Welfare": `${data.average_welfare_unemployed}%`,
+      }}
       assignValueFn={(val) =>
         updateGameValue(GameValue.WelfareBudget, Number(val))}
     />

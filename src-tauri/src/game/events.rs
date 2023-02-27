@@ -28,6 +28,8 @@ pub struct FinanceAppOpenedPayload {
     pub welfare_budget: i64,
     pub business_budget: i64,
     pub spare_budget: i64,
+    pub average_welfare: i32,
+    pub average_unemployed_welfare: i32,
     pub rules: serde_json::Value,
 }
 
@@ -95,6 +97,8 @@ pub fn app_open(state_mux: State<'_, GameStateSafe>, app_id: u8) -> IncResult<St
                 welfare_budget: state.welfare_budget,
                 business_budget: state.business_budget,
                 spare_budget: state.spare_budget,
+                average_welfare: state.average_welfare as i32,
+                average_unemployed_welfare: state.average_welfare_unemployed as i32,
                 rules: json!({
                     "tax": state.rules.tax_rule,
                     "business_tax": state.rules.business_tax_rule,
@@ -354,7 +358,7 @@ pub fn update_healthcare_budget(state_mux: State<'_, GameStateSafe>, new_budget:
 
     let spare_budget = state.get_spare_budget();
 
-    if spare_budget < 0 {
+    if new_budget > state.healthcare.budget && spare_budget < 0 {
         state.healthcare.budget = old_budget;
         return json!({
             "error": "Cannot afford this budget.",
@@ -379,7 +383,7 @@ pub fn update_welfare_budget(state_mux: State<'_, GameStateSafe>, new_budget: i6
     state.welfare_budget = new_budget;
     let spare_budget = state.get_spare_budget();
 
-    if spare_budget < 0 {
+    if new_budget > state.welfare_budget && spare_budget < 0 {
         state.welfare_budget = old_budget;
         return json!({
             "error": "Cannot afford this budget",
@@ -400,7 +404,7 @@ pub fn update_business_budget(state_mux: State<'_, GameStateSafe>, new_budget: i
     state.business_budget = new_budget;
     let spare_budget = state.get_spare_budget();
 
-    if spare_budget < 0 {
+    if state.business_budget > new_budget && spare_budget < 0 {
         state.business_budget = old_budget;
         return json!({
             "error": "Cannot afford this budget",

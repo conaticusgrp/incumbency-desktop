@@ -265,10 +265,11 @@
 
   .username {
     border-top: 1px solid var(--color-accent);
+    color: var(--color-accent);
   }
 
   .username > div {
-    color: var(--color-accent);
+    font-weight: bold;
   }
 
   .email-list::-webkit-scrollbar {

@@ -1,10 +1,20 @@
 <script lang="ts">
   export let width: string;
-  export let onClick: () => any;
   export let height = "34px";
+
+  export let onClick: (toggled: boolean) => any;
+
+  let isToggled = false;
 </script>
 
-<button on:click={onClick} style="--width: {width}; --height: {height}">
+<button
+  class:toggled={isToggled}
+  style="--width: {width};--height: {height}"
+  on:click={() => {
+    isToggled = !isToggled;
+    onClick(isToggled)
+  }}
+>
   <slot />
 </button>
 
@@ -14,6 +24,12 @@
     width: var(--width);
     padding: 0;
     height: var(--height);
+  }
+
+  .toggled {
+    background-color: var(--color-accent);
+    color: var(--color-bg);
+    font-weight: bold;
   }
 
   button:hover {

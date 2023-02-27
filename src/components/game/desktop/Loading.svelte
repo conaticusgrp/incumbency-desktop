@@ -27,7 +27,7 @@
   };
 
   const log = (msg: string): void => {
-    details.innerText += `${msg}\n`;
+    details.innerText += `[INFO]  ${msg}\n`;
   };
 
   listen("loading_status", (e) => {
@@ -68,7 +68,7 @@
         />
       </div>
 
-      <span style="margin-top: 2em;">Details:</span>
+      <span style="margin-top: 2em;">Details</span>
       <div class="details" bind:this={details} />
     </div>
   </div>
@@ -148,6 +148,8 @@
     border-radius: 1em;
     padding-left: 1em;
     overflow-y: scroll;
+    padding-left: 10px;
+    color: grey;
   }
 
   .details::-webkit-scrollbar {

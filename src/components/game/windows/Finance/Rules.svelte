@@ -5,7 +5,7 @@
 </script>
 
 <main>
-    Rules
+  Rules
 </main>
 
 <style>
