@@ -1,10 +1,12 @@
 <script lang="ts">
-    import ToggleButton from "../../../../ui/ToggleButton.svelte";
-    import type { DataItem } from "./Overview.svelte";
+    import ToggleButton from "../../../ui/ToggleButton.svelte";
+    import type { DataItem } from "../Finance/Overview/Overview.svelte";
 
-    export let title: string;
     export let data: string;
-    export let dataArray: DataItem[];
+    export let title: string;
+    export let dataArray: any[];
+
+    let isToggled = false;
 
     const comp = (a: DataItem, b: DataItem): number => {
         if (a.pinned && !b.pinned) {
@@ -20,7 +22,7 @@
 <div class="container">
     <div style="display: flex;">
         <div class="btn">
-            <ToggleButton onClick={(isToggled) => {
+            <ToggleButton  onClick={(isToggled) => {
                 dataArray.forEach((data, idx) => {
                     if (data.title !== title) return;
 
@@ -28,7 +30,7 @@
                 })
                 
                 dataArray = dataArray.sort((a, b) => comp(a, b));
-            }} width="100px" height="50px">Pin</ToggleButton>
+            }} width="100px" height="50px">{isToggled ? "Unpin" : "Pin"}</ToggleButton>
         </div>
 
         <h1>{title.toUpperCase()}</h1>

@@ -3,7 +3,6 @@
   export let height = "34px";
 
   export let onClick: (toggled: boolean) => any;
-
   let isToggled = false;
 </script>
 

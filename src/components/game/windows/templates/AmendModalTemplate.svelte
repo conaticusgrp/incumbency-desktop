@@ -3,7 +3,7 @@
   export let value: any;
   export let shown = false;
   export let updateValueFn: (newValue: any) => any;
-  export let appendValueStart: string;
+  export let appendValueStart: string; // TODO: use these
   export let appendValueEnd: string;
 </script>
 
@@ -14,9 +14,7 @@
       <p>{title}</p>
     </div>
     <div class="input-container">
-      <p>{appendValueStart}</p>
       <input type="text" bind:value />
-      <p>{appendValueEnd}</p>
     </div>
     <div class="btns">
       <button
@@ -71,8 +69,12 @@
     font-size: 20px;
   }
 
+  .input-container {
+    position: relative;
+  }
+
   .input-container p {
-    transform: translate(-50%, -50%);
+    position: absolute;
     font-size: 40px;
     font-weight: bold;
     color: grey;

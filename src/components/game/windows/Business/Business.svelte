@@ -19,7 +19,7 @@
   size={{ width: 800, height: 600 }}
   {windowData}
   tabButtonComponent={BusinessTabButton}
-  tabButtonData={["Overview"]}
+  tabButtonData={["Overview", "Rules"]}
   tabs={[
     { c: Overview, data: null }
   ]}
