@@ -8,8 +8,8 @@
 </script>
 
 <script lang="ts">
-    import OverviewData from "../templates/OverviewData.svelte";
-    import type { HealthcareData } from "./Healthcare.svelte";
+    import OverviewData from "../../templates/OverviewData.svelte";
+    import type { HealthcareData } from "../Healthcare.svelte";
 
     export let data: HealthcareData;
 

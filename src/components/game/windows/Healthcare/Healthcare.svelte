@@ -14,6 +14,16 @@
      population: number;
      used_capacity: number;
      total_capacity: number;
+     rules: {
+      deny_past_age: {
+        enabled: boolean,
+        maximum_age: number;
+      },
+      deny_past_health: {
+        enabled: boolean,
+        maximum_percentage: number;
+      }
+     }
   }
 </script>
 
@@ -22,9 +32,11 @@
   import { createEventDispatcher } from "svelte";
   import TabWindow from "../TabWindow.svelte";
   import type { CriticalWindowData } from "../Window.svelte";
+  import Capacity from "./Capacity/Capacity.svelte";
   
   import HealthcareTabButton from "./HealthcareTabButton.svelte";
-  import Overview from "./Overview.svelte";
+  import Overview from "./Overview/Overview.svelte";
+  import Rules from "./Rules/Rules.svelte";
   
   export let windowData: CriticalWindowData;
 
@@ -41,6 +53,8 @@
   tabButtonData={["Overview", "Capacity", "Rules"]}
   tabs={[
     { c: Overview, data: null },
+    { c: Capacity, data: null, },
+    { c: Rules, data: null }
   ]}
   on:criticalWindowEvent={(e) => dispatcher('criticalWindowEvent', e.detail)}
 />

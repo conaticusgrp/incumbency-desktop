@@ -107,8 +107,8 @@ pub struct GameState {
 
   pub spare_budget: i64,
 
-  pub average_welfare: f32,
-  pub average_welfare_unemployed: f32,
+  pub average_welfare: i32,
+  pub average_welfare_unemployed: i32,
 
   pub business_data: BusinessData,
 

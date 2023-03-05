@@ -39,8 +39,8 @@ impl Default for GameState {
 
             spare_budget: (GOVERNMENT_START_BALANCE as f64 * 0.55) as i64,
 
-            average_welfare: 100.,
-            average_welfare_unemployed: 100.,
+            average_welfare: 100,
+            average_welfare_unemployed: 100,
 
             business_data: BusinessData::default(),
             unemployed_count: 0,
@@ -179,11 +179,9 @@ impl GameState {
             self.healthcare.deaths_per_month += *day_amount as i32;
         }
 
-        self.average_welfare = total_welfare as f32 / self.people.len() as f32;
-        self.average_welfare = set_decimal_count(self.average_welfare, 2);
+        self.average_welfare = (total_welfare as f32 / self.people.len() as f32) as i32;
 
-        self.average_welfare_unemployed = total_welfare_unemployed as f32 / self.unemployed_count as f32;
-        self.average_welfare_unemployed = set_decimal_count(self.average_welfare_unemployed, 3);
+        self.average_welfare_unemployed = (total_welfare_unemployed as f32 / self.unemployed_count as f32) as i32;
 
         self.spare_budget = self.get_spare_budget();
         self.emit_daily_events(app_handle);
@@ -200,8 +198,8 @@ impl GameState {
             "government_balance": self.government_balance,
             "spare_budget": self.spare_budget,
             "used_hospital_capacity": self.healthcare.get_current_capacity(),
-            "average_welfare": self.average_welfare as i32,
-            "average_welfare_unemployed": self.average_welfare_unemployed as i32,
+            "average_welfare": self.average_welfare,
+            "average_welfare_unemployed": self.average_welfare_unemployed,
         }), app_handle);
 
         update_app(App::Healthcare, json!({

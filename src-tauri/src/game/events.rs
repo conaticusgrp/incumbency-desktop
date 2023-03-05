@@ -50,8 +50,8 @@ pub struct HealthcareAppOpenedPayload {
 
 #[derive(Serialize, Deserialize)]
 pub struct WelfareAppOpenedPayload {
-    pub average_welfare: f32,
-    pub average_unemployed_welfare: f32,
+    pub average_welfare: i32,
+    pub average_unemployed_welfare: i32,
     pub rules: serde_json::Value,
 }
 
