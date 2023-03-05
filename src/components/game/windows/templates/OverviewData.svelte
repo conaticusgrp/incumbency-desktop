@@ -6,8 +6,6 @@
     export let title: string;
     export let dataArray: any[];
 
-    let isToggled = false;
-
     const comp = (a: DataItem, b: DataItem): number => {
         if (a.pinned && !b.pinned) {
             return -1;
@@ -22,16 +20,15 @@
 <div class="container">
     <div style="display: flex;">
         <div class="btn">
-            <ToggleButton onClick={(toggled) => {
+            <ToggleButton activeText="Unpin" inactiveText="Pin" onClick={(isToggled) => {
                 dataArray.forEach((data, idx) => {
                     if (data.title !== title) return;
 
-                    dataArray[idx].pinned = toggled;
-                    isToggled = toggled;
+                    dataArray[idx].pinned = isToggled;
                 })
                 
                 dataArray = dataArray.sort((a, b) => comp(a, b));
-            }} width="100px" height="50px">{isToggled ? "Unpin" : "Pin"}</ToggleButton>
+            }} width="100px" height="50px" />
         </div>
 
         <h1>{title.toUpperCase()}</h1>

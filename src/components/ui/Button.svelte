@@ -2,9 +2,11 @@
   export let width: string;
   export let onClick: () => any;
   export let height = "34px";
+  export let style = "";
+  export let enabled: boolean = true;
 </script>
 
-<button on:click={onClick} style="--width: {width}; --height: {height}">
+<button disabled={!enabled} on:click={onClick} style="--width: {width}; --height: {height};{style}">
   <slot />
 </button>
 
@@ -16,7 +18,7 @@
     height: var(--height);
   }
 
-  button:hover {
+  button:hover:enabled {
     background-color: var(--color-accent);
     color: var(--color-bg);
     font-weight: bold;

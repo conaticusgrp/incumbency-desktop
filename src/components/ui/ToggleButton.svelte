@@ -3,18 +3,21 @@
   export let height = "34px";
 
   export let onClick: (toggled: boolean) => any;
-  let isToggled = false;
+  export let isToggled = false;
+  export let activeText: string;
+  export let inactiveText: string;
+  export let style: string = "";
 </script>
 
 <button
   class:toggled={isToggled}
-  style="--width: {width};--height: {height}"
+  style="--width: {width};--height: {height};{style}"
   on:click={() => {
     isToggled = !isToggled;
     onClick(isToggled)
   }}
 >
-  <slot />
+  {isToggled ? activeText : inactiveText}
 </button>
 
 <style>

@@ -32,7 +32,7 @@
   import FinanceTabButton from "./FinanceTabButton.svelte";
   import Overview from "./Overview/Overview.svelte";
   import Budgets from "./Budgets/Budgets.svelte";
-  import Rules from "./Rules.svelte";
+  import Rules from "./Rules/Rules.svelte";
   import TabWindow from "../TabWindow.svelte";
 
   export let windowData: CriticalWindowData;
