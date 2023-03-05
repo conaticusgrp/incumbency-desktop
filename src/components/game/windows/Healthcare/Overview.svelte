@@ -1,6 +1,7 @@
 <script lang="ts" context="module">
     export interface DataItem {
         title: string;
+        dataKey: keyof HealthcareData;
         data: any;
         pinned: boolean;
     }
@@ -12,35 +13,49 @@
 
     export let data: HealthcareData;
 
-    let dataArray: DataItem[] = [];
-
-    $: dataArray = [
+    let dataArray: DataItem[] = [
       {
         title: "Population",
-        data: data.population,
+        dataKey: "population",
+        data: null,
         pinned: false,
       },
       {
         title: "Births per month",
-        data: data.births_per_month,
+        dataKey: "births_per_month",
+        data: null,
         pinned: false,
       },
       {
         title: "Deaths per month",
-        data: data.deaths_per_month,
+        dataKey: "deaths_per_month",
+        data: null,
         pinned: false,
       },
       {
         title: "Life Expectancy",
-        data: data.life_expectancy,
+        dataKey: "life_expectancy",
+        data: null,
         pinned: false,
       },
       {
         title: "Capacity",
-        data: `${data.used_capacity}/${data.total_capacity} (${Math.floor((data.used_capacity / data.total_capacity) * 100)}%)`,
+        dataKey: "used_capacity",
+        data: null,
         pinned: false,
       },
     ];
+
+    $: {
+      dataArray.forEach((d, i) => {
+        if (d.title === "Capacity") {
+          dataArray[i].data = `${data.used_capacity}/${data.total_capacity} (${Math.floor((data.used_capacity / data.total_capacity) * 100)}%)`;
+          return;
+        }
+
+        dataArray[i].data = data[d.dataKey];
+      })
+    }
 </script>
 
 <main>

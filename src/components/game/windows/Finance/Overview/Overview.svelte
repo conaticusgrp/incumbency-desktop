@@ -1,8 +1,10 @@
 <script lang="ts" context="module">
     export interface DataItem {
         title: string;
+        dataKey: keyof FinanceData;
         data: any;
-        pinned: boolean;
+        pinned?: boolean;
+        prefix: string;
     }
 </script>
 
@@ -12,40 +14,59 @@
 
     export let data: FinanceData;
 
-    let dataArray: DataItem[] = [];
-
-    $: dataArray = [
+    let dataArray: DataItem[] = [
       {
         title: "Government Balance",
-        data: `$${data.government_balance}`,
+        prefix: "$",
+        dataKey: "government_balance",
+        data: null,
         pinned: false,
       },
       {
         title: "Average Monthly Income",
-        data: `$${data.average_monthly_income}`,
+        prefix: "$",
+        dataKey: "average_monthly_income",
+        data: null,
         pinned: false,
       },
       {
         title: "Expected Tax Income",
-        data: `$${data.expected_person_income}`,
+        dataKey: "expected_person_income",
+        prefix: "$",
+        data: null,
         pinned: false,
       },
       {
         title: "Expected Business Tax Income",
-        data: `$${data.expected_business_income}`,
+        dataKey: "expected_business_income",
+        prefix: "$",
+        data: null,
         pinned: false,
       },
       {
         title: "Total Expected Income",
-        data: `$${data.expected_person_income + data.expected_business_income}`,
+        dataKey: "expected_person_income",
+        prefix: "$",
+        data: null,
         pinned: false,
       },
       {
         title: "Spare Budget",
-        data: `$${data?.spare_budget}`,
+        dataKey: "spare_budget",
+        prefix: "$",
+        data: null,
         pinned: false,
       },
     ];
+
+    $: dataArray.forEach((d, i) => {
+      if (d.title === "Total Expected Income") {
+        dataArray[i].data = `${d.prefix}${data.expected_person_income + data.expected_business_income}`
+        return;
+      }
+
+      dataArray[i].data = `${d.prefix ? d.prefix : ""}${data[d.dataKey]}`;
+    })
 </script>
 
 <main>

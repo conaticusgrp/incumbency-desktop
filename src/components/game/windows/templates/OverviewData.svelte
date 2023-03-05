@@ -22,11 +22,12 @@
 <div class="container">
     <div style="display: flex;">
         <div class="btn">
-            <ToggleButton  onClick={(isToggled) => {
+            <ToggleButton onClick={(toggled) => {
                 dataArray.forEach((data, idx) => {
                     if (data.title !== title) return;
 
-                    dataArray[idx].pinned = isToggled;
+                    dataArray[idx].pinned = toggled;
+                    isToggled = toggled;
                 })
                 
                 dataArray = dataArray.sort((a, b) => comp(a, b));
