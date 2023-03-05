@@ -1,6 +1,6 @@
 <script lang="ts">
-    import Button from "../../../../ui/Button.svelte";
-    import AmendModalTemplate from "../../templates/AmendModalTemplate.svelte";
+    import Button from "../../../ui/Button.svelte";
+    import AmendModalTemplate from "./AmendModalTemplate.svelte";
 
     export let title: string;
     export let currentValue: any;
