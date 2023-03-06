@@ -73,5 +73,10 @@
     main {
         width: 100%;
         height: 100%;
+        overflow-y: scroll;
+    }
+
+    main::-webkit-scrollbar {
+        display: none;
     }
 </style>

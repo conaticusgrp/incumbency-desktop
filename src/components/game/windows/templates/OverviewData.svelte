@@ -14,21 +14,27 @@
         }
 
         return 0;
-    }
+    };
 </script>
 
 <div class="container">
     <div style="display: flex;">
         <div class="btn">
-            <ToggleButton activeText="Unpin" inactiveText="Pin" onClick={(isToggled) => {
-                dataArray.forEach((data, idx) => {
-                    if (data.title !== title) return;
+            <ToggleButton
+                activeText="Unpin"
+                inactiveText="Pin"
+                onClick={(isToggled) => {
+                    dataArray.forEach((data, idx) => {
+                        if (data.title !== title) return;
 
-                    dataArray[idx].pinned = isToggled;
-                })
-                
-                dataArray = dataArray.sort((a, b) => comp(a, b));
-            }} width="100px" height="50px" />
+                        dataArray[idx].pinned = isToggled;
+                    });
+
+                    dataArray = dataArray.sort((a, b) => comp(a, b));
+                }}
+                width="100px"
+                height="50px"
+            />
         </div>
 
         <h1>{title.toUpperCase()}</h1>
@@ -55,6 +61,6 @@
     .container {
         margin-left: 20px;
         margin-top: 20px;
-        margin-bottom: 50px
+        margin-bottom: 50px;
     }
 </style>
