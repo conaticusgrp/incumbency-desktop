@@ -62,5 +62,7 @@
         margin-left: 20px;
         margin-top: 20px;
         margin-bottom: 50px;
+        border: solid 1px var(--color-accent);
+        padding: 20px;
     }
 </style>

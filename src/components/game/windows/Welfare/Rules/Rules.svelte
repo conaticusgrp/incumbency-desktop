@@ -23,12 +23,12 @@
 
     const onCoverUpdate = (updateData: any[]) => {
         const payload = {
-            people_count: updateData[0],
-            maximum_salary: updateData[1],
+            people_count: Number(updateData[0]),
+            maximum_salary: Number(updateData[1]),
         };
 
         invoke("update_rule", {
-            ruleId: Rules.BusinessFunding,
+            ruleId: Rules.CoverFood,
             data: payload,
         });
 
@@ -56,7 +56,7 @@
 
     const onCoverUnemployedUpdate = (updateData: any[]) => {
         const payload = {
-            people_count: updateData[0],
+            people_count: Number(updateData[0]),
         };
 
         invoke("update_rule", {

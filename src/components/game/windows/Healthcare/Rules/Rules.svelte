@@ -23,7 +23,7 @@
 
     const onAgeRuleUpdated = (updateData: any[]) => {
         const payload = {
-            maximum_age: updateData[0],
+            maximum_age: Number(updateData[0]),
         };
 
         invoke("update_rule", {
@@ -52,11 +52,11 @@
 
     const onHealthRuleUpdated = (updateData: any[]) => {
         const payload = {
-            maximum_percentage: updateData[0],
+            maximum_percentage: Number(updateData[0]),
         };
 
         invoke("update_rule", {
-            ruleId: Rules.DenyAge,
+            ruleId: Rules.DenyHealthPercentage,
             data: payload,
         });
 
@@ -90,6 +90,7 @@
             {
                 startStr: "Deny healthcare if health > ",
                 value: data.rules.deny_past_health.maximum_percentage,
+                endStr: "%",
             },
         ]}
         data={{}}

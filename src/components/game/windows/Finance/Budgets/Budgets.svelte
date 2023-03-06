@@ -164,8 +164,11 @@
     main {
         width: 100%;
         height: 100%;
-        overflow: scroll;
-        position: relative;
+        overflow-y: scroll;
+    }
+
+    main::-webkit-scrollbar {
+        display: none;
     }
 
     h1 {

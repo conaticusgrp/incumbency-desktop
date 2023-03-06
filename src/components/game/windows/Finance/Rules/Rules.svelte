@@ -78,7 +78,7 @@
                 value: data.rules.tax.minimum_salary,
             },
             {
-                startStr: "then Tax = ",
+                startStr: " then Tax = ",
                 value: data.rules.tax.tax_rate,
                 endStr: "%",
             },
@@ -100,7 +100,7 @@
                 value: data.rules.business_tax.minimum_monthly_income,
             },
             {
-                startStr: "then Tax = ",
+                startStr: " then Tax = ",
                 value: data.rules.business_tax.tax_rate,
                 endStr: "%",
             },

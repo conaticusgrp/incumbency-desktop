@@ -23,9 +23,9 @@
 
     const onFundingUpdate = (updateData: any[]) => {
         const payload = {
-            business_count: updateData[0],
-            fund: updateData[1],
-            maximum_income: updateData[2],
+            business_count: Number(updateData[0]),
+            fund: Number(updateData[1]),
+            maximum_income: Number(updateData[2]),
         };
 
         invoke("update_rule", {
