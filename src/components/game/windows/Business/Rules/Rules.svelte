@@ -5,6 +5,9 @@
 
     export let data: BusinessData;
 
+    let fundBudgetCost = 0;
+    $: fundBudgetCost = data.rules.funding.budget_cost;
+
     const onFundingEnabled = (activated: boolean) => {
         data.rules.funding.enabled = activated;
 
@@ -21,17 +24,19 @@
         });
     };
 
-    const onFundingUpdate = (updateData: any[]) => {
+    const onFundingUpdate = async (updateData: any[]) => {
         const payload = {
             business_count: Number(updateData[0]),
             fund: Number(updateData[1]),
             maximum_income: Number(updateData[2]),
         };
 
-        invoke("update_rule", {
+        const { budget_cost } = (await invoke("update_rule", {
             ruleId: Rules.BusinessFunding,
             data: payload,
-        });
+        })) as any;
+
+        data.rules.funding.budget_cost = budget_cost;
 
         data.rules.funding = {
             ...data.rules.funding,
@@ -60,7 +65,9 @@
                 endStr: " or below",
             },
         ]}
-        data={{}}
+        data={{
+            "Budget Cost": `$${fundBudgetCost}/$${data.business_budget}`,
+        }}
         onActivationToggle={onFundingEnabled}
         updateRuleFn={onFundingUpdate}
         enabled={data.rules.funding.enabled}

@@ -52,6 +52,7 @@ pub struct HealthcareAppOpenedPayload {
 pub struct WelfareAppOpenedPayload {
     pub average_welfare: i32,
     pub average_unemployed_welfare: i32,
+    pub unemployed_count: i32,
     pub rules: serde_json::Value,
 }
 
@@ -133,10 +134,11 @@ pub fn app_open(state_mux: State<'_, GameStateSafe>, app_id: u8) -> IncResult<St
             let payload = WelfareAppOpenedPayload {
                 average_welfare: state.average_welfare,
                 average_unemployed_welfare: state.average_welfare_unemployed,
+                unemployed_count: state.unemployed_count,
                 rules: json!({
                     "cover_food": state.rules.cover_food_rule,
                     "cover_food_unemployed": state.rules.cover_food_unemployed_rule,
-                })
+                }),
             };
 
             serde_json::to_string(&payload)
@@ -245,6 +247,7 @@ pub fn update_rule(state_mux: State<'_, GameStateSafe>, rule_id: i32, data: serd
             state.rules.business_funding_rule.fund = fund;
             state.rules.business_funding_rule.maximum_income = maximum_income;
             state.rules.business_funding_rule.business_count = business_count;
+            state.rules.business_funding_rule.budget_cost = budget_cost;
 
             return Ok(json!({
                 "budget_cost": budget_cost,

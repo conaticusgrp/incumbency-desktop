@@ -217,10 +217,13 @@ impl GameState {
         update_app(App::Welfare, json!({
             "average_welfare": self.average_welfare,
             "average_unemployed_welfare": self.average_welfare_unemployed,
+            "welfare_budget": self.welfare_budget,
+            "unemployed_count": self.unemployed_count,
         }), app_handle);
 
         update_app(App::Business, json!({
             "business_count": self.businesses.len() as i32,
+            "business_budget": self.business_budget,
         }), app_handle);
 
         app_handle.emit_all("debug_payload",  json! ({
@@ -405,6 +408,8 @@ impl GameState {
 
             remaining_market_percentage -= assigned_percent;
         }
+
+        self.rules.business_funding_rule.budget_cost = self.rules.business_funding_rule.fund * (self.businesses.len() as i64);
 
         // Sync people to unemployed people
         for per_cpy in unemployed_people {

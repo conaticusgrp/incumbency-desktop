@@ -196,7 +196,7 @@
         border-radius: 10px;
         background-color: black;
         border: solid 1px var(--color-accent);
-        z-index: 99999;
+        z-index: 9999;
     }
 
     .title-container {

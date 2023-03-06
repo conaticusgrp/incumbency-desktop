@@ -66,7 +66,7 @@
     };
 </script>
 
-<div>
+<div class="container">
     <RuleCard
         updateRuleFn={updateTaxRule}
         onActivationToggle={onTaxRuleEnable}
@@ -111,3 +111,13 @@
         enabled={data.rules.business_tax.enabled}
     />
 </div>
+
+<style>
+    .container {
+        overflow-y: scroll;
+    }
+
+    .container::-webkit-scrollbar {
+        display: none;
+    }
+</style>

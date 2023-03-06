@@ -9,8 +9,10 @@
                 business_count: number;
                 fund: number;
                 maximum_income: number;
+                budget_cost: number;
             };
         };
+        business_budget: number;
     }
 </script>
 

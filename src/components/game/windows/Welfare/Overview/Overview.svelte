@@ -4,7 +4,7 @@
         dataKey: keyof WelfareData;
         data: any;
         pinned?: boolean;
-        suffix: string;
+        suffix?: string;
     }
 </script>
 
@@ -16,6 +16,12 @@
     export let data: WelfareData;
 
     let dataArray: DataItem[] = [
+        {
+            title: "Unemployed Count",
+            dataKey: "unemployed_count",
+            data: null,
+            pinned: false,
+        },
         {
             title: "Average Welfare",
             dataKey: "average_welfare",
@@ -33,7 +39,7 @@
     ];
 
     $: dataArray.forEach((d, i) => {
-        dataArray[i].data = `${data[d.dataKey]}${d.suffix}`;
+        dataArray[i].data = `${data[d.dataKey]}${d.suffix || ""}`;
     });
 </script>
 

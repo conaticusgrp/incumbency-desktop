@@ -67,7 +67,7 @@
     };
 </script>
 
-<div>
+<div class="container">
     <RuleCard
         category="General"
         title="Age Restrictions"
@@ -99,3 +99,13 @@
         enabled={data.rules.deny_past_health.enabled}
     />
 </div>
+
+<style>
+    .container {
+        overflow-y: scroll;
+    }
+
+    .container::-webkit-scrollbar {
+        display: none;
+    }
+</style>

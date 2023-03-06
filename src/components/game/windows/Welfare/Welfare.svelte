@@ -2,6 +2,8 @@
     export interface WelfareData {
         average_welfare: number;
         average_unemployed_welfare: number;
+        welfare_budget: number;
+        unemployed_count: number;
         rules: {
             cover_food: {
                 enabled: boolean;

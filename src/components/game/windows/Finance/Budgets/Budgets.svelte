@@ -2,8 +2,11 @@
     import { invoke } from "@tauri-apps/api/tauri";
     import type { FinanceData } from "../Finance.svelte";
     import ValueCard from "../../templates/ValueCard.svelte";
+    import { createEventDispatcher } from "svelte";
+    import { handleInvoke } from "../../../../../scripts/util";
 
     export let data: FinanceData | undefined;
+    const dispatcher = createEventDispatcher();
 
     enum GameValue {
         TaxRate,
@@ -32,16 +35,14 @@
                 );
                 break;
             case GameValue.HealthcareBudget:
-                const healthRes: any = await invoke(
-                    "update_healthcare_budget",
-                    {
+                const healthRes = await handleInvoke(
+                    dispatcher,
+                    invoke("update_healthcare_budget", {
                         newBudget: newValue,
-                    }
+                    })
                 );
 
-                if (healthRes.error) {
-                    // TODO: handle error in notifications
-                    console.error(healthRes.error);
+                if (healthRes === false) {
                     break;
                 }
 
@@ -51,26 +52,28 @@
                     healthRes.total_hospital_capacity;
                 break;
             case GameValue.WelfareBudget:
-                const welfareRes: any = await invoke("update_welfare_budget", {
-                    newBudget: newValue,
-                });
+                const welfareRes = await handleInvoke(
+                    dispatcher,
+                    invoke("update_welfare_budget", {
+                        newBudget: newValue,
+                    })
+                );
 
-                if (welfareRes.error) {
-                    // TODO: handle error in notifications
-                    console.error(welfareRes.error);
+                if (welfareRes === false) {
                     break;
                 }
 
                 data.welfare_budget = newValue;
                 break;
             case GameValue.BusinessBudget:
-                const busRes: any = await invoke("update_business_budget", {
-                    newBudget: newValue,
-                });
+                const busRes = await handleInvoke(
+                    dispatcher,
+                    invoke("update_business_budget", {
+                        newBudget: newValue,
+                    })
+                );
 
-                if (busRes.error) {
-                    // TODO: handle error in notifications
-                    console.error(busRes.error);
+                if (busRes === false) {
                     break;
                 }
 

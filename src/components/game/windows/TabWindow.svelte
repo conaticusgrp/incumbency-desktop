@@ -91,6 +91,8 @@
                     this={tabs[currentTabIndex].c}
                     tabData={tabs[currentTabIndex].data}
                     data={appData}
+                    on:criticalWindowEvent={(e) =>
+                        dispatcher("criticalWindowEvent", e.detail)}
                 />
             {/if}
         </section>

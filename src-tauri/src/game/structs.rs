@@ -25,6 +25,7 @@ pub struct BusinessFundingRule {
   pub fund: i64,
   pub maximum_income: i64,
   pub business_count: i32,
+  pub budget_cost: i64,
 }
 
 #[derive(Default, Serialize, Deserialize)]
