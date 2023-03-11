@@ -65,6 +65,7 @@
         height: number;
     };
     let dispatcher = createEventDispatcher();
+    let transition = "";
 
     $: if (windowData.opened && !prevWindowData.opened) {
         (async () => {
@@ -122,7 +123,16 @@
         dispatcher("criticalWindowEvent", { type: WINDOW_AQUIRE_FOCUS });
     };
 
+    const startTransition = (duration: number, ease: boolean = true) => {
+        transition = `${duration}s ${ease ? "ease" : ""}`;
+
+        setTimeout(() => {
+            transition = "";
+        }, duration * 1000);
+    };
+
     const maximize = (): void => {
+        startTransition(0.2);
         boundsBeforeMaximizing = { ...pos, ...size };
         pos = { x: 0, y: 0 };
         size = {
@@ -134,6 +144,7 @@
     };
 
     const unmaximize = (): void => {
+        startTransition(0.2);
         pos = { x: boundsBeforeMaximizing.x, y: boundsBeforeMaximizing.y };
         size = {
             width: boundsBeforeMaximizing.width,
@@ -306,6 +317,7 @@ Ned
     width: {size.width}px;
     height: {size.height}px;
     z-index: {windowData.focused ? 10_000 : 9999};
+    transition: {transition}
   "
     on:mousedown={requestFocus}
     bind:this={thisObj}
