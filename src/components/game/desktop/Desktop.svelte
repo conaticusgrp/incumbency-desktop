@@ -5,7 +5,7 @@
 
         component?: any;
         props?: any;
-        badgeCount?: number;
+        badgeCount: number;
         opened?: boolean;
         minimized?: boolean;
     }
@@ -15,7 +15,6 @@
 
 <script lang="ts">
     import { listen } from "@tauri-apps/api/event";
-    import Notification, { type NotificationData } from "./Notification.svelte";
     import {
         APP_LIST_MIN_WIDTH,
         APP_LIST_WIDTH,
@@ -32,13 +31,12 @@
         WINDOW_SEND_NOTIFICATION,
     } from "../../../scripts/windowEvent";
 
-    import DebuggerApp from "../windows/DebuggerApp/DebuggerApp.svelte";
-
     import Email from "../windows/Email/Email.svelte";
     import Finance from "../windows/Finance/Finance.svelte";
     import Healthcare from "../windows/Healthcare/Healthcare.svelte";
     import Welfare from "../windows/Welfare/Welfare.svelte";
     import Business from "../windows/Business/Business.svelte";
+    import Notification, { type NotificationData } from "./Notification.svelte";
 
     let startMenu: HTMLElement;
     let startMenuExpanded: boolean = false;
@@ -46,12 +44,11 @@
     let date: string = "undefined date";
     let wallpaperPath: string | null = "./src/assets/Wallpaper.png";
     let apps: DesktopAppShortcut[] = [
-        { componentConstructor: DebuggerApp, name: "DEBUG" },
-        { componentConstructor: Email, name: "Email", badgeCount: 2 },
-        { componentConstructor: Finance, name: "Finance", badgeCount: 1 },
-        { componentConstructor: Healthcare, name: "Healthcare" },
-        { componentConstructor: Welfare, name: "Welfare" },
-        { componentConstructor: Business, name: "Business" },
+        { componentConstructor: Email, name: "Email", badgeCount: 0 },
+        { componentConstructor: Finance, name: "Finance", badgeCount: 0 },
+        { componentConstructor: Healthcare, name: "Healthcare", badgeCount: 0 },
+        { componentConstructor: Welfare, name: "Welfare", badgeCount: 0 },
+        { componentConstructor: Business, name: "Business", badgeCount: 0 },
 
         // { componentConstructor: TestApp,      name: "test" },
         // { componentConstructor: OldEmail,     name: "old email" },
@@ -162,6 +159,14 @@
     };
 
     const receiveNotification = (n: NotificationData): void => {
+        const app = apps.find(
+            (app) => app.name.toLowerCase() === n.app?.toLowerCase()
+        );
+
+        if (app && !app.opened) {
+            app.badgeCount += 1;
+        }
+
         n.date = date;
         notifications.push(n);
         showLatestNotification = true;
@@ -234,10 +239,10 @@
         date = d.payload.date as string;
     });
 
-    listen("open_debugger_app", (e) => {
-        //@ts-ignore
-        handleOpenApp(apps.findIndex((v) => v.name === "DEBUG"));
-    });
+    // listen("open_debugger_app", (e) => {
+    //     //@ts-ignore
+    //     handleOpenApp(apps.findIndex((v) => v.name === "DEBUG"));
+    // });
 
     document.addEventListener("keydown", (e) => {
         if (e.altKey && e.key == "F4") {
@@ -320,9 +325,7 @@
                 : 'none'};
       "
         >
-            {#each apps as app, i}
-                <!-- !! to cast (boolean | undefined) to boolean -->
-
+            {#each apps as app, i (i)}
                 <svelte:component
                     this={app.componentConstructor}
                     bind:this={app.component}
@@ -342,6 +345,24 @@
                     style="right: {NOTIFICATION_MARGIN_X};"
                 >
                     <Notification
+                        actionTitle={notifications[notifications.length - 1]
+                            .actionTitle}
+                        actionFunction={notifications[
+                            notifications.length - 1
+                        ].actionTitle?.toLowerCase() === "open app"
+                            ? () => {
+                                  apps.forEach((app, idx) => {
+                                      if (
+                                          app.name.toLowerCase() ===
+                                          notifications[
+                                              notifications.length - 1
+                                          ].app?.toLowerCase()
+                                      ) {
+                                          handleOpenApp(idx);
+                                      }
+                                  });
+                              }
+                            : () => {}}
                         justDisplayed={true}
                         onDismissed={() =>
                             notifications.splice(notifications.length - 1, 1)}
@@ -357,6 +378,20 @@
                 >
                     {#each notifications as notif, idx}
                         <Notification
+                            actionTitle={notif.actionTitle}
+                            actionFunction={notif.actionTitle?.toLowerCase() ===
+                            "open app"
+                                ? () => {
+                                      apps.forEach((app, idx) => {
+                                          if (
+                                              app.name.toLowerCase() ===
+                                              notif.app?.toLowerCase()
+                                          ) {
+                                              handleOpenApp(idx);
+                                          }
+                                      });
+                                  }
+                                : () => {}}
                             onDismissed={() => {
                                 notifications.splice(idx, 1);
                             }}

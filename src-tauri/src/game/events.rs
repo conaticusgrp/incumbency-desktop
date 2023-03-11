@@ -8,10 +8,10 @@ use super::{state_manager::GameStateSafe, structs::{GameState, HealthcareGroup}}
 
 #[derive(PartialEq, Eq, Hash)]
 pub enum App {
-    Finance = 2,
-    Healthcare = 3,
-    Welfare = 4,
-    Business = 5,
+    Finance = 1,
+    Healthcare = 2,
+    Welfare = 3,
+    Business = 4,
 }
 
 #[derive(Serialize, Deserialize)]

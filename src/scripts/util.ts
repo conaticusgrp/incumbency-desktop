@@ -1,4 +1,5 @@
 import { WINDOW_SEND_NOTIFICATION } from "./windowEvent";
+import { elasticIn } from "svelte/easing";
 
 export const handleInvoke = async (
     dispatcher: Function,
@@ -30,4 +31,17 @@ export const errorNotif = (
             severity: "error",
         },
     });
+};
+
+export const popout = (node: any): any => {
+    return {
+        duration: 200,
+        css: (t: any) => {
+            const eased = elasticIn(t);
+
+            return `
+                    scale: ${eased}
+            `;
+        },
+    };
 };

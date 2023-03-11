@@ -1,37 +1,37 @@
 export type CssUnit =
-  | "px"
-  | "em"
-  | "rem"
-  | "%"
-  | "vw"
-  | "vh"
-  | "vmin"
-  | "vmax"
-  | "fr"
-  | "number";
+    | "px"
+    | "em"
+    | "rem"
+    | "%"
+    | "vw"
+    | "vh"
+    | "vmin"
+    | "vmax"
+    | "fr"
+    | "number";
 
 export class CssNumericalValue {
-  value: number;
-  unit: CssUnit;
-  calculatedString: string;
+    value: number;
+    unit: CssUnit;
+    calculatedString: string;
 
-  constructor(v: number, u: CssUnit) {
-    this.value = v;
-    this.unit = u;
-    this.calculatedString = "";
-    this.calculateString();
-  }
-
-  calculateString(): void {
-    if (this.unit === "number") {
-      this.calculatedString = String(this.value);
+    constructor(v: number, u: CssUnit) {
+        this.value = v;
+        this.unit = u;
+        this.calculatedString = "";
+        this.calculateString();
     }
-    this.calculatedString = `${this.value}${this.unit}`;
-  }
 
-  toString(): string {
-    return this.calculatedString;
-  }
+    calculateString(): void {
+        if (this.unit === "number") {
+            this.calculatedString = String(this.value);
+        }
+        this.calculatedString = `${this.value}${this.unit}`;
+    }
+
+    toString(): string {
+        return this.calculatedString;
+    }
 }
 
 export const RESIZE_BAR_SIZE = new CssNumericalValue(5, "px");
@@ -53,7 +53,7 @@ export const TAB_LIST_WIDTH = new CssNumericalValue(8, "%");
 export const TAB_LIST_MIN_WIDTH = new CssNumericalValue(250, "px");
 export const TAB_LIST_ENTRY_MARGIN = new CssNumericalValue(0.5, "em");
 
-export const USERNAME = "Joe";
+export const USERNAME = "Thomas";
 export const USERNAME_HEIGHT = new CssNumericalValue(3.5, "em");
 
 export const MODAL_TIMER_DELAY = 5; // s

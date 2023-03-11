@@ -71,6 +71,7 @@
             default:
                 break;
         }
+
         dispatcher("criticalWindowEvent", e.detail); // !!!
     };
 
@@ -106,6 +107,7 @@
                 header: `New Email from ${data.sender}`,
                 content: data.content,
                 severity: "normal",
+                actionTitle: "Open App",
             },
         });
     }

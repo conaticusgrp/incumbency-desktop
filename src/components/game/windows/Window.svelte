@@ -24,7 +24,7 @@
 <script lang="ts">
     import { listen } from "@tauri-apps/api/event";
     import { invoke } from "@tauri-apps/api/tauri";
-    import { createEventDispatcher, onMount } from "svelte";
+    import { createEventDispatcher } from "svelte";
     import { tick } from "svelte";
     import {
         MIN_WINDOW_HEIGHT,
@@ -426,6 +426,23 @@ Ned
         border-top: none;
         pointer-events: all;
         background-color: var(--color-bg);
+    }
+
+    main {
+        animation-name: popup;
+        animation-delay: 0s;
+        animation-duration: 0.2s;
+        animation-fill-mode: forwards;
+        animation-timing-function: ease;
+    }
+
+    @keyframes popup {
+        from {
+            scale: 0;
+        }
+        to {
+            scale: 1;
+        }
     }
 
     .header {
