@@ -13,6 +13,7 @@ export const WINDOW_SEND_NOTIFICATION = "windowSendNotification";
 export const WINDOW_MAXIMIZE = "windowMaximize";
 export const WINDOW_RESIZE = "windowResize";
 export const WINDOW_OPENED = "windowOpened";
+export const EMAIL_CREATE = "emailCreate";
 
 // Apps
 export const APP_UPDATE = "appUpdate";
@@ -21,6 +22,8 @@ export const handleDataEvents = (
     { detail: { data, type } }: any,
     appData: any
 ): any => {
+    if (!data) return;
+
     switch (type) {
         case WINDOW_OPENED:
             return JSON.parse(data);

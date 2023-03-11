@@ -39,10 +39,6 @@
     import Healthcare from "../windows/Healthcare/Healthcare.svelte";
     import Welfare from "../windows/Welfare/Welfare.svelte";
     import Business from "../windows/Business/Business.svelte";
-    import { onMount } from "svelte";
-
-    // import TestApp from "../debug/TestApp.svelte";
-    // import OldEmail from "../debug/OldEmail.svelte";
 
     let startMenu: HTMLElement;
     let startMenuExpanded: boolean = false;
@@ -110,7 +106,7 @@
 
     const handleCriticalEvent = (index: number, e: CustomEvent): void => {
         if (index < 0 || index >= apps.length) return;
-        console.log(e.detail.type);
+
         switch (e.detail.type) {
             case WINDOW_CLOSE:
                 {

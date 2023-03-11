@@ -24,16 +24,18 @@
 <script lang="ts">
     import { listen } from "@tauri-apps/api/event";
     import { invoke } from "@tauri-apps/api/tauri";
-    import { createEventDispatcher } from "svelte";
+    import { createEventDispatcher, onMount } from "svelte";
     import { tick } from "svelte";
     import {
         MIN_WINDOW_HEIGHT,
         MIN_WINDOW_WIDTH,
         RESIZE_BAR_SIZE,
+        USERNAME,
         WINDOW_HEADER_HEIGHT,
     } from "../../../scripts/desktopConstants";
     import {
         APP_UPDATE,
+        EMAIL_CREATE,
         WINDOW_AQUIRE_FOCUS,
         WINDOW_CLOSE,
         WINDOW_MAXIMIZE,
@@ -273,6 +275,26 @@
         document.removeEventListener("mousemove", handleResize);
         document.removeEventListener("mouseup", handleResizeEnd);
     };
+
+    listen("game_generated", () => {
+        setTimeout(() => {
+            dispatcher("windowEvent", {
+                type: EMAIL_CREATE,
+                data: {
+                    title: "The Start of Your Incumbency",
+                    content: `
+Hello, ${USERNAME}. You are now in leading position for the countries economy. Gary set the bar high during his incumbency, however, his sex scandal led him to step down from office. My name is Ned, I will be here to guide you during your time in office.
+
+What you are currently looking at is the desktop environment that you will use to manage the economy. From here you will control everything - taxes, laws & regulations, healthcare and more. Take a look at your left panel and you will see all the available desktop apps that are at your disposal. You can open them and take a look around. Just.. try not to break everything, okay?
+
+Kind regards,
+Ned
+`,
+                    sender: "Ned",
+                },
+            });
+        }, 5000);
+    });
 </script>
 
 <!-- PARENT COMPONENT -->

@@ -50,7 +50,7 @@
 
             <h2>{data.app ?? ""}</h2>
 
-            <span>{data.date ?? ""}</span>
+            <span>{data.date && !justDisplayed ? data.date : "now"}</span>
         </div>
 
         <div class="content">
@@ -77,6 +77,7 @@
         animation-name: fadeout;
         animation-delay: 5s;
         animation-duration: 5s;
+        animation-fill-mode: forwards;
     }
 
     @keyframes fadeout {
@@ -133,6 +134,9 @@
     .content > p {
         color: var(--color-shaded);
         font-size: 13px;
+        text-overflow: ellipsis;
+        overflow: hidden;
+        white-space: nowrap;
     }
 
     .actions {
