@@ -141,18 +141,20 @@
                     data: {
                         title: "EXPECTED CRISIS",
                         content: `
-                Thomas! I have done some calculations and based on our statistics I estimate that we are going to experience a financial crash next month and our budget is going to fall to -$${-appData.expected_balance}. You need to cut at least $${
+Thomas! I have done some calculations and based on our statistics I estimate that we are going to experience a financial crash next month and our budget is going to fall to -$${-appData.expected_balance}. You need to save at least $${
                             -appData.expected_balance + totalBudgetSpending
-                        } off our budgets to gain a digit above $0.
+                        } to gain a digit above $0.
 
-                To gain a safe budget with 30% spare you need to cut at least $${
-                    -appData.expected_balance +
-                    totalBudgetSpending +
-                    totalBudgetSpending * 0.3
-                } off our budgets.
+To gain a safe budget with 30% spare you need to save at least $${
+                            -appData.expected_balance +
+                            totalBudgetSpending +
+                            totalBudgetSpending * 0.3
+                        }.
 
-                If action isn't taken, the damage could be irreversible,
-                Tarun.
+You can save by either increasing tax rates or reducing budget allocations.
+
+If action isn't taken, the damage could be irreversible,
+Tarun.
                                         `,
                         sender: "Tarun",
                         severity: "error",
@@ -171,9 +173,11 @@ I have been doing some digging and I wanted to give you a quick heads up. The ex
                         }.
 
 It is generally good practise to keep at least 30% of our expected budget spending for some leeyway incase of miscalculation.
-Our estimated budget spending next month is $${totalBudgetSpending}. This means that you need to cut at least $${
+Our estimated budget spending next month is $${totalBudgetSpending}. This means that you need to save at least $${
                             totalBudgetSpending * 0.3 + totalBudgetSpending
-                        } from our budgets spending to maintain a safe budget.
+                        } to maintain a safe budget.
+
+You can save by either increasing tax rates or reducing budget allocations.
 
 Thanks for reading and good luck,
 Tarun.
