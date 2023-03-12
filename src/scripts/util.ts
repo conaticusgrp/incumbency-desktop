@@ -45,3 +45,8 @@ export const popout = (node: any): any => {
         },
     };
 };
+
+interface EmailData {
+    title: string;
+    content: string;
+}

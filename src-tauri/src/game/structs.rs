@@ -114,6 +114,8 @@ pub struct GameState {
   pub business_data: BusinessData,
 
   pub unemployed_count: i32,
+
+  pub expected_balance: i64,
 }
 
 #[derive(Default, Clone, Copy, Serialize, Deserialize)]

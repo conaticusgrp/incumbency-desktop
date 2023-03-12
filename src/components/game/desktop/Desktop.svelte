@@ -49,9 +49,6 @@
         { componentConstructor: Healthcare, name: "Healthcare", badgeCount: 0 },
         { componentConstructor: Welfare, name: "Welfare", badgeCount: 0 },
         { componentConstructor: Business, name: "Business", badgeCount: 0 },
-
-        // { componentConstructor: TestApp,      name: "test" },
-        // { componentConstructor: OldEmail,     name: "old email" },
     ];
     let focusedApp: number | null = null;
 
@@ -325,8 +322,8 @@
                         focused: i === focusedApp,
                         index: i,
                     }}
-                    {...app.props}
                     on:criticalWindowEvent={(e) => handleCriticalEvent(i, e)}
+                    {...app.props}
                 />
             {/each}
 

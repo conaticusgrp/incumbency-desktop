@@ -26,6 +26,7 @@
     import { invoke } from "@tauri-apps/api/tauri";
     import { createEventDispatcher } from "svelte";
     import { tick } from "svelte";
+    import App from "../../../App.svelte";
     import {
         MIN_WINDOW_HEIGHT,
         MIN_WINDOW_WIDTH,
@@ -33,6 +34,7 @@
         USERNAME,
         WINDOW_HEADER_HEIGHT,
     } from "../../../scripts/desktopConstants";
+    67;
     import {
         APP_UPDATE,
         EMAIL_CREATE,
@@ -44,6 +46,7 @@
         WINDOW_RESIZE,
         WINDOW_SEND_NOTIFICATION,
     } from "../../../scripts/windowEvent";
+    import type { FinanceData } from "./Finance/Finance.svelte";
 
     export let title: string = "?";
     export let pos: Pos = { x: 0, y: 0 };
@@ -96,9 +99,91 @@
         })();
     }
 
+    enum Apps {
+        Finance = 1,
+        Healthcare = 2,
+        Welfare = 3,
+        Business = 4,
+    }
+
+    type AppString = "finance" | "healthcare" | "welfare" | "business";
+
+    const getAppNameFromId = (id: number): AppString => {
+        return Apps[id].toLowerCase() as any;
+    };
+
     listen("update_app", ({ payload }: any) => {
-        if (payload.app_id !== windowData.index) return;
-        dispatcher("windowEvent", { type: APP_UPDATE, data: payload });
+        if (payload.app_id === windowData.index) {
+            dispatcher("windowEvent", { type: APP_UPDATE, data: payload });
+        }
+
+        const app = getAppNameFromId(payload.app_id);
+        const { data, update_type } = payload;
+
+        if (update_type !== "month") return;
+
+        if (app == "finance") {
+            const appData: FinanceData = data;
+            const totalBudgetSpending =
+                appData.welfare_budget +
+                appData.business_budget +
+                appData.healthcare_budget;
+
+            const enoughToSpend =
+                appData.expected_balance - totalBudgetSpending > 0;
+
+            const enoughSaved =
+                appData.expected_balance - totalBudgetSpending * 0.3 > 0;
+
+            if (!enoughToSpend) {
+                dispatcher("windowEvent", {
+                    type: EMAIL_CREATE,
+                    data: {
+                        title: "EXPECTED CRISIS",
+                        content: `
+                Thomas! I have done some calculations and based on our statistics I estimate that we are going to experience a financial crash next month and our budget is going to fall to -$${-appData.expected_balance}. You need to cut at least $${
+                            -appData.expected_balance + totalBudgetSpending
+                        } off our budgets to gain a digit above $0.
+
+                To gain a safe budget with 30% spare you need to cut at least $${
+                    -appData.expected_balance +
+                    totalBudgetSpending +
+                    totalBudgetSpending * 0.3
+                } off our budgets.
+
+                If action isn't taken, the damage could be irreversible,
+                Tarun.
+                                        `,
+                        sender: "Tarun",
+                        severity: "error",
+                    },
+                });
+            } else if (!enoughSaved) {
+                dispatcher("windowEvent", {
+                    type: EMAIL_CREATE,
+                    data: {
+                        title: "Expected Balance Below Safe Zone",
+                        content: `
+Hello Thomas,
+
+I have been doing some digging and I wanted to give you a quick heads up. The expected balance next month is $${
+                            appData.expected_balance
+                        }.
+
+It is generally good practise to keep at least 30% of our expected budget spending for some leeyway incase of miscalculation.
+Our estimated budget spending next month is $${totalBudgetSpending}. This means that you need to cut at least $${
+                            totalBudgetSpending * 0.3 + totalBudgetSpending
+                        } from our budgets spending to maintain a safe budget.
+
+Thanks for reading and good luck,
+Tarun.
+                        `,
+                        sender: "Tarun",
+                        severity: "warning",
+                    },
+                });
+            }
+        }
     });
 
     const getParentBox = (): {
@@ -287,7 +372,7 @@
         document.removeEventListener("mouseup", handleResizeEnd);
     };
 
-    listen("game_generated", () => {
+    const unlisten = listen("game_generated", () => {
         setTimeout(() => {
             dispatcher("windowEvent", {
                 type: EMAIL_CREATE,

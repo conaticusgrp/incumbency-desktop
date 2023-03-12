@@ -37,7 +37,7 @@ fn emit_error(app_handle: &tauri::AppHandle, error: &Error) {
 }
 
 pub async fn start_game_loop(state_mux: &GameStateSafe, app_handle: &tauri::AppHandle, config: &Config) {
-    let mut interval = tokio::time::interval(Duration::from_secs(1));
+    let mut interval = tokio::time::interval(Duration::from_millis(400));
 
     loop {
         interval.tick().await;

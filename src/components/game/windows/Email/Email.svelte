@@ -28,6 +28,7 @@
         WINDOW_RESIZE,
         WINDOW_SEND_NOTIFICATION,
     } from "../../../../scripts/windowEvent";
+    import type { Severity } from "../../desktop/Notification.svelte";
 
     export let windowData: CriticalWindowData;
 
@@ -87,7 +88,12 @@
         title: string;
         content: string;
         sender: string;
+        severity?: Severity;
     }) {
+        if (!data.severity) {
+            data.severity = "normal";
+        }
+
         const email = {
             date: "now",
             title: data.title,
@@ -96,6 +102,8 @@
         };
 
         emails.push(email);
+        currentTab = 0;
+
         emailsMapped = emails.reverse().map((e) => {
             return { c: EmailTab, data: e };
         });
@@ -106,7 +114,7 @@
                 app: "Email",
                 header: `New Email from ${data.sender}`,
                 content: data.content,
-                severity: "normal",
+                severity: data.severity,
                 actionTitle: "Open App",
             },
         });
@@ -117,11 +125,11 @@
     title="Email (last checked {lastCheckedDate})"
     pos={{ x: 100, y: 50 }}
     size={{ width: 800, height: 600 }}
-    {windowData}
     tabButtonComponent={EmailTabButton}
-    tabButtonData={emails}
+    bind:tabButtonData={emails}
     bind:tabs={emailsMapped}
     bind:currentTabIndex={currentTab}
     on:windowEvent={handleWindowEvent}
     on:criticalWindowEvent={handleCriticalWindowEvent}
+    {windowData}
 />

@@ -25,6 +25,7 @@
         spare_hospital_capacity: number;
         used_welfare_budget: number;
         used_business_budget: number;
+        expected_balance: number;
     }
 </script>
 

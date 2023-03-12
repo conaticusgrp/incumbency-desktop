@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { createEventDispatcher, onMount, SvelteComponent } from "svelte";
+    import { createEventDispatcher, SvelteComponent } from "svelte";
     import Window, {
         type CriticalWindowData,
         type Pos,
@@ -28,7 +28,7 @@
 
     export let currentTabIndex: number = -1;
 
-    let dispatcher = createEventDispatcher();
+    const dispatcher = createEventDispatcher();
 
     const selectTab = (e: CustomEvent): void => {
         const i = e.detail.index;

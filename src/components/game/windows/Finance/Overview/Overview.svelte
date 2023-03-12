@@ -30,6 +30,20 @@
             pinned: false,
         },
         {
+            title: "Expected Balance",
+            dataKey: "expected_balance",
+            prefix: "$",
+            data: null,
+            pinned: false,
+        },
+        {
+            title: "Total Expected Income",
+            dataKey: "expected_person_income",
+            prefix: "$",
+            data: null,
+            pinned: false,
+        },
+        {
             title: "Expected Tax Income",
             dataKey: "expected_person_income",
             prefix: "$",
@@ -39,13 +53,6 @@
         {
             title: "Expected Business Tax Income",
             dataKey: "expected_business_income",
-            prefix: "$",
-            data: null,
-            pinned: false,
-        },
-        {
-            title: "Total Expected Income",
-            dataKey: "expected_person_income",
             prefix: "$",
             data: null,
             pinned: false,

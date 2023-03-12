@@ -33,6 +33,7 @@ pub struct FinanceAppOpenedPayload {
     pub spare_budget: i64,
     pub average_welfare: i32,
     pub average_unemployed_welfare: i32,
+    pub expected_balance: i64,
     pub rules: serde_json::Value,
 }
 
@@ -87,6 +88,7 @@ pub fn app_open(state_mux: State<'_, GameStateSafe>, app_id: u8) -> IncResult<St
     };
 
     let ret = match app {
+
         App::Finance => {
             let payload = FinanceAppOpenedPayload {
                 government_balance: state.government_balance,
@@ -106,6 +108,7 @@ pub fn app_open(state_mux: State<'_, GameStateSafe>, app_id: u8) -> IncResult<St
                 used_business_budget: (state.rules.business_funding_rule.fund * state.rules.business_funding_rule.business_count as i64),
                 used_welfare_budget: ((state.rules.cover_food_rule.people_count * 4) + (state.rules.cover_food_unemployed_rule.people_count * 4)) as i64,
                 spare_hospital_capacity: (state.healthcare.total_capacity - (state.healthcare.childcare.total_capacity + state.healthcare.adultcare.total_capacity + state.healthcare.eldercare.total_capacity)),
+                expected_balance: state.expected_balance,
                 rules: json!({
                     "tax": state.rules.tax_rule,
                     "business_tax": state.rules.business_tax_rule,
@@ -305,9 +308,24 @@ pub fn update_rule(state_mux: State<'_, GameStateSafe>, rule_id: i32, data: serd
     Ok(json!({}))
 }
 
-pub fn update_app(app: App, payload: serde_json::Value, app_handle: &AppHandle) {
+#[derive(PartialEq, Eq)]
+pub enum AppUpdateType {
+    Day,
+    Month,
+}
+
+pub fn update_app(app: App, payload: serde_json::Value, app_handle: &AppHandle, update_type: AppUpdateType) {
     let app_id = app as u8;
-    app_handle.emit_all("update_app", json!({ "app_id": app_id, "data": payload })).unwrap();
+
+    let update_type_str;
+
+    if update_type == AppUpdateType::Day {
+        update_type_str = String::from("day");
+    } else {
+        update_type_str = String::from("month");
+    }
+
+    app_handle.emit_all("update_app", json!({ "app_id": app_id, "data": payload, "update_type": update_type_str })).unwrap();
 }
 
 #[tauri::command]

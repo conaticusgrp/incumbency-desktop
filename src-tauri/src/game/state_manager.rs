@@ -3,7 +3,7 @@ use serde_json::json;
 use uuid::Uuid;
 use crate::{entities::{business::{Business, ProductType}, person::{person::{Person, Job}, debt::{Debt, DebtType}}}, as_decimal_percent, common::{util::{Date, SlotArray, chance_one_in, generate_unemployed_salary, get_healthcare_group}, config::Config, errors::{IncResult, Error}}};
 use tauri::{Manager, AppHandle};
-use super::{structs::{GameState, GameStateRules, HealthcareState, FinanceData, BusinessData}, events::{update_app, App, json_get_i64}};
+use super::{structs::{GameState, GameStateRules, HealthcareState, FinanceData, BusinessData}, events::{update_app, App, json_get_i64, AppUpdateType}};
 
 const GOVERNMENT_START_BALANCE: u32 = 140000000;
 
@@ -44,6 +44,8 @@ impl Default for GameState {
 
             business_data: BusinessData::default(),
             unemployed_count: 0,
+
+            expected_balance: 0,
         }
     }
 }
@@ -188,6 +190,8 @@ impl GameState {
 
         self.average_welfare_unemployed = (total_welfare_unemployed as f32 / self.unemployed_count as f32) as i32;
 
+        self.expected_balance = (self.government_balance - (self.business_budget + self.welfare_budget + self.healthcare.budget)) + (self.finance_data.expected_business_income + self.finance_data.expected_person_income);
+
         self.spare_budget = self.get_spare_budget();
         self.emit_daily_events(app_handle);
 
@@ -208,7 +212,8 @@ impl GameState {
             "used_business_budget": (self.rules.business_funding_rule.fund * self.rules.business_funding_rule.business_count as i64),
             "used_welfare_budget": ((self.rules.cover_food_rule.people_count * 4) + (self.rules.cover_food_unemployed_rule.people_count * 4)) as i64,
             "spare_hospital_capacity": (self.healthcare.total_capacity - (self.healthcare.childcare.total_capacity + self.healthcare.adultcare.total_capacity + self.healthcare.eldercare.total_capacity)),
-        }), app_handle);
+            "expected_balance": self.expected_balance,
+        }), app_handle, AppUpdateType::Day);
 
         update_app(App::Healthcare, json!({
             "population": self.people.len() as i32,
@@ -220,28 +225,28 @@ impl GameState {
             "elder_care": self.healthcare.eldercare,
             "births_per_month": self.healthcare.births_per_month,
             "deaths_per_month": self.healthcare.deaths_per_month,
-        }), app_handle);
+        }), app_handle, AppUpdateType::Day);
 
         update_app(App::Welfare, json!({
             "average_welfare": self.average_welfare,
             "average_unemployed_welfare": self.average_welfare_unemployed,
             "welfare_budget": self.welfare_budget,
             "unemployed_count": self.unemployed_count,
-        }), app_handle);
+        }), app_handle, AppUpdateType::Day);
 
         update_app(App::Business, json!({
             "business_count": self.businesses.len() as i32,
             "business_budget": self.business_budget,
-        }), app_handle);
+        }), app_handle, AppUpdateType::Day);
 
-        app_handle.emit_all("debug_payload",  json! ({
-            "Population": self.people.len(),
-            "Average Welfare": self.average_welfare,
-            "Government Balance": self.government_balance,
-            "Monthly Births": self.healthcare.births_per_month,
-            "Monthly Deaths": self.healthcare.deaths_per_month,
-            "Unemployed Count": self.unemployed_count,
-        })).unwrap();
+        // app_handle.emit_all("debug_payload",  json! ({
+        //     "Population": self.people.len(),
+        //     "Average Welfare": self.average_welfare,
+        //     "Government Balance": self.government_balance,
+        //     "Monthly Births": self.healthcare.births_per_month,
+        //     "Monthly Deaths": self.healthcare.deaths_per_month,
+        //     "Unemployed Count": self.unemployed_count,
+        // })).unwrap();
     }
 
     pub fn month_pass(&mut self, app_handle: &AppHandle, config: &Config) -> IncResult<()> {
@@ -436,16 +441,20 @@ impl GameState {
             "average_monthly_income": self.finance_data.average_monthly_income,
             "expected_person_income": self.finance_data.expected_person_income,
             "expected_business_income": self.finance_data.expected_business_income,
-        }), app_handle);
+            "welfare_budget": self.welfare_budget,
+            "business_budget": self.business_budget,
+            "healthcare_budget": self.healthcare.budget,
+            "expected_balance": self.expected_balance,
+        }), app_handle, AppUpdateType::Month);
 
         update_app(App::Healthcare, json!({
             "life_expectancy": self.healthcare.life_expectancy,
-        }), app_handle);
+        }), app_handle, AppUpdateType::Month);
 
         update_app(App::Business, json!({
             "average_employees": self.business_data.average_employees,
             "average_monthly_income": self.business_data.average_monthly_income,
-        }), app_handle);
+        }), app_handle, AppUpdateType::Month);
 
         self.government_balance -= self.welfare_owed + (*funded_businesses as i64 * self.rules.business_funding_rule.fund) + self.healthcare.budget;
 
