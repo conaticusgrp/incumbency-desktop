@@ -1,11 +1,11 @@
 use std::{sync::{Mutex, Arc}, collections::HashMap};
 use serde_json::json;
 use uuid::Uuid;
-use crate::{entities::{business::{Business, ProductType}, person::{person::{Person, Job}, debt::{Debt, DebtType}}}, as_decimal_percent, common::{util::{Date, SlotArray, set_decimal_count, chance_one_in, generate_unemployed_salary, get_healthcare_group}, config::Config, errors::{IncResult, Error}}, game::structs::TaxRule};
+use crate::{entities::{business::{Business, ProductType}, person::{person::{Person, Job}, debt::{Debt, DebtType}}}, as_decimal_percent, common::{util::{Date, SlotArray, chance_one_in, generate_unemployed_salary, get_healthcare_group}, config::Config, errors::{IncResult, Error}}};
 use tauri::{Manager, AppHandle};
 use super::{structs::{GameState, GameStateRules, HealthcareState, FinanceData, BusinessData}, events::{update_app, App, json_get_i64}};
 
-const GOVERNMENT_START_BALANCE: u32 = 12000000; // TODO: changeme
+const GOVERNMENT_START_BALANCE: u32 = 140000000;
 
 pub type GameStateSafe = Arc<Mutex<GameState>>;
 
@@ -31,13 +31,13 @@ impl Default for GameState {
             healthcare: HealthcareState::default(),
 
             finance_data: FinanceData::default(),
-            welfare_budget: (GOVERNMENT_START_BALANCE as f64 * 0.15) as i64,
+            welfare_budget: 0,
             welfare_owed: 0,
 
-            business_budget: (GOVERNMENT_START_BALANCE as f64 * 0.1) as i64,
+            business_budget: 0,
             business_owed: 0,
 
-            spare_budget: (GOVERNMENT_START_BALANCE as f64 * 0.55) as i64,
+            spare_budget: (GOVERNMENT_START_BALANCE as f64 * 0.) as i64,
 
             average_welfare: 100,
             average_welfare_unemployed: 100,
@@ -76,7 +76,12 @@ impl GameState {
     }
 
     pub fn get_spare_budget(&self) -> i64 {
-        self.government_balance - (self.healthcare.budget + self.welfare_budget + self.business_budget) 
+        let spare_budget = self.government_balance - (self.healthcare.budget + self.welfare_budget + self.business_budget);
+        if spare_budget < 0 {
+            return 0;
+        }
+
+        spare_budget
     }
 
     pub fn day_pass(&mut self, day: i32, app_handle: Option<&tauri::AppHandle>, config: &Config) -> IncResult<()> {
@@ -200,6 +205,9 @@ impl GameState {
             "used_hospital_capacity": self.healthcare.get_current_capacity(),
             "average_welfare": self.average_welfare,
             "average_welfare_unemployed": self.average_welfare_unemployed,
+            "used_business_budget": (self.rules.business_funding_rule.fund * self.rules.business_funding_rule.business_count as i64),
+            "used_welfare_budget": ((self.rules.cover_food_rule.people_count * 4) + (self.rules.cover_food_unemployed_rule.people_count * 4)) as i64,
+            "spare_hospital_capacity": (self.healthcare.total_capacity - (self.healthcare.childcare.total_capacity + self.healthcare.adultcare.total_capacity + self.healthcare.eldercare.total_capacity)),
         }), app_handle);
 
         update_app(App::Healthcare, json!({
@@ -211,7 +219,7 @@ impl GameState {
             "adult_care": self.healthcare.adultcare,
             "elder_care": self.healthcare.eldercare,
             "births_per_month": self.healthcare.births_per_month,
-            "deaths_per_month": self.healthcare.deaths_per_month
+            "deaths_per_month": self.healthcare.deaths_per_month,
         }), app_handle);
 
         update_app(App::Welfare, json!({

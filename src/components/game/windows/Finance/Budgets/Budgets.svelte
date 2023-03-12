@@ -128,6 +128,7 @@
                           )
                         : 0
                 }%)`,
+                "Spare Capacity": data.spare_hospital_capacity,
             }}
             assignValueFn={(val) =>
                 updateGameValue(GameValue.HealthcareBudget, Number(val))}
@@ -137,6 +138,16 @@
             appendValueStart="$"
             currentValue={data.welfare_budget}
             data={{
+                "Used Budget": `$${data.used_welfare_budget}/${
+                    data.welfare_budget
+                } (${
+                    data.welfare_budget != 0
+                        ? Math.floor(
+                              (data.used_welfare_budget / data.welfare_budget) *
+                                  100
+                          )
+                        : 0
+                }%)`,
                 "Average Welfare": `${data.average_welfare}%`,
                 "Average Unemployed Welfare": `${data.average_welfare_unemployed}%`,
             }}
@@ -147,7 +158,19 @@
             title="Business"
             appendValueStart="$"
             currentValue={data.business_budget}
-            data={{}}
+            data={{
+                "Used Budget": `$${data.used_business_budget}/${
+                    data.business_budget
+                } (${
+                    data.business_budget != 0
+                        ? Math.floor(
+                              (data.used_business_budget /
+                                  data.business_budget) *
+                                  100
+                          )
+                        : 0
+                }%)`,
+            }}
             assignValueFn={(val) =>
                 updateGameValue(GameValue.BusinessBudget, Number(val))}
         />

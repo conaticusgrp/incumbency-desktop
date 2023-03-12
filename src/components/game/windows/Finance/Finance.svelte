@@ -22,6 +22,9 @@
         };
         used_hospital_capacity: number;
         total_hospital_capacity: number;
+        spare_hospital_capacity: number;
+        used_welfare_budget: number;
+        used_business_budget: number;
     }
 </script>
 

@@ -66,6 +66,7 @@
         flex-direction: column;
         justify-content: space-between;
         margin-right: 20px;
+        width: 200px;
     }
 
     .container .right {

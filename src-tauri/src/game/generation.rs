@@ -60,7 +60,7 @@ pub fn generate_game(state_mux: &GameStateSafe, config: &Config, app_handle: &Ap
             "Generating stock & products",
             "Generating budget ratios",
             "Generating jobs",
-        ]
+        ]   
     })).unwrap();
 
     let bus_tax_rate = state.business_tax_rate;
@@ -98,12 +98,13 @@ pub fn stabilize_game(state_mux: &GameStateSafe, config: &Config, app_handle: &A
     let government_balance = state.government_balance;
     let healthcare = &mut state.healthcare;
 
-    healthcare.budget = (government_balance as f64 * 0.2) as i64; // For now we start with 20% of the government balance
+    healthcare.budget = (government_balance as f64 * 0.3) as i64;
     healthcare.cost_per_hospital_capacity = (healthcare.budget as f64 / healthcare.month_unhospitalised_count as f64) as f32;
     healthcare.total_capacity = (healthcare.budget / healthcare.cost_per_hospital_capacity as i64) as i32;
-
+    
     let divided_budget = healthcare.budget / 3; // Divide into the three sectors
     let budget_capacity = (divided_budget / healthcare.cost_per_hospital_capacity as i64) as i32;
+
 
     let budget = HealthcareGroup {
         budget: divided_budget,

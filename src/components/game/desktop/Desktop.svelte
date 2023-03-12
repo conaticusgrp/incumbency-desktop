@@ -79,22 +79,13 @@
 
     const handleOpenApp = (index: number): void => {
         if (index < 0 || index >= apps.length) return;
+        focusedApp = index;
+        updateUI();
 
         if (!apps[index].opened) {
             apps[index].opened = true;
             apps[index].badgeCount = 0;
-            focusedApp = index;
-            updateUI();
-        } else {
-            unminimizeApp(index);
         }
-    };
-
-    const unminimizeApp = (index: number) => {
-        if (index < 0 || index >= apps.length) return;
-
-        apps[index].minimized = !apps[index].minimized;
-        updateUI();
     };
 
     const updateUI = () => {
@@ -410,7 +401,10 @@
                     <span
                         data-minimized={!!apps[i].minimized}
                         title={shortcut.name}
-                        on:click={() => unminimizeApp(i)}
+                        on:click={() => {
+                            focusedApp = i;
+                            updateUI();
+                        }}
                         on:keydown={() => {}}
                     >
                         {shortcut.name}
