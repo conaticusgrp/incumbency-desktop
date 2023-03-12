@@ -16,23 +16,25 @@ impl Person {
     /// Get percentage chance of death based on current health percentage
     pub fn get_death_chance(&self) -> i32 {
         match self.health_percentage {
-            h if h >= 40 => 0,
-            h if h >= 30 => 5,
-            h if h >= 20 => 20,
-            h if h >= 10 => 30,
-            h if h >= 2 => 45,
-            _ => 100, // if health percentage is 2 or below, death is iminent
+            h if h <= 3 => 45,
+            h if h <= 5 => 15,
+            h if h <= 10 => 8,
+            h if h <= 20 => 4,
+            h if h <= 30 => 1,
+            h if h <= 40 => 0,
+            _ => 100, // if health percentage is 3 or below, death is iminent
         }
     }
 
     /// Change an additional chance of death based on hospital capacity - the predetermined death chance must be multiplyed by this multiplyer
-    fn multiplyer_based_on_capacity(&self, capacity: i32) -> f32 {
-        match capacity {
-            0 => 4.,
-            c if c <= 3 => 2.,
-            c if c <= 7 => 1.5,
-            c if c <= 15 => 1.2,
-            _ => 1.,
+    fn multiplyer_based_on_capacity(&self, capacity_percentage: f32) -> f32 {
+        match capacity_percentage {
+            c if c <= 0. => 5.,
+            c if c <= 5. => 2.5,
+            c if c <= 10. => 1.8,
+            c if c <= 25. => 1.5,
+            c if c >= 30. => 1.2,
+            _ => 1.
         }
     }
 
@@ -59,12 +61,18 @@ impl Person {
         if percentage_below_hospitalisation < 0 { return }
 
         let mut death_chance = self.get_death_chance();
-        let predetermined_health_factor = if self.hospitalisation_percentage > 35 { percentage_below_hospitalisation + (self.hospitalisation_percentage / 8) } else { 0 };
+        let predetermined_health_factor = if self.hospitalisation_percentage < 35 { (percentage_below_hospitalisation / 2) + (self.hospitalisation_percentage / 10) } else { 0 };
 
         let healthcare_group = get_healthcare_group(self.age, healthcare);
 
         death_chance += predetermined_health_factor; // death chance is higher based on age and capacity for new patients
-        death_chance = (death_chance as f32 * self.multiplyer_based_on_capacity(healthcare_group.current_capacity)) as i32;
+
+        let mut group_capacity_percentage = (healthcare_group.current_capacity as f32 / healthcare_group.total_capacity as f32) * 100.;
+        if group_capacity_percentage.is_nan() {
+            group_capacity_percentage = 0.;
+        }
+
+        death_chance = (death_chance as f32 * self.multiplyer_based_on_capacity(group_capacity_percentage)) as i32;
 
         if death_chance > 100 { death_chance = 100 }
 
@@ -82,7 +90,7 @@ impl Person {
         self.hospitalisation_count += 1;
         let mut rng = rand::thread_rng();
 
-        let hospital_days = death_chance / 2;
+        let hospital_days = death_chance;
         self.days_left_in_hospital = Some(hospital_days);
         self.hospitalised_age = self.age;
 
