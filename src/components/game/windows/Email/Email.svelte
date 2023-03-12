@@ -101,10 +101,10 @@
             sender: { username: data.sender },
         };
 
-        emails.push(email);
-        currentTab = 0;
+        emails.unshift(email);
+        emails = [...emails];
 
-        emailsMapped = emails.reverse().map((e) => {
+        emailsMapped = emails.map((e) => {
             return { c: EmailTab, data: e };
         });
 
