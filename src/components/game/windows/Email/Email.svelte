@@ -102,7 +102,7 @@
         };
 
         emails.unshift(email);
-        emails = [...emails];
+        emails = [...emails]; // Need to reassign for bind
 
         emailsMapped = emails.map((e) => {
             return { c: EmailTab, data: e };

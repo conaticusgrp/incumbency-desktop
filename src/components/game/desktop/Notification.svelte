@@ -190,6 +190,6 @@
 
     button:hover {
         color: black;
-        background-color: var(--color-accent);
+        background-color: var(--notification-color);
     }
 </style>
