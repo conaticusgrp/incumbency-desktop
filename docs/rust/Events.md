@@ -29,7 +29,7 @@ Input Payload:
 
 ```ts
 {
-  app_id: number;
+    app_id: number;
 }
 ```
 
@@ -47,7 +47,7 @@ Input Payload:
 
 ```ts
 {
-  app_id: number;
+    app_id: number;
 }
 ```
 
@@ -65,7 +65,7 @@ Input Payload:
 
 ```ts
 {
-  rule_id: number;
+    rule_id: number;
 }
 ```
 
@@ -83,7 +83,7 @@ Input Payload:
 
 ```ts
 {
-  rule_id: number;
+    rule_id: number;
 }
 ```
 
@@ -237,7 +237,7 @@ Input Payload:
 
 ```ts
 {
-  tax_rate: number;
+    tax_rate: number;
 }
 ```
 
@@ -255,7 +255,7 @@ Input Payload:
 
 ```ts
 {
-  tax_rate: number;
+    tax_rate: number;
 }
 ```
 
@@ -273,7 +273,7 @@ Input Payload:
 
 ```ts
 {
-  new_budget: number;
+    new_budget: number;
 }
 ```
 
@@ -304,7 +304,7 @@ Input Payload:
 
 ```ts
 {
-  new_budget: number;
+    new_budget: number;
 }
 ```
 
@@ -333,7 +333,7 @@ Input Payload:
 
 ```ts
 {
-  new_budget: number;
+    new_budget: number;
 }
 ```
 
@@ -362,7 +362,7 @@ Input Payload:
 
 ```ts
 {
-  new_capacity: number;
+    new_capacity: number;
 }
 ```
 
@@ -391,7 +391,7 @@ Input Payload:
 
 ```ts
 {
-  new_capacity: number;
+    new_capacity: number;
 }
 ```
 
@@ -420,7 +420,7 @@ Input Payload:
 
 ```ts
 {
-  new_capacity: number;
+    new_capacity: number;
 }
 ```
 
@@ -444,3 +444,17 @@ Output Payloads:
 Received when an app needs a data update.
 
 Output Payload: `object` - Object containing the updated app data (this will have the same data keys as sent back in the `app_opened` event)
+
+## recv (`unemployed_high`)
+
+### Description
+
+Received at the end of a month if the unemployed count exceeds 0.5% of the population.
+
+Output Payload:
+
+```ts
+{
+  unemployed_count: number,
+}
+```

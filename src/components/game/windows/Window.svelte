@@ -141,7 +141,7 @@
                     data: {
                         title: "EXPECTED CRISIS",
                         content: `
-Thomas! I have done some calculations and based on our statistics I estimate that we are going to experience a financial crash next month and our budget is going to fall to -$${-appData.expected_balance}. You need to save at least $${
+${USERNAME}! I have done some calculations and based on our statistics I estimate that we are going to experience a financial crash next month and our budget is going to fall to -$${-appData.expected_balance}. You need to save at least $${
                             -appData.expected_balance + totalBudgetSpending
                         } to gain a digit above $0.
 
@@ -166,7 +166,7 @@ Tarun.
                     data: {
                         title: "Expected Balance Below Safe Zone",
                         content: `
-Hello Thomas,
+Hello ${USERNAME},
 
 I have been doing some digging and I wanted to give you a quick heads up. The expected balance next month is $${
                             appData.expected_balance
@@ -394,6 +394,38 @@ Ned
                 },
             });
         }, 5000);
+    });
+
+    listen("unemployed_high", ({ payload }: any) => {
+        if (payload.severity === "mild") {
+            dispatcher("windowEvent", {
+                type: EMAIL_CREATE,
+                data: {
+                    title: "High Unemployment Rate",
+                    content: `
+Hi ${USERNAME}, hope you're doing well. It has been brought to my attention that the unemployment rate for the country needs to be addressed, as it currently sits at ${payload.unemployed_count} people (${Number(payload.percent)}%).
+
+This was likely caused by a large coorporation going bust. Ensure that you cover expenses for these people to keep them healthy while they seek for new employment.
+
+Many thanks, Ralph
+`,
+                    sender: "Ralph",
+                    severity: "warning",
+                },
+            });
+        } else {
+            dispatcher("windowEvent", {
+                type: EMAIL_CREATE,
+                data: {
+                    title: "Huge business has gone bust!",
+                    content: `
+Hello ${USERNAME}, you need to act ASAP! A large business has just gone bust and ${payload.unemployed_count} people (${Number(payload.percent)}%) are now unemployed. Fund expenses for as many people as you can while they seek new employment.
+`,
+                    sender: "Ralph",
+                    severity: "error",
+                },
+            });
+        }
     });
 </script>
 

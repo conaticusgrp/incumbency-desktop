@@ -424,17 +424,29 @@ impl GameState {
 
         self.rules.business_funding_rule.budget_cost = self.rules.business_funding_rule.fund * (self.businesses.len() as i64);
 
+        let mut unemployed_count = 0;
+
         // Sync people to unemployed people
         for per_cpy in unemployed_people {
             if per_cpy.job != Job::Unemployed {
                 let per = self.people.get_mut(&per_cpy.id).unwrap();
                 per.job = per_cpy.job.clone();
                 per.set_salary(per_cpy.salary);
+            } else {
+                unemployed_count += 1;
             }
         }
 
         for id in bus_removal_queue {
             self.businesses.remove(&id);
+        }
+
+        let percentage = (unemployed_count as f32 / self.people.len() as f32) * 100.;
+
+        if percentage >= 4. {
+            app_handle.emit_all("unemployed_high", json!({ "unemployed_count": unemployed_count, "percent": percentage, "severity": "mild" })).unwrap();
+        } else if percentage >= 1. {
+            app_handle.emit_all("unemployed_high", json!({ "unemployed_count": unemployed_count, "percent": percentage, "severity": "high" })).unwrap();
         }
 
         update_app(App::Finance, json!({
