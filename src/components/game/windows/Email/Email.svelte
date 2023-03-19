@@ -113,7 +113,7 @@
             data: {
                 app: "Email",
                 header: `New Email from ${data.sender}`,
-                content: data.content,
+                content: data.title,
                 severity: data.severity,
                 actionTitle: "Open App",
             },

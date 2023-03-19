@@ -8,7 +8,7 @@
         badgeCount: number;
         opened?: boolean;
         minimized?: boolean;
-    }
+    };
 
     type ModalState = "closed" | "log off" | "shut down";
 </script>

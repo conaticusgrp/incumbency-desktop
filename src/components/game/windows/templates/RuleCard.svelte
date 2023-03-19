@@ -9,6 +9,8 @@
         CoverFoodUnemployed,
     }
 
+    type HTMLInputType = "number" | "text";
+
     export interface RuleCardValue {
         startStr?: string;
         value: any;

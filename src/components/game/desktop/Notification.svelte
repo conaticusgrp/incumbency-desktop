@@ -174,9 +174,6 @@
     .content > p {
         color: var(--color-shaded);
         font-size: 13px;
-        text-overflow: ellipsis;
-        overflow: hidden;
-        white-space: nowrap;
     }
 
     .actions {

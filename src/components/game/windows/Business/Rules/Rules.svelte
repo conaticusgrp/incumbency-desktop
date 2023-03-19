@@ -1,27 +1,46 @@
 <script lang="ts">
     import { invoke } from "@tauri-apps/api/tauri";
+    import { createEventDispatcher } from "svelte";
+    import { handleInvoke } from "../../../../../scripts/util";
     import RuleCard, { Rules } from "../../templates/RuleCard.svelte";
     import type { BusinessData } from "../Business.svelte";
 
     export let data: BusinessData;
+    const dispatcher = createEventDispatcher();
 
     let fundBudgetCost = 0;
     $: fundBudgetCost = data.rules.funding.budget_cost;
 
-    const onFundingEnabled = (activated: boolean) => {
-        data.rules.funding.enabled = activated;
+    const onFundingEnabled = async (activated: boolean) => {
+        let success: any;
 
         if (activated) {
-            invoke("enable_rule", {
-                ruleId: Rules.BusinessFunding,
-            });
+            success = await handleInvoke(
+                dispatcher,
+                invoke("enable_rule", {
+                    ruleId: Rules.BusinessFunding,
+                }),
+                "business"
+            );
+
+            if (success !== false) {
+                data.rules.funding.enabled = false;
+            }
 
             return;
         }
 
-        invoke("disable_rule", {
-            ruleId: Rules.BusinessFunding,
-        });
+        success = await handleInvoke(
+            dispatcher,
+            invoke("disable_rule", {
+                ruleId: Rules.BusinessFunding,
+            }),
+            "business"
+        );
+
+        if (success !== false) {
+            data.rules.funding.enabled = true;
+        }
     };
 
     const onFundingUpdate = async (updateData: any[]) => {
@@ -31,17 +50,23 @@
             maximum_income: Number(updateData[2]),
         };
 
-        const { budget_cost } = (await invoke("update_rule", {
-            ruleId: Rules.BusinessFunding,
-            data: payload,
-        })) as any;
+        const res = await handleInvoke(
+            dispatcher,
+            invoke("update_rule", {
+                ruleId: Rules.BusinessFunding,
+                data: payload,
+            }),
+            "business"
+        );
 
-        data.rules.funding.budget_cost = budget_cost;
+        if (res !== false) {
+            data.rules.funding.budget_cost = res.budget_cost;
 
-        data.rules.funding = {
-            ...data.rules.funding,
-            ...payload,
-        };
+            data.rules.funding = {
+                ...data.rules.funding,
+                ...payload,
+            };
+        }
     };
 </script>
 

@@ -22,24 +22,37 @@
 
         switch (gameValue) {
             case GameValue.TaxRate:
-                data.tax_rate = newValue;
-                data.expected_person_income = await invoke("update_tax_rate", {
-                    taxRate: newValue,
-                });
+                const taxRes = await handleInvoke(
+                    dispatcher,
+                    invoke("update_tax_rate", { taxRate: newValue }),
+                    "finance"
+                );
+
+                if (taxRes !== false) {
+                    data.tax_rate = newValue;
+                    data.expected_person_income = taxRes;
+                }
+
                 break;
             case GameValue.BusinessTaxRate:
-                data.business_tax_rate = newValue;
-                data.expected_business_income = await invoke(
-                    "update_business_tax_rate",
-                    { taxRate: newValue }
+                const busTaxRes = await handleInvoke(
+                    dispatcher,
+                    invoke("update_business_tax_rate", { taxRate: newValue }),
+                    "finance"
                 );
+
+                if (busTaxRes !== false) {
+                    data.business_tax_rate = newValue;
+                }
+
                 break;
             case GameValue.HealthcareBudget:
                 const healthRes = await handleInvoke(
                     dispatcher,
                     invoke("update_healthcare_budget", {
                         newBudget: newValue,
-                    })
+                    }),
+                    "finance"
                 );
 
                 if (healthRes === false) {
@@ -56,7 +69,8 @@
                     dispatcher,
                     invoke("update_welfare_budget", {
                         newBudget: newValue,
-                    })
+                    }),
+                    "finance"
                 );
 
                 if (welfareRes === false) {
@@ -70,7 +84,8 @@
                     dispatcher,
                     invoke("update_business_budget", {
                         newBudget: newValue,
-                    })
+                    }),
+                    "finance"
                 );
 
                 if (busRes === false) {

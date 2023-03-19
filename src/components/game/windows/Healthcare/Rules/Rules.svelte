@@ -1,69 +1,119 @@
 <script lang="ts">
     import { invoke } from "@tauri-apps/api/tauri";
+    import { createEventDispatcher } from "svelte";
+    import { handleInvoke } from "../../../../../scripts/util";
     import RuleCard, { Rules } from "../../templates/RuleCard.svelte";
     import type { HealthcareData } from "../Healthcare.svelte";
 
     export let data: HealthcareData;
+    const dispatcher = createEventDispatcher();
 
-    const onAgeRuleEnabled = (activated: boolean) => {
-        data.rules.deny_past_age.enabled = activated;
+    const onAgeRuleEnabled = async (activated: boolean) => {
+        let success: any;
 
         if (activated) {
-            invoke("enable_rule", {
-                ruleId: Rules.DenyAge,
-            });
+            success = await handleInvoke(
+                dispatcher,
+                invoke("enable_rule", {
+                    ruleId: Rules.DenyAge,
+                }),
+                "healthcare"
+            );
+
+            if (success !== false) {
+                data.rules.deny_past_age.enabled = true;
+            }
 
             return;
         }
 
-        invoke("disable_rule", {
-            ruleId: Rules.DenyAge,
-        });
+        success = await handleInvoke(
+            dispatcher,
+            invoke("disable_rule", {
+                ruleId: Rules.DenyAge,
+            }),
+            "healthcare"
+        );
+
+        if (success !== false) {
+            data.rules.deny_past_age.enabled = true;
+        }
     };
 
-    const onAgeRuleUpdated = (updateData: any[]) => {
+    const onAgeRuleUpdated = async (updateData: any[]) => {
         const payload = {
             maximum_age: Number(updateData[0]),
         };
 
-        invoke("update_rule", {
-            ruleId: Rules.DenyAge,
-            data: payload,
-        });
+        const res = await handleInvoke(
+            dispatcher,
+            invoke("update_rule", {
+                ruleId: Rules.DenyAge,
+                data: payload,
+            }),
+            "healthcare"
+        );
 
-        data.rules.deny_past_age = { ...data.rules.deny_past_age, ...payload };
+        if (res !== false) {
+            data.rules.deny_past_age = {
+                ...data.rules.deny_past_age,
+                ...payload,
+            };
+        }
     };
 
-    const onHealthRuleEnabled = (activated: boolean) => {
-        data.rules.deny_past_health.enabled = activated;
+    const onHealthRuleEnabled = async (activated: boolean) => {
+        let success: any;
 
         if (activated) {
-            invoke("enable_rule", {
-                ruleId: Rules.DenyHealthPercentage,
-            });
+            success = await handleInvoke(
+                dispatcher,
+                invoke("enable_rule", {
+                    ruleId: Rules.DenyHealthPercentage,
+                }),
+                "healthcare"
+            );
+
+            if (success !== false) {
+                data.rules.deny_past_health.enabled = true;
+            }
 
             return;
         }
 
-        invoke("disable_rule", {
-            ruleId: Rules.DenyHealthPercentage,
-        });
+        success = await handleInvoke(
+            dispatcher,
+            invoke("disable_rule", {
+                ruleId: Rules.DenyHealthPercentage,
+            }),
+            "healthcare"
+        );
+
+        if (success !== false) {
+            data.rules.deny_past_health.enabled = false;
+        }
     };
 
-    const onHealthRuleUpdated = (updateData: any[]) => {
+    const onHealthRuleUpdated = async (updateData: any[]) => {
         const payload = {
             maximum_percentage: Number(updateData[0]),
         };
 
-        invoke("update_rule", {
-            ruleId: Rules.DenyHealthPercentage,
-            data: payload,
-        });
+        const res = await handleInvoke(
+            dispatcher,
+            invoke("update_rule", {
+                ruleId: Rules.DenyHealthPercentage,
+                data: payload,
+            }),
+            "healthcare"
+        );
 
-        data.rules.deny_past_health = {
-            ...data.rules.deny_past_health,
-            ...payload,
-        };
+        if (res !== false) {
+            data.rules.deny_past_health = {
+                ...data.rules.deny_past_health,
+                ...payload,
+            };
+        }
     };
 </script>
 

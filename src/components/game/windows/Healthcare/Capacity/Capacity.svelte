@@ -1,9 +1,12 @@
 <script lang="ts">
     import { invoke } from "@tauri-apps/api/tauri";
+    import { createEventDispatcher } from "svelte";
+    import { handleInvoke } from "../../../../../scripts/util";
     import ValueCard from "../../templates/ValueCard.svelte";
     import type { HealthcareData } from "../Healthcare.svelte";
 
     export let data: HealthcareData | undefined;
+    const dispatcher = createEventDispatcher();
 
     enum GameValue {
         ChildcareCapacity,
@@ -11,46 +14,51 @@
         EldercareCapacity,
     }
 
-    const handleErrorFromResult = (result: any): boolean => {
-        if (result.error) {
-            console.error(result.error);
-            return true;
-        }
-
-        return false;
-    };
-
     const updateGameValue = async (gameValue: GameValue, newValue: any) => {
         if (!data) throw new Error("Data is undefined.");
 
         switch (gameValue) {
             case GameValue.ChildcareCapacity:
-                const childRes = await invoke("update_childcare_capacity", {
-                    newCapacity: newValue,
-                });
+                const childRes = await handleInvoke(
+                    dispatcher,
+                    invoke("update_childcare_capacity", {
+                        newCapacity: newValue,
+                    }),
+                    "healthcare"
+                );
 
-                if (!handleErrorFromResult(childRes)) {
+                if (childRes !== false) {
                     data.child_care.total_capacity = newValue;
                 }
 
                 break;
             case GameValue.AdultcareCapacity:
-                const adultRes = await invoke("update_adultcare_capacity", {
-                    newCapacity: newValue,
-                });
+                const adultRes = await handleInvoke(
+                    dispatcher,
+                    invoke("update_adultcare_capacity", {
+                        newCapacity: newValue,
+                    }),
+                    "healthcare"
+                );
 
-                if (!handleErrorFromResult(adultRes)) {
+                if (adultRes !== false) {
                     data.adult_care.total_capacity = newValue;
                 }
+
                 break;
             case GameValue.EldercareCapacity:
-                const elderRes = await invoke("update_eldercare_capacity", {
-                    newCapacity: newValue,
-                });
+                const elderRes = await handleInvoke(
+                    dispatcher,
+                    invoke("update_eldercare_capacity", {
+                        newCapacity: newValue,
+                    }),
+                    "healthcare"
+                );
 
-                if (!handleErrorFromResult(elderRes)) {
+                if (elderRes !== false) {
                     data.elder_care.total_capacity = newValue;
                 }
+
                 break;
             default:
                 break;

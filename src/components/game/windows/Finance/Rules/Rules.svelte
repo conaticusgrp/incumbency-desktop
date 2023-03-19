@@ -2,67 +2,117 @@
     import type { FinanceData } from "../Finance.svelte";
     import RuleCard, { Rules } from "../../templates/RuleCard.svelte";
     import { invoke } from "@tauri-apps/api/tauri";
+    import { handleInvoke } from "../../../../../scripts/util";
+    import { createEventDispatcher } from "svelte";
 
     export let data: FinanceData;
+    const dispatcher = createEventDispatcher();
 
-    const updateTaxRule = (updateData: any[]) => {
+    const updateTaxRule = async (updateData: any[]) => {
         const payload = {
             minimum_salary: Number(updateData[0]),
             tax_rate: Number(updateData[1]),
         };
 
-        invoke("update_rule", {
-            ruleId: Rules.Tax,
-            data: payload,
-        });
+        const res = await handleInvoke(
+            dispatcher,
+            invoke("update_rule", {
+                ruleId: Rules.Tax,
+                data: payload,
+            }),
+            "finance"
+        );
 
-        data.rules.tax = { ...data.rules.tax, ...payload };
+        if (res !== false) {
+            data.rules.tax = { ...data.rules.tax, ...payload };
+        }
     };
 
-    const onTaxRuleEnable = (activated: boolean) => {
-        data.rules.tax.enabled = activated;
+    const onTaxRuleEnable = async (activated: boolean) => {
+        let success: any;
 
         if (activated) {
-            invoke("enable_rule", {
-                ruleId: Rules.Tax,
-            });
+            success = await handleInvoke(
+                dispatcher,
+                invoke("enable_rule", {
+                    ruleId: Rules.Tax,
+                }),
+                "finance"
+            );
+
+            if (success !== false) {
+                data.rules.tax.enabled = true;
+            }
 
             return;
         }
 
-        invoke("disable_rule", {
-            ruleId: Rules.Tax,
-        });
+        success = await handleInvoke(
+            dispatcher,
+            invoke("disable_rule", {
+                ruleId: Rules.Tax,
+            }),
+            "finance"
+        );
+
+        if (success !== false) {
+            data.rules.tax.enabled = false;
+        }
     };
 
-    const updateBusinessTaxRule = (updateData: any[]) => {
+    const updateBusinessTaxRule = async (updateData: any[]) => {
         const payload = {
             minimum_monthly_income: Number(updateData[0]),
             tax_rate: Number(updateData[1]),
         };
 
-        invoke("update_rule", {
-            ruleId: Rules.BusinessTax,
-            data: payload,
-        });
+        const res = await handleInvoke(
+            dispatcher,
+            invoke("update_rule", {
+                ruleId: Rules.BusinessTax,
+                data: payload,
+            }),
+            "finance"
+        );
 
-        data.rules.business_tax = { ...data.rules.business_tax, ...payload };
+        if (res !== false) {
+            data.rules.business_tax = {
+                ...data.rules.business_tax,
+                ...payload,
+            };
+        }
     };
 
-    const onBusinessRuleEnabled = (activated: boolean) => {
-        data.rules.business_tax.enabled = activated;
+    const onBusinessRuleEnabled = async (activated: boolean) => {
+        let success: any;
 
         if (activated) {
-            invoke("enable_rule", {
-                ruleId: Rules.BusinessTax,
-            });
+            success = await handleInvoke(
+                dispatcher,
+                invoke("enable_rule", {
+                    ruleId: Rules.BusinessTax,
+                }),
+                "finance"
+            );
+
+            if (success !== false) {
+                data.rules.business_tax.enabled = true;
+            }
 
             return;
         }
 
-        invoke("disable_rule", {
-            ruleId: Rules.BusinessTax,
-        });
+        success = await handleInvoke(
+            dispatcher,
+            invoke("disable_rule", {
+                ruleId: Rules.BusinessTax,
+            }),
+            "finance"
+        );
+
+        if (success !== false) {
+            data.rules.business_tax.enabled = false;
+        }
     };
 </script>
 

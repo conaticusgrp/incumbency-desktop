@@ -1,9 +1,13 @@
 <script lang="ts">
     import { invoke } from "@tauri-apps/api/tauri";
+    import { createEventDispatcher } from "svelte";
+    import { handleInvoke } from "../../../../../scripts/util";
     import RuleCard, { Rules } from "../../templates/RuleCard.svelte";
     import type { WelfareData } from "../Welfare.svelte";
 
     export let data: WelfareData;
+
+    const dispatcher = createEventDispatcher();
 
     let coverCost = 0;
     let unemployedCoverCost = 0;
@@ -11,20 +15,36 @@
     $: coverCost = data.rules.cover_food.budget_cost;
     $: unemployedCoverCost = data.rules.cover_food_unemployed.budget_cost;
 
-    const onCoverEnabled = (activated: boolean) => {
-        data.rules.cover_food.enabled = activated;
+    const onCoverEnabled = async (activated: boolean) => {
+        let success: any;
 
         if (activated) {
-            invoke("enable_rule", {
-                ruleId: Rules.CoverFood,
-            });
+            success = await handleInvoke(
+                dispatcher,
+                invoke("enable_rule", {
+                    ruleId: Rules.CoverFood,
+                }),
+                "welfare"
+            );
+
+            if (success !== false) {
+                data.rules.cover_food.enabled = true;
+            }
 
             return;
         }
 
-        invoke("disable_rule", {
-            ruleId: Rules.CoverFood,
-        });
+        success = await handleInvoke(
+            dispatcher,
+            invoke("disable_rule", {
+                ruleId: Rules.CoverFood,
+            }),
+            "welfare"
+        );
+
+        if (success !== false) {
+            data.rules.cover_food.enabled = false;
+        }
     };
 
     const onCoverUpdate = async (updateData: any[]) => {
@@ -33,33 +53,55 @@
             maximum_salary: Number(updateData[1]),
         };
 
-        const { budget_cost } = (await invoke("update_rule", {
-            ruleId: Rules.CoverFood,
-            data: payload,
-        })) as any;
+        const res = await handleInvoke(
+            dispatcher,
+            invoke("update_rule", {
+                ruleId: Rules.CoverFood,
+                data: payload,
+            }),
+            "welfare"
+        );
 
-        data.rules.cover_food.budget_cost = budget_cost;
+        if (res !== false) {
+            data.rules.cover_food.budget_cost = res.budget_cost;
 
-        data.rules.cover_food = {
-            ...data.rules.cover_food,
-            ...payload,
-        };
+            data.rules.cover_food = {
+                ...data.rules.cover_food,
+                ...payload,
+            };
+        }
     };
 
-    const onCoverUnemployedEnabled = (activated: boolean) => {
-        data.rules.cover_food_unemployed.enabled = activated;
+    const onCoverUnemployedEnabled = async (activated: boolean) => {
+        let success: any;
 
         if (activated) {
-            invoke("enable_rule", {
-                ruleId: Rules.CoverFoodUnemployed,
-            });
+            success = await handleInvoke(
+                dispatcher,
+                invoke("enable_rule", {
+                    ruleId: Rules.CoverFoodUnemployed,
+                }),
+                "welfare"
+            );
+
+            if (success !== false) {
+                data.rules.cover_food_unemployed.enabled = true;
+            }
 
             return;
         }
 
-        invoke("disable_rule", {
-            ruleId: Rules.CoverFoodUnemployed,
-        });
+        success = await handleInvoke(
+            dispatcher,
+            invoke("disable_rule", {
+                ruleId: Rules.CoverFoodUnemployed,
+            }),
+            "welfare"
+        );
+
+        if (success !== false) {
+            data.rules.cover_food_unemployed.enabled = false;
+        }
     };
 
     const onCoverUnemployedUpdate = async (updateData: any[]) => {
@@ -67,17 +109,23 @@
             people_count: Number(updateData[0]),
         };
 
-        const { budget_cost } = (await invoke("update_rule", {
-            ruleId: Rules.CoverFoodUnemployed,
-            data: payload,
-        })) as any;
+        const res = await handleInvoke(
+            dispatcher,
+            invoke("update_rule", {
+                ruleId: Rules.CoverFoodUnemployed,
+                data: payload,
+            }),
+            "welfare"
+        );
 
-        data.rules.cover_food_unemployed.budget_cost = budget_cost;
+        if (res !== false) {
+            data.rules.cover_food_unemployed.budget_cost = res.budget_cost;
 
-        data.rules.cover_food_unemployed = {
-            ...data.rules.cover_food_unemployed,
-            ...payload,
-        };
+            data.rules.cover_food_unemployed = {
+                ...data.rules.cover_food_unemployed,
+                ...payload,
+            };
+        }
     };
 </script>
 
