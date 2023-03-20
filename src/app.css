@@ -1,19 +1,27 @@
+@font-face {
+    font-family: "Fira Code";
+    src: url("./assets/Fira Code.ttf");
+}
+
 :root {
     /* variables */
 
-    --color-primary: #242424;
-    --color-secondary: rgba(255, 255, 255, 0.87);
-    --color-tertiary: #f5f5f5;
+    --color-bg: black;
+    --color-accent: #6d9b14;
+    --color-highlight: white;
+    --color-shaded: rgba(255, 255, 255, 0.5);
+    --color-critical: #ff5656;
+    --app-border-radius: 0.5rem;
 
     /*  */
 
-    font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
-    font-size: 16px;
+    font-family: "Fira Code";
+    font-size: 14px;
     line-height: 24px;
     font-weight: 400;
 
-    color: var(--color-secondary);
-    background-color: var(--color-primary);
+    color: var(--color-highlight);
+    background-color: var(--color-bg);
 
     font-synthesis: none;
     text-rendering: optimizeLegibility;
@@ -26,15 +34,10 @@
 * {
     margin: 0;
     padding: 0;
-}
 
-a {
-    font-weight: 500;
-    color: #646cff;
-    text-decoration: inherit;
-}
-a:hover {
-    color: #535bf2;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 body {
@@ -46,17 +49,8 @@ body {
     overflow: hidden;
 }
 
-h1 {
-    font-size: 3.2em;
-    line-height: 1.1;
-}
-
-.card {
-    padding: 2em;
-}
-
 #app {
-    max-width: 1280px;
+    /* max-width: 1280px; */
     margin: 0 auto;
     text-align: center;
 
@@ -65,28 +59,21 @@ h1 {
     /* overflow: hidden; */
 }
 
+h1 {
+    font-size: 3.2em;
+    line-height: 1.1;
+}
+
 button {
-    border-radius: 8px;
-    border: 1px solid transparent;
-    padding: 0.6em 1.2em;
-    font-size: 1em;
-    font-weight: 500;
-    font-family: inherit;
-    background-color: #1a1a1a;
-    color: var(--color-secondary);
+    border: none;
+    border-radius: 0;
+    background-color: transparent;
+    color: var(--color-highlight);
+    padding: 1em;
     cursor: pointer;
-    transition: border-color 0.25s;
-}
-button:hover:enabled {
-    border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-    outline: 4px auto -webkit-focus-ring-color;
+    font-family: "Fira Code";
 }
 
 button:disabled {
-    background-color: rgb(16, 16, 16);
-    color: rgb(42, 42, 42);
     cursor: default;
 }

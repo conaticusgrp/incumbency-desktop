@@ -3,36 +3,20 @@
   windows_subsystem = "windows"
 )]
 
-const DATA_PATH: &str = "./data";
-const SAVES_PATH: &str = "./data/saves";
+mod entities;
+mod game;
+mod common;
 
-fn check_data_directories() {
-  if !std::path::Path::new(DATA_PATH).exists() {
-    std::fs::create_dir(DATA_PATH).unwrap();
-    std::fs::create_dir(SAVES_PATH).unwrap();
+use game::{manager::{create_game}, structs::GameState};
+use common::{filesystem::check_save_exists};
+use std::sync::{Arc, Mutex};
+use game::events::{app_open, app_close, enable_rule, disable_rule, update_rule, update_tax_rate, update_business_tax_rate, update_healthcare_budget, update_welfare_budget, update_business_budget, update_childcare_capacity, update_adultcare_capacity, update_eldercare_capacity};
 
-    return;
-  }
-
-  if !std::path::Path::new(SAVES_PATH).exists() {
-    std::fs::create_dir(SAVES_PATH).unwrap();
-  }
-}
-
-#[tauri::command]
-fn check_save_exists(name: String) -> bool {
-  check_data_directories();
-  std::path::Path::new(&format!("{}/{}", SAVES_PATH, name)).exists()
-}
-
-#[tauri::command]
-fn create_game(name: String) {
-  std::fs::create_dir(format!("{}/{}", SAVES_PATH, name)).unwrap();
-}
-
-fn main() {
+#[tokio::main]
+async fn main() { 
   tauri::Builder::default()
-  .invoke_handler(tauri::generate_handler![create_game, check_save_exists])
+  .invoke_handler(tauri::generate_handler![create_game, check_save_exists, app_close, app_open, enable_rule, disable_rule, update_rule, update_tax_rate, update_business_tax_rate, update_healthcare_budget, update_welfare_budget, update_business_budget, update_childcare_capacity, update_adultcare_capacity, update_eldercare_capacity])
+    .manage(Arc::new(Mutex::new(GameState::default())))
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
 }
