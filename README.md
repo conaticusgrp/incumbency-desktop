@@ -6,6 +6,10 @@
 
 Incumbency is an economy simulation engine made by the YouTuber [conaticus](https://youtube.com/@conaticus) and his team. In this game you can change taxes, rules and budgets to keep the economy stable.
 
+### Download
+
+You can either build with instructions from the README or download the executable [here](https://github.com/conaticusgrp/incumbency-desktop/releases).
+
 ## Honourable mentions
 
 ### Lemon Foxmere
