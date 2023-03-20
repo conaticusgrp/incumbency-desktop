@@ -1087,7 +1087,10 @@ dependencies = [
 name = "incumbency-desktop"
 version = "0.1.0"
 dependencies = [
+<<<<<<< HEAD
  "cc",
+=======
+>>>>>>> ea6e01cbbfda9b27de97c62484c6e7805feafeef
  "maplit",
  "rand 0.8.5",
  "serde",
