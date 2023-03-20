@@ -21,7 +21,7 @@ pub struct WelfareMachine {
 impl Default for WelfareMachine {
     fn default() -> Self {
         Self {
-            welfare_days: vec![WelfareDay::default(); 30]
+            welfare_days: vec![WelfareDay::default(); 30],
         }
     }
 }
@@ -36,7 +36,7 @@ impl WelfareMachine {
 
         self.welfare_days[idx].maximum += amount;
     }
-    
+
     pub fn remove_welfare_if(&mut self, amount: i32, day: i32, condition: bool) {
         let idx = (day - 1) as usize;
 
