@@ -8,7 +8,7 @@
         badgeCount: number;
         opened?: boolean;
         minimized?: boolean;
-    };
+    }
 
     type ModalState = "closed" | "log off" | "shut down";
 </script>
@@ -156,7 +156,9 @@
         }
 
         n.date = date;
-        notifications.push(n);
+
+        notifications = [...notifications, n]; // for mutability updates
+
         showLatestNotification = true;
         updateUI();
     };
@@ -364,7 +366,7 @@
                     class="notifications-section"
                     style="width: calc({NOTIFICATION_WIDTH} + {NOTIFICATION_MARGIN_X} * 2);"
                 >
-                    {#each notifications as notif, idx}
+                    {#each notifications.reverse() as notif, idx}
                         <Notification
                             actionTitle={notif.actionTitle}
                             actionFunction={notif.actionTitle?.toLowerCase() ===

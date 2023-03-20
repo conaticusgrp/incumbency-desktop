@@ -24,7 +24,7 @@
             );
 
             if (success !== false) {
-                data.rules.funding.enabled = false;
+                data.rules.funding.enabled = true;
             }
 
             return;
@@ -39,7 +39,7 @@
         );
 
         if (success !== false) {
-            data.rules.funding.enabled = true;
+            data.rules.funding.enabled = false;
         }
     };
 

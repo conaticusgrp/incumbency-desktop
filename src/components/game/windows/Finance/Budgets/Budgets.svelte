@@ -4,6 +4,7 @@
     import ValueCard from "../../templates/ValueCard.svelte";
     import { createEventDispatcher } from "svelte";
     import { handleInvoke } from "../../../../../scripts/util";
+    import Welfare from "../../Welfare/Welfare.svelte";
 
     export let data: FinanceData | undefined;
     const dispatcher = createEventDispatcher();

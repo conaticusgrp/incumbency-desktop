@@ -9,6 +9,7 @@
         severity?: Severity;
         action?: () => void;
         actionTitle?: string;
+        shown: boolean;
     }
 
     export const severityColors = new Map<Severity, string>()

@@ -13,13 +13,22 @@ export const handleInvoke = async (
     invokeRes: Promise<any>,
     app: AppString
 ): Promise<any> => {
+    let error = null;
+
     const result = await invokeRes.catch((e) => {
-        errorNotif(dispatcher, "An error occured", e, app);
+        errorNotif(dispatcher, "An error occured", e.error, app);
+        error = e;
     });
 
-    if (result.error) {
-        errorNotif(dispatcher, "An error occured", result.error, app);
+    if (error !== null) {
         return false;
+    }
+
+    if (typeof result === "object" && result !== null) {
+        if (result.error) {
+            errorNotif(dispatcher, "An error occured", result.error, app);
+            return false;
+        }
     }
 
     return result;
