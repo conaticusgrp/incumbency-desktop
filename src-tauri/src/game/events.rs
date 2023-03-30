@@ -1,10 +1,18 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use serde_json::json;
-use tauri::{State, AppHandle, Manager};
+use tauri::{AppHandle, Manager, State};
 
-use crate::{entities::{person::person::Person, business::Business}, percentage_of, as_decimal_percent, common::errors::{IncResult, Error}};
+use crate::{
+    as_decimal_percent,
+    common::errors::{Error, IncResult},
+    entities::{business::Business, person::person::Person},
+    percentage_of,
+};
 
-use super::{state_manager::GameStateSafe, structs::{GameState, HealthcareGroup}};
+use super::{
+    state_manager::GameStateSafe,
+    structs::{GameState, HealthcareGroup},
+};
 
 #[derive(PartialEq, Eq, Hash)]
 pub enum App {
@@ -88,7 +96,6 @@ pub fn app_open(state_mux: State<'_, GameStateSafe>, app_id: u8) -> IncResult<St
     };
 
     let ret = match app {
-
         App::Finance => {
             let payload = FinanceAppOpenedPayload {
                 government_balance: state.government_balance,
@@ -105,9 +112,15 @@ pub fn app_open(state_mux: State<'_, GameStateSafe>, app_id: u8) -> IncResult<St
                 spare_budget: state.spare_budget,
                 average_welfare: state.average_welfare as i32,
                 average_unemployed_welfare: state.average_welfare_unemployed as i32,
-                used_business_budget: (state.rules.business_funding_rule.fund * state.rules.business_funding_rule.business_count as i64),
-                used_welfare_budget: ((state.rules.cover_food_rule.people_count * 4) + (state.rules.cover_food_unemployed_rule.people_count * 4)) as i64,
-                spare_hospital_capacity: (state.healthcare.total_capacity - (state.healthcare.childcare.total_capacity + state.healthcare.adultcare.total_capacity + state.healthcare.eldercare.total_capacity)),
+                used_business_budget: (state.rules.business_funding_rule.fund
+                    * state.rules.business_funding_rule.business_count as i64),
+                used_welfare_budget: ((state.rules.cover_food_rule.people_count * 4)
+                    + (state.rules.cover_food_unemployed_rule.people_count * 4))
+                    as i64,
+                spare_hospital_capacity: (state.healthcare.total_capacity
+                    - (state.healthcare.childcare.total_capacity
+                        + state.healthcare.adultcare.total_capacity
+                        + state.healthcare.eldercare.total_capacity)),
                 expected_balance: state.expected_balance,
                 rules: json!({
                     "tax": state.rules.tax_rule,
@@ -116,7 +129,7 @@ pub fn app_open(state_mux: State<'_, GameStateSafe>, app_id: u8) -> IncResult<St
             };
 
             serde_json::to_string(&payload)
-        },
+        }
 
         App::Healthcare => {
             let payload = HealthcareAppOpenedPayload {
@@ -133,11 +146,11 @@ pub fn app_open(state_mux: State<'_, GameStateSafe>, app_id: u8) -> IncResult<St
                 rules: json!({
                     "deny_past_age": state.rules.deny_age_rule,
                     "deny_past_health": state.rules.deny_health_percentage_rule
-                })
+                }),
             };
 
             serde_json::to_string(&payload)
-        },
+        }
 
         App::Welfare => {
             let payload = WelfareAppOpenedPayload {
@@ -151,7 +164,7 @@ pub fn app_open(state_mux: State<'_, GameStateSafe>, app_id: u8) -> IncResult<St
             };
 
             serde_json::to_string(&payload)
-        },
+        }
 
         App::Business => {
             let payload = BusinessAppOpenedPayload {
@@ -160,11 +173,11 @@ pub fn app_open(state_mux: State<'_, GameStateSafe>, app_id: u8) -> IncResult<St
                 average_monthly_income: state.business_data.average_monthly_income,
                 rules: json!({
                     "funding": state.rules.business_funding_rule,
-                })
+                }),
             };
 
             serde_json::to_string(&payload)
-        },
+        }
     }?;
 
     *state.open_apps.entry(app).or_insert(true) = true;
@@ -178,7 +191,7 @@ pub fn app_close(state_mux: State<'_, GameStateSafe>, app_id: u8) {
     let app = match get_app_from_id(app_id) {
         Some(a) => a,
         None => return,
-    }; 
+    };
     *state.open_apps.entry(app).or_insert(false) = false;
 }
 
@@ -186,22 +199,22 @@ fn set_rule(state: &mut GameState, id: i32, enabled: bool) {
     match id {
         0 => {
             state.rules.tax_rule.enabled = enabled;
-        },
+        }
         1 => {
             state.rules.business_tax_rule.enabled = enabled;
-        },
+        }
         2 => {
             state.rules.business_funding_rule.enabled = enabled;
-        },
+        }
         3 => {
             state.rules.deny_age_rule.enabled = enabled;
-        },
+        }
         4 => {
             state.rules.deny_health_percentage_rule.enabled = enabled;
-        },
+        }
         5 => {
             state.rules.cover_food_rule.enabled = enabled;
-        },
+        }
         6 => {
             state.rules.cover_food_unemployed_rule.enabled = enabled;
         }
@@ -222,27 +235,38 @@ pub fn disable_rule(state_mux: State<'_, GameStateSafe>, rule_id: i32) {
 }
 
 pub fn json_get_f64(json: &serde_json::Value, key: &str) -> IncResult<f64> {
-    let val = json.get(key).ok_or_else(|| Error::Danger(format!("Expected '{}', was not found.", key)))?;
-    val.as_f64().ok_or_else(|| Error::Danger(format!("Failed to convert '{}' to f64.", val)))
+    let val = json
+        .get(key)
+        .ok_or_else(|| Error::Danger(format!("Expected '{}', was not found.", key)))?;
+    val.as_f64()
+        .ok_or_else(|| Error::Danger(format!("Failed to convert '{}' to f64.", val)))
 }
 
 pub fn json_get_i64(json: &serde_json::Value, key: &str) -> IncResult<i64> {
-    let val = json.get(key).ok_or_else(|| Error::Danger(format!("Expected '{}', was not found.", key)))?;
-    val.as_i64().ok_or_else(|| Error::Danger(format!("Failed to convert '{}' to i64.", val)))
+    let val = json
+        .get(key)
+        .ok_or_else(|| Error::Danger(format!("Expected '{}', was not found.", key)))?;
+    val.as_i64()
+        .ok_or_else(|| Error::Danger(format!("Failed to convert '{}' to i64.", val)))
 }
 
 #[tauri::command]
-pub fn update_rule(state_mux: State<'_, GameStateSafe>, rule_id: i32, data: serde_json::Value) -> IncResult<serde_json::Value> {
+pub fn update_rule(
+    state_mux: State<'_, GameStateSafe>,
+    rule_id: i32,
+    data: serde_json::Value,
+) -> IncResult<serde_json::Value> {
     let mut state = state_mux.lock().unwrap();
     match rule_id {
         0 => {
             state.rules.tax_rule.minimum_salary = json_get_i64(&data, "minimum_salary")? as i32;
             state.rules.tax_rule.tax_rate = json_get_f64(&data, "tax_rate")? as f32;
-        },
+        }
         1 => {
-            state.rules.business_tax_rule.minimum_monthly_income = json_get_f64(&data, "minimum_monthly_income")?;
+            state.rules.business_tax_rule.minimum_monthly_income =
+                json_get_f64(&data, "minimum_monthly_income")?;
             state.rules.business_tax_rule.tax_rate = json_get_f64(&data, "tax_rate")? as f32;
-        },
+        }
         2 => {
             let fund = json_get_i64(&data, "fund")?;
             let maximum_income = json_get_i64(&data, "maximum_income")?;
@@ -250,7 +274,9 @@ pub fn update_rule(state_mux: State<'_, GameStateSafe>, rule_id: i32, data: serd
 
             let budget_cost = fund * business_count as i64;
             if budget_cost > state.business_budget {
-                return Err(Error::Danger("This fund exceeds the budget for businesses".to_string()));
+                return Err(Error::Danger(
+                    "This fund exceeds the budget for businesses".to_string(),
+                ));
             }
 
             state.rules.business_funding_rule.fund = fund;
@@ -261,21 +287,25 @@ pub fn update_rule(state_mux: State<'_, GameStateSafe>, rule_id: i32, data: serd
             return Ok(json!({
                 "budget_cost": budget_cost,
             }));
-        },
+        }
         3 => {
             state.rules.deny_age_rule.maximum_age = json_get_i64(&data, "maximum_age")? as i32;
-        },
+        }
         4 => {
-            state.rules.deny_health_percentage_rule.maximum_percentage = json_get_i64(&data, "maximum_percentage")? as i32;
-        },
+            state.rules.deny_health_percentage_rule.maximum_percentage =
+                json_get_i64(&data, "maximum_percentage")? as i32;
+        }
         5 => {
             let people_count = json_get_i64(&data, "people_count")? as i32;
             let maximum_salary = json_get_i64(&data, "maximum_salary")? as i32;
             let budget_cost = people_count as i64 * 4;
 
-            let remaining_budget = state.welfare_budget - state.rules.cover_food_unemployed_rule.budget_cost;
+            let remaining_budget =
+                state.welfare_budget - state.rules.cover_food_unemployed_rule.budget_cost;
             if budget_cost > remaining_budget {
-                return Err(Error::Danger("Cannot cover food as the cost exceeds the welfare budget.".to_string()));
+                return Err(Error::Danger(
+                    "Cannot cover food as the cost exceeds the welfare budget.".to_string(),
+                ));
             }
 
             state.rules.cover_food_rule.people_count = people_count;
@@ -285,14 +315,16 @@ pub fn update_rule(state_mux: State<'_, GameStateSafe>, rule_id: i32, data: serd
             return Ok(json!({
                 "budget_cost": budget_cost,
             }));
-        },
+        }
         6 => {
             let people_count = json_get_i64(&data, "people_count")? as i32;
             let budget_cost = people_count as i64 * 4;
 
             let remaining_budget = state.welfare_budget - state.rules.cover_food_rule.budget_cost;
             if budget_cost > remaining_budget {
-                return Err(Error::Danger("Cannot cover food as the cost exceeds the welfare budget.".to_string()));
+                return Err(Error::Danger(
+                    "Cannot cover food as the cost exceeds the welfare budget.".to_string(),
+                ));
             }
 
             state.rules.cover_food_unemployed_rule.people_count = people_count;
@@ -301,7 +333,7 @@ pub fn update_rule(state_mux: State<'_, GameStateSafe>, rule_id: i32, data: serd
             return Ok(json!({
                 "budget_cost": budget_cost,
             }));
-        },
+        }
         _ => unreachable!(),
     };
 
@@ -314,7 +346,12 @@ pub enum AppUpdateType {
     Month,
 }
 
-pub fn update_app(app: App, payload: serde_json::Value, app_handle: &AppHandle, update_type: AppUpdateType) {
+pub fn update_app(
+    app: App,
+    payload: serde_json::Value,
+    app_handle: &AppHandle,
+    update_type: AppUpdateType,
+) {
     let app_id = app as u8;
 
     let update_type_str;
@@ -325,7 +362,12 @@ pub fn update_app(app: App, payload: serde_json::Value, app_handle: &AppHandle, 
         update_type_str = String::from("month");
     }
 
-    app_handle.emit_all("update_app", json!({ "app_id": app_id, "data": payload, "update_type": update_type_str })).unwrap();
+    app_handle
+        .emit_all(
+            "update_app",
+            json!({ "app_id": app_id, "data": payload, "update_type": update_type_str }),
+        )
+        .unwrap();
 }
 
 #[tauri::command]
@@ -333,7 +375,7 @@ pub fn update_tax_rate(state_mux: State<'_, GameStateSafe>, tax_rate: i32) -> i6
     let mut state = state_mux.lock().unwrap();
 
     state.tax_rate = tax_rate as f32 / 100.;
-    
+
     let mut total_income: i64 = 0;
 
     for per in state.people.values() {
@@ -354,9 +396,15 @@ pub fn update_business_tax_rate(state_mux: State<'_, GameStateSafe>, tax_rate: i
     let mut total_income: i64 = 0;
 
     for bus in state.businesses.values() {
-        let tax_rate = Business::get_tax_rate(&state.rules.business_tax_rule, bus.last_month_income, state.business_tax_rate);
-        if bus.last_month_income <= 0. { continue }
-        
+        let tax_rate = Business::get_tax_rate(
+            &state.rules.business_tax_rule,
+            bus.last_month_income,
+            state.business_tax_rate,
+        );
+        if bus.last_month_income <= 0. {
+            continue;
+        }
+
         total_income += (bus.last_month_income * tax_rate as f64) as i64;
     }
 
@@ -365,12 +413,16 @@ pub fn update_business_tax_rate(state_mux: State<'_, GameStateSafe>, tax_rate: i
 }
 
 #[tauri::command]
-pub fn update_healthcare_budget(state_mux: State<'_, GameStateSafe>, new_budget: i64) -> serde_json::Value {
+pub fn update_healthcare_budget(
+    state_mux: State<'_, GameStateSafe>,
+    new_budget: i64,
+) -> serde_json::Value {
     let mut state = state_mux.lock().unwrap();
 
     let healthcare = &state.healthcare;
-    let new_total_capacity = (new_budget as i64 / healthcare.cost_per_hospital_capacity as i64) as i32;
- 
+    let new_total_capacity =
+        (new_budget as i64 / healthcare.cost_per_hospital_capacity as i64) as i32;
+
     let error_checker_failed = &mut false;
     state.check_healthcare_capacity(new_total_capacity, error_checker_failed);
 
@@ -402,7 +454,10 @@ pub fn update_healthcare_budget(state_mux: State<'_, GameStateSafe>, new_budget:
 }
 
 #[tauri::command]
-pub fn update_welfare_budget(state_mux: State<'_, GameStateSafe>, new_budget: i64) -> serde_json::Value {
+pub fn update_welfare_budget(
+    state_mux: State<'_, GameStateSafe>,
+    new_budget: i64,
+) -> serde_json::Value {
     let mut state = state_mux.lock().unwrap();
 
     let old_budget = state.welfare_budget;
@@ -414,7 +469,7 @@ pub fn update_welfare_budget(state_mux: State<'_, GameStateSafe>, new_budget: i6
         state.welfare_budget = old_budget;
         return json!({
             "error": "Cannot afford this budget",
-        })
+        });
     }
 
     state.spare_budget = spare_budget;
@@ -423,7 +478,10 @@ pub fn update_welfare_budget(state_mux: State<'_, GameStateSafe>, new_budget: i6
 }
 
 #[tauri::command]
-pub fn update_business_budget(state_mux: State<'_, GameStateSafe>, new_budget: i64) -> serde_json::Value {
+pub fn update_business_budget(
+    state_mux: State<'_, GameStateSafe>,
+    new_budget: i64,
+) -> serde_json::Value {
     let mut state = state_mux.lock().unwrap();
 
     let old_budget = state.business_budget;
@@ -435,7 +493,7 @@ pub fn update_business_budget(state_mux: State<'_, GameStateSafe>, new_budget: i
         state.business_budget = old_budget;
         return json!({
             "error": "Cannot afford this budget",
-        })
+        });
     }
 
     state.spare_budget = spare_budget;
@@ -444,10 +502,14 @@ pub fn update_business_budget(state_mux: State<'_, GameStateSafe>, new_budget: i
 }
 
 #[tauri::command]
-pub fn update_childcare_capacity(state_mux: State<'_, GameStateSafe>, new_capacity: i32) -> serde_json::Value {
+pub fn update_childcare_capacity(
+    state_mux: State<'_, GameStateSafe>,
+    new_capacity: i32,
+) -> serde_json::Value {
     let mut state = state_mux.lock().unwrap();
 
-    let remaining_capacity = state.healthcare.total_capacity - (state.healthcare.adultcare.total_capacity + state.healthcare.eldercare.total_capacity);
+    let remaining_capacity = state.healthcare.total_capacity
+        - (state.healthcare.adultcare.total_capacity + state.healthcare.eldercare.total_capacity);
     if new_capacity > remaining_capacity {
         return json!({
             "error": "This capacity exceeds the remaining hospital capacity.",
@@ -456,7 +518,8 @@ pub fn update_childcare_capacity(state_mux: State<'_, GameStateSafe>, new_capaci
 
     if state.healthcare.childcare.total_capacity > new_capacity {
         let lost_capacity = state.healthcare.childcare.total_capacity - new_capacity;
-        let remaining_capacity = state.healthcare.childcare.total_capacity - state.healthcare.childcare.current_capacity;
+        let remaining_capacity =
+            state.healthcare.childcare.total_capacity - state.healthcare.childcare.current_capacity;
         if remaining_capacity - lost_capacity < 0 {
             return json!({
                 "error": "Cannot change to this childcare capacity because there are too many children in hospital."
@@ -470,10 +533,14 @@ pub fn update_childcare_capacity(state_mux: State<'_, GameStateSafe>, new_capaci
 }
 
 #[tauri::command]
-pub fn update_adultcare_capacity(state_mux: State<'_, GameStateSafe>, new_capacity: i32) -> serde_json::Value {
+pub fn update_adultcare_capacity(
+    state_mux: State<'_, GameStateSafe>,
+    new_capacity: i32,
+) -> serde_json::Value {
     let mut state = state_mux.lock().unwrap();
 
-    let remaining_capacity = state.healthcare.total_capacity - (state.healthcare.childcare.total_capacity + state.healthcare.eldercare.total_capacity);
+    let remaining_capacity = state.healthcare.total_capacity
+        - (state.healthcare.childcare.total_capacity + state.healthcare.eldercare.total_capacity);
     if new_capacity > remaining_capacity {
         return json!({
             "error": "This capacity exceeds the remaining hospital capacity.",
@@ -482,7 +549,8 @@ pub fn update_adultcare_capacity(state_mux: State<'_, GameStateSafe>, new_capaci
 
     if state.healthcare.adultcare.total_capacity > new_capacity {
         let lost_capacity = state.healthcare.adultcare.total_capacity - new_capacity;
-        let remaining_capacity = state.healthcare.adultcare.total_capacity - state.healthcare.adultcare.current_capacity;
+        let remaining_capacity =
+            state.healthcare.adultcare.total_capacity - state.healthcare.adultcare.current_capacity;
         if remaining_capacity - lost_capacity < 0 {
             return json!({
                 "error": "Cannot change to this adultcare capacity because there are too many adults in hospital."
@@ -495,10 +563,14 @@ pub fn update_adultcare_capacity(state_mux: State<'_, GameStateSafe>, new_capaci
 }
 
 #[tauri::command]
-pub fn update_eldercare_capacity(state_mux: State<'_, GameStateSafe>, new_capacity: i32) -> serde_json::Value {
+pub fn update_eldercare_capacity(
+    state_mux: State<'_, GameStateSafe>,
+    new_capacity: i32,
+) -> serde_json::Value {
     let mut state = state_mux.lock().unwrap();
 
-    let remaining_capacity = state.healthcare.total_capacity - (state.healthcare.childcare.total_capacity + state.healthcare.adultcare.total_capacity);
+    let remaining_capacity = state.healthcare.total_capacity
+        - (state.healthcare.childcare.total_capacity + state.healthcare.adultcare.total_capacity);
     if new_capacity > remaining_capacity {
         return json!({
             "error": "This capacity exceeds the remaining hospital capacity.",
@@ -507,7 +579,8 @@ pub fn update_eldercare_capacity(state_mux: State<'_, GameStateSafe>, new_capaci
 
     if state.healthcare.eldercare.total_capacity > new_capacity {
         let lost_capacity = state.healthcare.eldercare.total_capacity - new_capacity;
-        let remaining_capacity = state.healthcare.eldercare.total_capacity - state.healthcare.eldercare.current_capacity;
+        let remaining_capacity =
+            state.healthcare.eldercare.total_capacity - state.healthcare.eldercare.current_capacity;
         if remaining_capacity - lost_capacity < 0 {
             return json!({
                 "error": "Cannot change to this eldercare capacity because there are too many elders in hospital."

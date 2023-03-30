@@ -1,8 +1,11 @@
 use rand::Rng;
 use serde::{Deserialize, Serialize};
-use std::{collections::HashMap, ops::{Index, IndexMut}};
+use std::{
+    collections::HashMap,
+    ops::{Index, IndexMut},
+};
 
-use crate::{game::structs::{HealthcareGroup, HealthcareState}};
+use crate::game::structs::{HealthcareGroup, HealthcareState};
 
 #[macro_export]
 macro_rules! percentage_of {
@@ -150,7 +153,12 @@ impl Date {
     }
 
     pub fn get_date_string(&self) -> String {
-        format!("{}/{}/{}", zerofy(self.day, 2), zerofy(self.month, 2), zerofy(self.year, 4))
+        format!(
+            "{}/{}/{}",
+            zerofy(self.day, 2),
+            zerofy(self.month, 2),
+            zerofy(self.year, 4)
+        )
     }
 }
 
@@ -223,7 +231,9 @@ impl<T: Default + Clone> SlotArray<T> {
         }
     }
 
-    pub fn len(&self) -> usize { self.array.len() }
+    pub fn len(&self) -> usize {
+        self.array.len()
+    }
 }
 
 impl<T> Index<usize> for SlotArray<T> {
@@ -240,7 +250,7 @@ impl<T> IndexMut<usize> for SlotArray<T> {
 }
 
 pub fn generate_unemployed_salary() -> i32 {
-    rand::thread_rng().gen_range(300..=1100)    
+    rand::thread_rng().gen_range(300..=1100)
 }
 
 pub fn get_healthcare_group(age: i32, healthcare: &mut HealthcareState) -> &mut HealthcareGroup {

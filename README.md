@@ -1,5 +1,28 @@
 # Incumbency Desktop
 
+![Incumbency Screenshot](/screenshots/incumbency.png)
+
+## About
+
+Incumbency is an economy simulation engine made by the YouTuber [conaticus](https://youtube.com/@conaticus) and his team. In this game you can change taxes, rules and budgets to keep the economy stable.
+
+### Download
+
+You can either build with instructions from the README or download the executable [here](https://github.com/conaticusgrp/incumbency-desktop/releases).
+
+## Honourable mentions
+
+### Lemon Foxmere
+
+The slick UX Design for this app was created completely by [Lemon Foxmere](https://github.com/TheLemonOrange).
+
+### Exedice
+
+The fundamentals of the desktop UI was created in svelte by [Exedice](https://github.com/Ex-ce-pt).
+
+### Z88
+[Z88](https://github.com/maksymixs) helped out with the wireframe for the desktop UI and came up with some game design ideas for incumbency.
+
 ## Recommended IDE Setup
 
 [VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode).
@@ -21,6 +44,7 @@ cargo tauri build
 ```
 
 ## Debugger Setup
+
 ### VSCode
 In the root directory:
 - Create a `.vscode` folder
@@ -32,9 +56,6 @@ Inside the folder:
 `launch.json`:
 ```json
 {
-  // Use IntelliSense to learn about possible attributes.
-  // Hover to view descriptions of existing attributes.
-  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
   "version": "0.2.0",
   "configurations": [
     {
@@ -48,7 +69,6 @@ Inside the folder:
           "--no-default-features"
         ]
       },
-      // task for the `beforeDevCommand` if used, must be configured in `.vscode/tasks.json`
       "preLaunchTask": "ui:dev",
       "cwd": "${workspaceFolder}/src-tauri"
     },
@@ -59,8 +79,6 @@ Inside the folder:
       "cargo": {
         "args": ["build", "--release", "--manifest-path=./src-tauri/Cargo.toml"]
       },
-    //   // task for the `beforeBuildCommand` if used, must be configured in `.vscode/tasks.json`
-    //   "preLaunchTask": "ui:build"
     }
   ]
 }
@@ -68,26 +86,19 @@ Inside the folder:
 `tasks.json`:
 ```json
 {
-  // See https://go.microsoft.com/fwlink/?LinkId=733558
-  // for the documentation about the tasks.json format
   "version": "2.0.0",
   "tasks": [
     {
       "label": "ui:dev",
       "type": "shell",
-      // `dev` keeps running in the background
-      // ideally you should also configure a `problemMatcher`
-      // see https://code.visualstudio.com/docs/editor/tasks#_can-a-background-task-be-used-as-a-prelaunchtask-in-launchjson
       "problemMatcher": "$rustc",
       "isBackground": true,
-      // change this to your `beforeDevCommand`:
       "command": "npm",
       "args": ["run", "dev"]
     },
     {
       "label": "ui:build",
       "type": "shell",
-      // change this to your `beforeBuildCommand`:
       "command": "npm run",
       "args": ["build"]
     }
