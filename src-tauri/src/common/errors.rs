@@ -6,7 +6,7 @@ pub enum Error {
     Toml(#[from] toml::de::Error),
     #[error(transparent)]
     SerdeJson(#[from] serde_json::Error),
-    
+
     #[error("{0}")]
     Warning(String),
 
@@ -21,16 +21,16 @@ pub enum Error {
 
     #[error("An unexpected issue occured.")]
     DangerUnexpected,
-    
+
     #[error("An unexpected issue occured.")]
     FatalUnexpected,
 }
 
 impl serde::Serialize for Error {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-        where
-            S: serde::Serializer {
-
+    where
+        S: serde::Serializer,
+    {
         use serde::ser::SerializeStruct;
 
         let mut state = serializer.serialize_struct("Error", 2)?;

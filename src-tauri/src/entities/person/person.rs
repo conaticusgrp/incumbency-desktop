@@ -1,15 +1,37 @@
-use std::{ops::Range, collections::HashMap};
+use crate::{
+    as_decimal_percent,
+    common::{config::Config, util::get_healthcare_group},
+    common::{
+        errors::{Error, IncResult},
+        util::{
+            chance_one_in, float_range, generate_unemployed_salary, percentage_based_output_int,
+            percentage_chance, Date,
+        },
+    },
+    entities::business::{Business, ProductType},
+    game::{
+        generation::{generate_education_level, get_expected_salary_range},
+        structs::{GameStateRules, HealthcareState, TaxRule},
+    },
+    percentage_of,
+};
 use maplit::hashmap;
-use rand::{Rng};
+use rand::Rng;
+use std::{collections::HashMap, ops::Range};
 use uuid::Uuid;
-use crate::{common::{util::{float_range, percentage_based_output_int, Date, percentage_chance, chance_one_in, generate_unemployed_salary}, errors::{Error, IncResult}}, common::{config::Config, util::get_healthcare_group}, game::{generation::{generate_education_level, get_expected_salary_range}, structs::{TaxRule, HealthcareState, GameStateRules}}, entities::business::{ProductType, Business}, percentage_of, as_decimal_percent};
 use EducationLevel::*;
 
-use super::{debt::{Debt}, welfare::{WelfareMachine, WELFARE_IMPACT_FOUR, WELFARE_IMPACT_FIVE, WELFARE_IMPACT_THREE, WELFARE_IMPACT_TWO, WELFARE_IMPACT_SEVEN}};
+use super::{
+    debt::Debt,
+    welfare::{
+        WelfareMachine, WELFARE_IMPACT_FIVE, WELFARE_IMPACT_FOUR, WELFARE_IMPACT_SEVEN,
+        WELFARE_IMPACT_THREE, WELFARE_IMPACT_TWO,
+    },
+};
 
 #[derive(Default, Clone)]
 pub struct Birthday {
-    pub day: i32, // 1-30
+    pub day: i32,   // 1-30
     pub month: i32, // 1-12
 }
 
@@ -62,15 +84,15 @@ pub struct Person {
     pub daily_food_spending: i32,
 
     pub demand: HashMap<ProductType, f32>,
-    pub business_this_month: Option<Uuid>,  // The business the individual will buy from this month, until marketing is re-evaluated
+    pub business_this_month: Option<Uuid>, // The business the individual will buy from this month, until marketing is re-evaluated
     pub purchase_days: HashMap<i32, i32>, // The days of the month that they will make a purchase - <day, quantity>
 
     pub health_percentage: i32, // The percentage of their health that they have remaining
     pub hospitalisation_percentage: i32, // The percentage of their health that will require them to be hospitalised
-    pub hospitalisation_count: i32, // The amount of times the individual has been hospitalised
-    pub days_until_death: Option<i32>, // If the person is predicted to die, use this as a counter
+    pub hospitalisation_count: i32,      // The amount of times the individual has been hospitalised
+    pub days_until_death: Option<i32>,   // If the person is predicted to die, use this as a counter
     pub days_left_in_hospital: Option<i32>, // Days left that the person is in hospitalisation
-    pub hospitalised_age: i32, // This is important to avoid capacity bugs
+    pub hospitalised_age: i32,           // This is important to avoid capacity bugs
     pub maximum_health: i32,
 
     pub homeless: bool,
@@ -86,7 +108,13 @@ pub struct Person {
 // Static methods
 impl Person {
     /// Generates a randomly aged person based on statistics
-    pub fn new_generate(config: &Config, product_demand: &mut HashMap<ProductType, f32>, tax_rate: f32, tax_rule: &TaxRule, date: Date) -> IncResult<Self> {
+    pub fn new_generate(
+        config: &Config,
+        product_demand: &mut HashMap<ProductType, f32>,
+        tax_rate: f32,
+        tax_rule: &TaxRule,
+        date: Date,
+    ) -> IncResult<Self> {
         let mut person = Self {
             id: Uuid::new_v4(),
             age: Self::generate_age(),
@@ -99,7 +127,8 @@ impl Person {
         person.education_level = generate_education_level(config);
         person.expected_salary_range = get_expected_salary_range(config, &person.education_level);
 
-        let mut expected_salary = ((person.expected_salary_range.start + person.expected_salary_range.end) / 2) as i32;
+        let mut expected_salary =
+            ((person.expected_salary_range.start + person.expected_salary_range.end) / 2) as i32;
         if person.age >= 70 || (person.age >= 65 && chance_one_in(60)) {
             // Retired
             person.job = Job::Retired;
@@ -135,7 +164,12 @@ impl Person {
     }
 
     /// Adds a new baby to the population
-    pub fn new_infant(config: &Config, tax_rate: f32, tax_rule: &TaxRule, date: Date) -> IncResult<Self> {
+    pub fn new_infant(
+        config: &Config,
+        tax_rate: f32,
+        tax_rule: &TaxRule,
+        date: Date,
+    ) -> IncResult<Self> {
         let mut infant = Self {
             id: Uuid::new_v4(),
             birthday: Birthday::from(&date),
@@ -150,7 +184,8 @@ impl Person {
         infant.education_level = generate_education_level(config);
         infant.expected_salary_range = get_expected_salary_range(config, &infant.education_level);
 
-        let expected_salary = ((infant.expected_salary_range.start + infant.expected_salary_range.end) / 2) as i32;
+        let expected_salary =
+            ((infant.expected_salary_range.start + infant.expected_salary_range.end) / 2) as i32;
         let tax_rate = Self::get_tax_rate(tax_rule, tax_rate, expected_salary);
 
         infant.generate_spending_behaviour();
@@ -191,9 +226,12 @@ impl Person {
             return self.gender = Gender::Female;
         }
 
-        if self.age <= 35 && percentage_chance(42.) { // 42% chance of having a newborn (based on real world statistic)
+        if self.age <= 35 && percentage_chance(42.) {
+            // 42% chance of having a newborn (based on real world statistic)
             let mut latest_birthday_year = date.year + (35 - self.age) - 1;
-            if latest_birthday_year < 0 { latest_birthday_year = 0; }
+            if latest_birthday_year < 0 {
+                latest_birthday_year = 0;
+            }
 
             let mut earliest_birth_year = date.year;
             if self.age < 18 {
@@ -210,7 +248,12 @@ impl Person {
         self.gender = Gender::Female;
     }
 
-    pub fn due_birth(&mut self, date: &Date, healthcare: &mut HealthcareState, rules: &GameStateRules) -> bool {
+    pub fn due_birth(
+        &mut self,
+        date: &Date,
+        healthcare: &mut HealthcareState,
+        rules: &GameStateRules,
+    ) -> bool {
         if self.gender == Gender::Male || self.birth_date.is_none() {
             return false;
         }
@@ -251,19 +294,23 @@ impl Person {
                 SpendingBehaviour::Four => 1,
             }),
 
-            College | AssociateDegree => percentage_based_output_int::<SpendingBehaviour>(hashmap! {
-                SpendingBehaviour::One => 3,
-                SpendingBehaviour::Two => 10,
-                SpendingBehaviour::Three => 82,
-                SpendingBehaviour::Four => 5,
-            }),
+            College | AssociateDegree => {
+                percentage_based_output_int::<SpendingBehaviour>(hashmap! {
+                    SpendingBehaviour::One => 3,
+                    SpendingBehaviour::Two => 10,
+                    SpendingBehaviour::Three => 82,
+                    SpendingBehaviour::Four => 5,
+                })
+            }
 
-            Bachelors | AdvancedDegree => percentage_based_output_int::<SpendingBehaviour>(hashmap! {
-                SpendingBehaviour::One => 1,
-                SpendingBehaviour::Two => 4,
-                SpendingBehaviour::Three => 77,
-                SpendingBehaviour::Four => 18,
-            })
+            Bachelors | AdvancedDegree => {
+                percentage_based_output_int::<SpendingBehaviour>(hashmap! {
+                    SpendingBehaviour::One => 1,
+                    SpendingBehaviour::Two => 4,
+                    SpendingBehaviour::Three => 77,
+                    SpendingBehaviour::Four => 18,
+                })
+            }
         };
 
         self.saving_percentage_range = match self.spending_behaviour {
@@ -293,7 +340,12 @@ impl Person {
         self.balance = float_range(4., 90., 1);
     }
 
-    pub fn calculate_demand(&mut self, salary: i32, product_demand: Option<&mut HashMap<ProductType, f32>>, tax_rate: f32) -> IncResult<()> {
+    pub fn calculate_demand(
+        &mut self,
+        salary: i32,
+        product_demand: Option<&mut HashMap<ProductType, f32>>,
+        tax_rate: f32,
+    ) -> IncResult<()> {
         if salary == 0 {
             *self.demand.entry(ProductType::Leisure).or_insert(0.) = 0.;
             return Ok(());
@@ -312,14 +364,19 @@ impl Person {
         let mut total_demand = remaining_balance * as_decimal_percent!(balance_percentage);
         total_demand -= (salary / 12) as f32 * tax_rate;
         if total_demand < 0. {
-            total_demand = 0.; 
+            total_demand = 0.;
         }
-        
-        *self.demand.entry(ProductType::Leisure).or_insert(total_demand) += total_demand;
+
+        *self
+            .demand
+            .entry(ProductType::Leisure)
+            .or_insert(total_demand) += total_demand;
 
         if let Some(prod_dem) = product_demand {
-            let product_demand = prod_dem.get_mut(&ProductType::Leisure).ok_or(Error::DangerUnexpected)?;
-            *product_demand += total_demand; 
+            let product_demand = prod_dem
+                .get_mut(&ProductType::Leisure)
+                .ok_or(Error::DangerUnexpected)?;
+            *product_demand += total_demand;
         }
 
         Ok(())
@@ -364,12 +421,14 @@ impl Person {
     /// This should be done every time the individual's salary changes, and every month.
     pub fn generate_daily_food_spending(&mut self) {
         // TODO: change me
-        if let Job::BusinessOwner(_) = self.job { return self.daily_food_spending = 4 }
+        if let Job::BusinessOwner(_) = self.job {
+            return self.daily_food_spending = 4;
+        }
 
         if self.job == Job::Unemployed {
             self.set_salary(generate_unemployed_salary()); // TODO: make me more dynamic & move me
         }
-        
+
         self.daily_food_spending = self.calculate_daily_food_spending()
     }
 
@@ -377,7 +436,9 @@ impl Person {
         let mut rng = rand::thread_rng();
         let saving_percent = rng.gen_range(self.saving_percentage_range.clone()) as f32 / 100.;
 
-        let mut cut_balance: f32 = self.balance - (self.balance * saving_percent) - ((self.salary as f32 / 12.) * saving_percent);
+        let mut cut_balance: f32 = self.balance
+            - (self.balance * saving_percent)
+            - ((self.salary as f32 / 12.) * saving_percent);
         cut_balance -= self.monthly_debt_cost;
         cut_balance -= self.daily_food_spending as f32 * 30.;
 
@@ -392,9 +453,11 @@ impl Person {
         self.balance += amount as f32;
         payer.balance -= amount;
     }
-    
+
     pub fn pay_tax(&mut self, government_balance: &mut i64, amount: f32) {
-        if amount <= 0. { return }
+        if amount <= 0. {
+            return;
+        }
         self.balance -= amount;
         *government_balance += amount as i64;
     }
@@ -405,12 +468,23 @@ impl Person {
         }
     }
 
-    pub fn day_pass(&mut self, day: i32, healthcare: &mut HealthcareState, date: &Date, businesses: &mut HashMap<Uuid, Business>, purchases: &mut u32, total_possible_purchases: &mut u32, rules: &GameStateRules, food_coverage: &mut i32, unemployed_food_coverage: &mut i32) -> IncResult<bool> {
+    pub fn day_pass(
+        &mut self,
+        day: i32,
+        healthcare: &mut HealthcareState,
+        date: &Date,
+        businesses: &mut HashMap<Uuid, Business>,
+        purchases: &mut u32,
+        total_possible_purchases: &mut u32,
+        rules: &GameStateRules,
+        food_coverage: &mut i32,
+        unemployed_food_coverage: &mut i32,
+    ) -> IncResult<bool> {
         self.check_birthday(date);
 
         if let Some(ref mut days) = self.days_until_death {
             *days -= 1;
-            if *days <= 0 { 
+            if *days <= 0 {
                 return Ok(true);
             }
         }
@@ -419,12 +493,14 @@ impl Person {
 
         if !self.homeless && self.age >= 18 && self.job == Job::Unemployed {
             // TODO: affect this by other factors
-            if chance_one_in(500 * 365) { // 1 in 500 chance each year 
+            if chance_one_in(500 * 365) {
+                // 1 in 500 chance each year
                 self.homeless = true;
             }
         }
 
-        if chance_one_in(7300) { // Average person has minor accident every 20 years (guessed)
+        if chance_one_in(7300) {
+            // Average person has minor accident every 20 years (guessed)
             self.remove_health(rng.gen_range(15..=25), healthcare, rules);
         }
 
@@ -432,10 +508,16 @@ impl Person {
             self.balance += rng.gen_range(1..=2) as f32;
         }
 
-        if rules.cover_food_rule.enabled && self.salary < rules.cover_food_rule.maximum_salary && *food_coverage <= rules.cover_food_rule.people_count {
+        if rules.cover_food_rule.enabled
+            && self.salary < rules.cover_food_rule.maximum_salary
+            && *food_coverage <= rules.cover_food_rule.people_count
+        {
             self.balance += 4.;
             *food_coverage += 1;
-        } else if rules.cover_food_unemployed_rule.enabled && self.job == Job::Unemployed && *unemployed_food_coverage <= rules.cover_food_unemployed_rule.people_count {
+        } else if rules.cover_food_unemployed_rule.enabled
+            && self.job == Job::Unemployed
+            && *unemployed_food_coverage <= rules.cover_food_unemployed_rule.people_count
+        {
             self.balance += 4.;
             *food_coverage += 1;
         }
@@ -444,7 +526,8 @@ impl Person {
             self.daily_food_spending = self.calculate_daily_food_spending();
             self.balance -= self.daily_food_spending as f32;
 
-            let (health_loss_chance, welfare_loss) = match self.daily_food_spending { // Chance that the individual will lose 1% of their health
+            let (health_loss_chance, welfare_loss) = match self.daily_food_spending {
+                // Chance that the individual will lose 1% of their health
                 0 => (98., WELFARE_IMPACT_SEVEN),
                 1 => (50., WELFARE_IMPACT_FIVE),
                 2 => (25., WELFARE_IMPACT_FOUR),
@@ -454,7 +537,8 @@ impl Person {
             };
 
             self.welfare_machine.welfare_reset(day);
-            self.welfare_machine.remove_welfare_if(welfare_loss, day, welfare_loss != 0);
+            self.welfare_machine
+                .remove_welfare_if(welfare_loss, day, welfare_loss != 0);
 
             if percentage_chance(health_loss_chance) {
                 self.remove_health(1, healthcare, rules);
@@ -474,7 +558,8 @@ impl Person {
             }
         }
 
-        self.welfare_machine.remove_welfare_if(WELFARE_IMPACT_THREE, day, in_hospital);
+        self.welfare_machine
+            .remove_welfare_if(WELFARE_IMPACT_THREE, day, in_hospital);
         self.replenish_health();
 
         let quantity_opt = self.purchase_days.remove(&day);
@@ -482,7 +567,11 @@ impl Person {
 
         if let Some(quantity) = quantity_opt {
             let business_this_month = &self.business_this_month.ok_or(Error::DangerUnexpected)?;
-            let business = businesses.get_mut(business_this_month).ok_or_else(|| Error::Warning("Could not find business that was expected to purchase from.".to_string()))?;
+            let business = businesses.get_mut(business_this_month).ok_or_else(|| {
+                Error::Warning(
+                    "Could not find business that was expected to purchase from.".to_string(),
+                )
+            })?;
             let item_cost = (business.product_price * quantity) as f32;
             *total_possible_purchases += quantity as u32;
 
@@ -491,12 +580,18 @@ impl Person {
                     *purchases += 1;
 
                     self.balance -= item_cost;
-                    let demand = self.demand.get_mut(&business.product_type).ok_or(Error::DangerUnexpected)?;
+                    let demand = self
+                        .demand
+                        .get_mut(&business.product_type)
+                        .ok_or(Error::DangerUnexpected)?;
                     *demand -= item_cost;
-                    if *demand < 0. { *demand = 0. }
+                    if *demand < 0. {
+                        *demand = 0.
+                    }
 
                     business.balance += item_cost as f64;
-                    self.welfare_machine.add_welfare_if(WELFARE_IMPACT_TWO, day, true);
+                    self.welfare_machine
+                        .add_welfare_if(WELFARE_IMPACT_TWO, day, true);
                 } else {
                     not_afford_wanted_item = true;
                     break;
@@ -506,8 +601,10 @@ impl Person {
 
         let no_business_this_month = self.business_this_month.is_none();
 
-        self.welfare_machine.remove_welfare_if(WELFARE_IMPACT_THREE, day, not_afford_wanted_item);
-        self.welfare_machine.remove_welfare_if(WELFARE_IMPACT_FOUR, day, no_business_this_month);
+        self.welfare_machine
+            .remove_welfare_if(WELFARE_IMPACT_THREE, day, not_afford_wanted_item);
+        self.welfare_machine
+            .remove_welfare_if(WELFARE_IMPACT_FOUR, day, no_business_this_month);
 
         self.get_welfare();
 
@@ -551,7 +648,7 @@ pub enum EducationLevel {
     College,
     AssociateDegree,
     Bachelors,
-    AdvancedDegree
+    AdvancedDegree,
 }
 
 #[derive(Default, Clone, PartialEq, Eq)]
