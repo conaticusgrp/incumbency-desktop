@@ -21,6 +21,7 @@ The slick UX Design for this app was created completely by [Lemon Foxmere](https
 The fundamentals of the desktop UI was created in svelte by [Exedice](https://github.com/Ex-ce-pt).
 
 ### Z88
+
 [Z88](https://github.com/maksymixs) helped out with the wireframe for the desktop UI and came up with some game design ideas for incumbency.
 
 ## Recommended IDE Setup

@@ -53,7 +53,6 @@
     let focusedApp: number | null = null;
 
     let notifications: NotificationData[] = [];
-    let showLatestNotification = true;
 
     let modalState: ModalState = "closed";
     let modalTimerResolve: (() => void) | null = null;
@@ -83,6 +82,13 @@
             apps[index].opened = true;
             apps[index].badgeCount = 0;
         }
+    };
+
+    const unminimizeApp = (index: number) => {
+        if (index < 0 || index >= apps.length || !apps[index].minimized) return;
+
+        apps[index].minimized = false;
+        updateUI();
     };
 
     const updateUI = () => {
@@ -136,10 +142,17 @@
 
     const toggleNotificationsSection = (): void => {
         notificationSectionExpanded = !notificationSectionExpanded;
-        showLatestNotification = false;
+
+        if (notificationSectionExpanded) {
+            for (let i = 0; i < notifications.length; i++) {
+                notifications[i].shown = false;
+            }
+        }
     };
 
     const closeStartMenuIfClickedAway = (e: MouseEvent): void => {
+        if (startMenu == null) return;
+
         if (e.target == null || startMenu.contains(e.target as HTMLElement))
             return;
 
@@ -156,10 +169,10 @@
         }
 
         n.date = date;
+        n.shown = !notificationSectionExpanded;
 
         notifications = [...notifications, n]; // for mutability updates
 
-        showLatestNotification = true;
         updateUI();
     };
 
@@ -329,38 +342,6 @@
                 />
             {/each}
 
-            {#if showLatestNotification && notifications.length > 0}
-                <div
-                    class="single-notification-container"
-                    style="right: {NOTIFICATION_MARGIN_X};"
-                >
-                    <Notification
-                        actionTitle={notifications[notifications.length - 1]
-                            .actionTitle}
-                        actionFunction={notifications[
-                            notifications.length - 1
-                        ].actionTitle?.toLowerCase() === "open app"
-                            ? () => {
-                                  apps.forEach((app, idx) => {
-                                      if (
-                                          app.name.toLowerCase() ===
-                                          notifications[
-                                              notifications.length - 1
-                                          ].app?.toLowerCase()
-                                      ) {
-                                          handleOpenApp(idx);
-                                      }
-                                  });
-                              }
-                            : () => {}}
-                        justDisplayed={true}
-                        onDismissed={() =>
-                            notifications.splice(notifications.length - 1, 1)}
-                        data={notifications[notifications.length - 1]}
-                    />
-                </div>
-            {/if}
-
             {#if notificationSectionExpanded}
                 <div
                     class="notifications-section"
@@ -384,9 +365,43 @@
                                 : () => {}}
                             onDismissed={() => {
                                 notifications.splice(idx, 1);
+                                notifications = [...notifications]; // so it updates :/
                             }}
+                            justDisplayed={false}
                             data={notif}
                         />
+                    {/each}
+                </div>
+            {:else}
+                <div
+                    class="notifications-section"
+                    style="width: calc({NOTIFICATION_WIDTH} + {NOTIFICATION_MARGIN_X} * 2); border: none; background: none;"
+                >
+                    {#each notifications.reverse() as notif, idx}
+                        {#if notif.shown}
+                            <Notification
+                                actionTitle={notif.actionTitle}
+                                actionFunction={notif.actionTitle?.toLowerCase() ===
+                                "open app"
+                                    ? () => {
+                                          apps.forEach((app, idx) => {
+                                              if (
+                                                  app.name.toLowerCase() ===
+                                                  notif.app?.toLowerCase()
+                                              ) {
+                                                  handleOpenApp(idx);
+                                              }
+                                          });
+                                      }
+                                    : () => {}}
+                                onDismissed={() => {
+                                    notifications[idx].shown = false;
+                                    notifications = [...notifications]; // so it updates :/
+                                }}
+                                justDisplayed={true}
+                                data={notif}
+                            />
+                        {/if}
                     {/each}
                 </div>
             {/if}
@@ -402,6 +417,7 @@
                         title={shortcut.name}
                         on:click={() => {
                             focusedApp = i;
+                            unminimizeApp(i);
                             updateUI();
                         }}
                         on:keydown={() => {}}
@@ -524,12 +540,12 @@
         color: var(--color-bg);
         font-weight: bold;
     }
-
+    /* 
     .single-notification-container {
         position: absolute;
         top: 0;
         z-index: 20000;
-    }
+    } */
 
     .notification-section-toggle {
         position: absolute;

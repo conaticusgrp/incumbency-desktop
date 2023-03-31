@@ -54,9 +54,9 @@
         },
         "windows": [
             {
-                "fullscreen": true,
+                "fullscreen": false,
                 "height": 600,
-                "resizable": false,
+                "resizable": true,
                 "title": "Incumbency",
                 "width": 800
             }
