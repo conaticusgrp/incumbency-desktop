@@ -375,7 +375,7 @@
             {:else}
                 <div
                     class="notifications-section"
-                    style="width: calc({NOTIFICATION_WIDTH} + {NOTIFICATION_MARGIN_X} * 2); border: none; background: none;"
+                    style="width: calc({NOTIFICATION_WIDTH} + {NOTIFICATION_MARGIN_X} * 2); border: none;"
                 >
                     {#each notifications.reverse() as notif, idx}
                         {#if notif.shown}
