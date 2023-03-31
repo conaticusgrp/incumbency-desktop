@@ -26,7 +26,6 @@
     import { invoke } from "@tauri-apps/api/tauri";
     import { createEventDispatcher } from "svelte";
     import { tick } from "svelte";
-    import App from "../../../App.svelte";
     import {
         MIN_WINDOW_HEIGHT,
         MIN_WINDOW_WIDTH,
@@ -403,7 +402,9 @@ Ned
                 data: {
                     title: "High Unemployment Rate",
                     content: `
-Hi ${USERNAME}, hope you're doing well. It has been brought to my attention that the unemployment rate for the country needs to be addressed, as it currently sits at ${payload.unemployed_count} people (${Number(payload.percent)}%).
+Hi ${USERNAME}, hope you're doing well. It has been brought to my attention that the unemployment rate for the country needs to be addressed, as it currently sits at ${
+                        payload.unemployed_count
+                    } people (${Number(payload.percent)}%).
 
 This was likely caused by a large coorporation going bust. Ensure that you cover expenses for these people to keep them healthy while they seek for new employment.
 
@@ -419,7 +420,11 @@ Many thanks, Ralph
                 data: {
                     title: "Huge business has gone bust!",
                     content: `
-Hello ${USERNAME}, you need to act ASAP! A large business has just gone bust and ${payload.unemployed_count} people (${Number(payload.percent)}%) are now unemployed. Fund expenses for as many people as you can while they seek new employment.
+Hello ${USERNAME}, you need to act ASAP! A large business has just gone bust and ${
+                        payload.unemployed_count
+                    } people (${Number(
+                        payload.percent
+                    )}%) are now unemployed. Fund expenses for as many people as you can while they seek new employment.
 `,
                     sender: "Ralph",
                     severity: "error",
