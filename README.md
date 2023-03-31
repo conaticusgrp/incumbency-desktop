@@ -47,72 +47,62 @@ cargo tauri build
 ## Debugger Setup
 
 ### VSCode
-
 In the root directory:
-
--   Create a `.vscode` folder
+- Create a `.vscode` folder
 
 Inside the folder:
-
--   Create a `launch.json`
--   Create a `tasks.json`
+- Create a `launch.json`
+- Create a `tasks.json`
 
 `launch.json`:
-
 ```json
 {
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Tauri Development Debug",
-            "cargo": {
-                "args": [
-                    "build",
-                    "--manifest-path=./src-tauri/Cargo.toml",
-                    "--no-default-features"
-                ]
-            },
-            "preLaunchTask": "ui:dev",
-            "cwd": "${workspaceFolder}/src-tauri"
-        },
-        {
-            "type": "lldb",
-            "request": "launch",
-            "name": "Tauri Production Debug",
-            "cargo": {
-                "args": [
-                    "build",
-                    "--release",
-                    "--manifest-path=./src-tauri/Cargo.toml"
-                ]
-            }
-        }
-    ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Tauri Development Debug",
+      "cargo": {
+        "args": [
+          "build",
+          "--manifest-path=./src-tauri/Cargo.toml",
+          "--no-default-features"
+        ]
+      },
+      "preLaunchTask": "ui:dev",
+      "cwd": "${workspaceFolder}/src-tauri"
+    },
+    {
+      "type": "lldb",
+      "request": "launch",
+      "name": "Tauri Production Debug",
+      "cargo": {
+        "args": ["build", "--release", "--manifest-path=./src-tauri/Cargo.toml"]
+      },
+    }
+  ]
 }
 ```
-
 `tasks.json`:
-
 ```json
 {
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "ui:dev",
-            "type": "shell",
-            "problemMatcher": "$rustc",
-            "isBackground": true,
-            "command": "npm",
-            "args": ["run", "dev"]
-        },
-        {
-            "label": "ui:build",
-            "type": "shell",
-            "command": "npm run",
-            "args": ["build"]
-        }
-    ]
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "ui:dev",
+      "type": "shell",
+      "problemMatcher": "$rustc",
+      "isBackground": true,
+      "command": "npm",
+      "args": ["run", "dev"]
+    },
+    {
+      "label": "ui:build",
+      "type": "shell",
+      "command": "npm run",
+      "args": ["build"]
+    }
+  ]
 }
 ```
