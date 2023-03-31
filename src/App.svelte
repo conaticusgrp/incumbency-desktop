@@ -8,7 +8,6 @@
     import type Loading from "./components/game/desktop/Loading.svelte";
     import SingleplayerGame from "./components/views/SingleplayerGame.svelte";
     import MultiplayerGame from "./components/views/MultiplayerGame.svelte";
-
     import { appState } from "./stores/appState";
     import {
         Chart as ChartJS,
@@ -20,6 +19,7 @@
         PointElement,
         CategoryScale,
     } from "chart.js";
+
     ChartJS.register(
         Title,
         Tooltip,
