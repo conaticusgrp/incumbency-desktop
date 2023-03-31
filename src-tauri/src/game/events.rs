@@ -20,7 +20,6 @@ pub enum App {
     Healthcare = 2,
     Welfare = 3,
     Business = 4,
-    MyApp = 5,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -83,7 +82,6 @@ pub fn get_app_from_id(app_id: u8) -> Option<App> {
         a if a == App::Healthcare as u8 => Some(App::Healthcare),
         a if a == App::Welfare as u8 => Some(App::Welfare),
         a if a == App::Business as u8 => Some(App::Business),
-        a if a == App::MyApp as u8 => Some(App::MyApp),
         _ => None,
     }
 }
