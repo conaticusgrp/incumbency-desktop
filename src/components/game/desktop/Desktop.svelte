@@ -50,7 +50,6 @@
         { componentConstructor: Healthcare, name: "Healthcare", badgeCount: 0 },
         { componentConstructor: Welfare, name: "Welfare", badgeCount: 0 },
         { componentConstructor: Business, name: "Business", badgeCount: 0 },
-        { componentConstructor: MyApp, name: "My App", badgeCount: 0, }
     ];
     let focusedApp: number | null = null;
 
