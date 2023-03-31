@@ -37,7 +37,6 @@
     import Welfare from "../windows/Welfare/Welfare.svelte";
     import Business from "../windows/Business/Business.svelte";
     import Notification, { type NotificationData } from "./Notification.svelte";
-    import MyApp from "../windows/MyApp/MyApp.svelte";
 
     let startMenu: HTMLElement;
     let startMenuExpanded: boolean = false;
