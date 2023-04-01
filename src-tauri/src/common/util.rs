@@ -201,7 +201,7 @@ pub fn chance_one_in(amount: i32) -> bool {
     rand::thread_rng().gen_range(0..=amount) == amount
 }
 
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct SlotArray<T> {
     pub array: Vec<T>,
     current_idx: usize,
@@ -213,6 +213,14 @@ impl<T: Default + Clone> SlotArray<T> {
             array: vec![T::default(); size],
             current_idx: 0,
         }
+    }
+
+    pub fn take(&self, count: usize) -> Vec<T> {
+        self.array[0..count].to_vec()
+    }
+
+    pub fn slice(&self, start: usize, end: usize) -> Vec<T> {
+        self.array[start..end].to_vec()
     }
 
     pub fn from(vector: Vec<T>) -> Self {
