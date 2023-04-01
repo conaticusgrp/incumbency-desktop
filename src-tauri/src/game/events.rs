@@ -1,6 +1,4 @@
-use std::{ops::{Add, AddAssign}, default};
-
-use serde::{Deserialize, Serialize};
+use serde::{Serialize};
 use serde_json::json;
 use tauri::{AppHandle, Manager, State};
 
@@ -10,7 +8,7 @@ use crate::{
 };
 
 use super::{
-    state_manager::GameStateSafe,
+    state_manager::{EMPTY_DATA, GameStateSafe},
     structs::{GameState, HealthcareGroup},
 };
 
@@ -22,16 +20,26 @@ pub enum App {
     Business = 4,
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct MonthlyGraphData {
-    three_months: Vec<i64>,
-    six_months: Vec<i64>,
-    one_year: Vec<i64>,
-    three_years: Vec<i64>,
+pub enum GraphType {
+    Daily,
+    Monthly,
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct DailyGraphData {
+impl Serialize for GraphType {
+    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            GraphType::Daily => serializer.serialize_i32(0),
+            GraphType::Monthly => serializer.serialize_i32(1),
+        }
+    }
+}
+
+#[derive(Serialize)]
+pub struct GraphData {
+    type_id: GraphType,
     one_week: Vec<i64>,
     one_month: Vec<i64>,
     three_months: Vec<i64>,
@@ -40,31 +48,29 @@ pub struct DailyGraphData {
     three_years: Vec<i64>,
 }
 
-impl Default for MonthlyGraphData {
-    fn default() -> Self {
+impl GraphData {
+    fn new(type_id: GraphType) -> Self {
         Self {
-            three_months: vec![-1; 90],
-            six_months: vec![-1; 180],
-            one_year: vec![-1; 12],
-            three_years: vec![-1; 36]
+            type_id,
+            one_week: vec![EMPTY_DATA; 7],
+            one_month: vec![EMPTY_DATA; 30],
+            three_months: vec![EMPTY_DATA; 90],
+            six_months: vec![EMPTY_DATA; 180],
+            one_year: vec![EMPTY_DATA; 12],
+            three_years: vec![EMPTY_DATA; 36]
         }
+    }
+
+    fn new_daily() -> Self {
+        Self::new(GraphType::Daily)
+    }
+
+    fn new_monthly() -> Self {
+        Self::new(GraphType::Monthly)
     }
 }
 
-impl Default for DailyGraphData {
-    fn default() -> Self {
-        Self {
-            one_week: vec![-1; 7],
-            one_month: vec![-1; 30],
-            three_months: vec![-1; 90],
-            six_months: vec![-1; 180],
-            one_year: vec![-1; 12],
-            three_years: vec![-1; 36]
-        }
-    }
-}
-
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize)]
 pub struct FinanceAppOpenedPayload {
     pub government_balance: i64,
     pub average_monthly_income: i32,
@@ -86,13 +92,14 @@ pub struct FinanceAppOpenedPayload {
     pub expected_balance: i64,
     pub rules: serde_json::Value,
 
-    pub government_balance_graph_data: MonthlyGraphData,
-    pub government_balance_prediction_graph_data: MonthlyGraphData,
-    pub average_monthly_income_graph_data: MonthlyGraphData,
-    pub government_losses_graph_data: MonthlyGraphData,
+    // NOTE(dylhack): Monthly data
+    pub government_balance_graph_data: GraphData,
+    pub government_balance_prediction_graph_data: GraphData,
+    pub average_monthly_income_graph_data: GraphData,
+    pub government_losses_graph_data: GraphData,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize)]
 pub struct HealthcareAppOpenedPayload {
     pub population: i32,
     pub births_per_month: i32,
@@ -106,39 +113,42 @@ pub struct HealthcareAppOpenedPayload {
     pub elder_care: HealthcareGroup,
     pub rules: serde_json::Value,
 
-    pub population_graph_data: DailyGraphData,
-    pub births_graph_data: DailyGraphData,
-    pub deaths_graph_data: DailyGraphData,
-    pub life_expectancy_graph_data: DailyGraphData,
-    pub hospital_usage_capacity_graph_data: DailyGraphData,
+    // NOTE(dylhack): Daily data
+    pub population_graph_data: GraphData,
+    pub births_graph_data: GraphData,
+    pub deaths_graph_data: GraphData,
+    pub life_expectancy_graph_data: GraphData,
+    pub hospital_usage_capacity_graph_data: GraphData,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize)]
 pub struct WelfareAppOpenedPayload {
     pub average_welfare: i32,
     pub average_unemployed_welfare: i32,
     pub unemployed_count: i32,
     pub rules: serde_json::Value,
 
-    pub unemployed_count_graph_data: MonthlyGraphData,
-    pub average_welfare_graph_data: DailyGraphData,
-    pub average_unemployed_welfare_graph_data: DailyGraphData,
+    // NOTE(dylhack): Monthly data
+    pub unemployed_count_graph_data: GraphData,
+    pub average_welfare_graph_data: GraphData,
+    pub average_unemployed_welfare_graph_data: GraphData,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize)]
 pub struct BusinessAppOpenedPayload {
     pub business_count: i32,
     pub average_employees: i32,
     pub average_monthly_income: i64,
     pub rules: serde_json::Value,
 
-    pub business_count_graph_data: MonthlyGraphData,
-    pub average_employees_graph_data: MonthlyGraphData,
-    pub average_monthly_income_graph_data: MonthlyGraphData,
+    // NOTE(dylhack): Monthly data
+    pub business_count_graph_data: GraphData,
+    pub average_employees_graph_data: GraphData,
+    pub average_monthly_income_graph_data: GraphData,
 }
 
-pub fn get_monthly_data(data: &SlotArray<i64>, get_total: bool) -> MonthlyGraphData {
-    let mut monthly_graph_data = MonthlyGraphData::default();
+pub fn get_monthly_data(data: &SlotArray<i64>, get_total: bool) -> GraphData {
+    let mut monthly_graph_data = GraphData::new_monthly();
 
     monthly_graph_data.three_months = get_last_days(90, &data);
     monthly_graph_data.six_months = get_last_days(180, &data);
@@ -183,8 +193,8 @@ pub fn get_last_days(days: u16, source_array: &SlotArray<i64>) -> Vec<i64> {
     source_array.slice(start_idx as usize, end_idx as usize)
 }
 
-pub fn get_daily_data(data: &SlotArray<i64>) -> DailyGraphData {
-    let mut daily_graph_data = DailyGraphData::default();
+pub fn get_daily_data(data: &SlotArray<i64>) -> GraphData {
+    let mut daily_graph_data = GraphData::new_daily();
 
     daily_graph_data.one_week = get_last_days(7, &data);
     daily_graph_data.one_month = get_last_days(30, &data);

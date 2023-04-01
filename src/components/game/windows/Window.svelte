@@ -20,21 +20,16 @@
         return { opened: false, focused: false, index: -1 };
     };
 
-    export interface MonthlyGraphData {
-        three_months: number[];
-        six_months: number[];
-        one_year: number[];
-        three_years: number[];
-    }
-
-    export interface DailyGraphData {
+    export type GraphData = {
+        // 0 = Daily, 1 = Monthly
+        type_id: 0 | 1;
         one_week: number[];
         one_month: number[];
         three_months: number[];
         six_months: number[];
         one_year: number[];
         three_years: number[];
-    }
+    };
 </script>
 
 <script lang="ts">

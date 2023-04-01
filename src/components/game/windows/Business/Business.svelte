@@ -13,9 +13,9 @@
             };
         };
         business_budget: number;
-        business_count_graph_data: MonthlyGraphData;
-        average_employees_graph_data: MonthlyGraphData;
-        average_monthly_income_graph_data: MonthlyGraphData;
+        business_count_graph_data: GraphData;
+        average_employees_graph_data: GraphData;
+        average_monthly_income_graph_data: GraphData;
     }
 </script>
 
@@ -24,7 +24,7 @@
     import TabWindow from "../TabWindow.svelte";
     import type {
         CriticalWindowData,
-        MonthlyGraphData,
+        GraphData,
     } from "../Window.svelte";
 
     import BusinessTabButton from "./BusinessTabButton.svelte";
