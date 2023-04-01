@@ -74,24 +74,24 @@ impl Default for GameState {
 
             // Daily updates
 
-            population_graph_data: SlotArray::new(THREE_YEAR_DAYS),
-            births_graph_data: SlotArray::new(THREE_YEAR_DAYS),
-            deaths_graph_data: SlotArray::new(THREE_YEAR_DAYS),
-            life_expectancy_graph_data: SlotArray::new(THREE_YEAR_DAYS),
-            hospital_usage_capacity_graph_data: SlotArray::new(THREE_YEAR_DAYS),
-            average_welfare_graph_data: SlotArray::new(THREE_YEAR_DAYS),
-            average_unemployed_welfare_graph_data: SlotArray::new(THREE_YEAR_DAYS),
-            government_balance_graph_data: SlotArray::new(THREE_YEAR_DAYS),
-            government_balance_prediction_data: SlotArray::new(THREE_YEAR_DAYS),
+            population_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, -1),
+            births_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, -1),
+            deaths_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, -1),
+            life_expectancy_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, -1),
+            hospital_usage_capacity_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, -1),
+            average_welfare_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, -1),
+            average_unemployed_welfare_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, -1),
+            government_balance_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, -1),
+            government_balance_prediction_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, -1),
 
             // Monthly updates
 
-            average_monthly_income_graph_data: SlotArray::new(THREE_YEAR_DAYS),
-            government_losses_graph_data: SlotArray::new(THREE_YEAR_DAYS),
-            business_count_graph_data: SlotArray::new(THREE_YEAR_DAYS),
-            average_employees_graph_data: SlotArray::new(THREE_YEAR_DAYS),
-            business_average_monthly_income_graph_data: SlotArray::new(THREE_YEAR_DAYS),
-            unemployed_count_graph_data: SlotArray::new(THREE_YEAR_DAYS),
+            average_monthly_income_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, -1),
+            government_losses_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, -1),
+            business_count_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, -1),
+            average_employees_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, -1),
+            business_average_monthly_income_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, -1),
+            unemployed_count_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, -1),
         }
     }
 }
@@ -278,7 +278,7 @@ impl GameState {
         self.average_welfare_graph_data.push(self.average_welfare as i64);
         self.average_unemployed_welfare_graph_data.push(self.average_welfare_unemployed as i64);
         self.government_balance_graph_data.push(self.government_balance);
-        self.government_balance_prediction_data.push(self.expected_balance);
+        self.government_balance_prediction_graph_data.push(self.expected_balance);
 
         self.spare_budget = self.get_spare_budget();
         self.emit_daily_events(app_handle);
@@ -631,6 +631,7 @@ impl GameState {
                 "healthcare_budget": self.healthcare.budget,
                 "expected_balance": self.expected_balance,
                 "government_balance_graph_data": get_monthly_data(&self.government_balance_graph_data, false),
+                "government_balance_prediction_graph_data": get_monthly_data(&self.government_balance_prediction_graph_data, false),
                 "average_monthly_income_graph_data": get_monthly_data(&self.average_monthly_income_graph_data, false),
                 "government_losses_graph_data": get_monthly_data(&self.government_losses_graph_data, false),
             }),

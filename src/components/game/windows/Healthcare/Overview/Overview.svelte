@@ -12,6 +12,7 @@
     import type { HealthcareData } from "../Healthcare.svelte";
 
     export let data: HealthcareData;
+    $: console.log(data);
 
     let dataArray: DataItem[] = [
         {

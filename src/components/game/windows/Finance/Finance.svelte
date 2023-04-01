@@ -27,6 +27,7 @@
         used_business_budget: number;
         expected_balance: number;
         government_balance_graph_data: MonthlyGraphData;
+        government_balance_prediction_graph_data: MonthlyGraphData;
         average_monthly_income_graph_data: MonthlyGraphData;
         government_losses_graph_data: MonthlyGraphData;
     }

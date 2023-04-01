@@ -56,7 +56,7 @@ pub async fn start_game_loop(
     app_handle: &tauri::AppHandle,
     config: &Config,
 ) {
-    let mut interval = tokio::time::interval(Duration::from_secs(5));
+    let mut interval = tokio::time::interval(Duration::from_secs(1));
 
     loop {
         interval.tick().await;
