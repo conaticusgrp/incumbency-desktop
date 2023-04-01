@@ -67,6 +67,10 @@
         }
       },
     },
+    interaction: {
+      mode: 'index',
+      intersect: false
+    },
     plugins: {
       legend: {
         display: false,
