@@ -13,16 +13,17 @@
         ThreeYears = "three_years",
     }
 
-    export let history: DataItem['historical'];
-    export let filter: Filter = history.actual.type_id === 1
-        ? Filter.OneMonth
-        : Filter.OneWeek;
+    export let history: DataItem["historical"];
+    export let filter: Filter =
+        history.actual.type_id === 1 ? Filter.OneMonth : Filter.OneWeek;
     export let data: string;
     export let title: string;
     export let dataArray: any[];
 
     const getData = (label: string, x?: GraphData) => {
-        if (!x) { return { data: [], label } }
+        if (!x) {
+            return { data: [], label };
+        }
         let data: number[] = [];
 
         switch (filter) {
@@ -42,8 +43,8 @@
         return {
             label,
             data,
-        }
-    }
+        };
+    };
     const actual = getData(`Actual ${title}`, history.actual);
     const predicted = getData(`Predicted ${title}`, history.predicted);
     console.log({ actual, predicted });
@@ -82,11 +83,7 @@
         <h1>{title.toUpperCase()}</h1>
     </div>
     <h3>{data}</h3> -->
-        <PredictedGraph
-            {title}
-            {actual}
-            {predicted}
-        ></PredictedGraph>
+    <PredictedGraph {title} {actual} {predicted} />
 </div>
 
 <style>

@@ -152,13 +152,15 @@ pub fn get_monthly_data(data: &SlotArray<i64>, get_total: bool) -> GraphData {
 
     monthly_graph_data.three_months = get_last_days(90, &data);
     monthly_graph_data.six_months = get_last_days(180, &data);
-    construct_months_from_day_array(data, &mut monthly_graph_data.one_year, 12, get_total);
-    construct_months_from_day_array(data, &mut monthly_graph_data.three_years, 36, get_total);
+    monthly_graph_data.one_year = construct_months_from_day_array(data,12, get_total);
+    monthly_graph_data.three_years = construct_months_from_day_array(data,36, get_total);
 
     monthly_graph_data
 }
 
-pub fn construct_months_from_day_array(source_array: &SlotArray<i64>, dest_array: &mut Vec<i64>, months: u16, get_total: bool) {
+pub fn construct_months_from_day_array(source_array: &SlotArray<i64>, months: usize, get_total: bool) -> Vec<i64> {
+    let mut ret = vec![EMPTY_DATA; months as usize];
+
     let mut end_idx = (source_array.current_idx - 1) as isize;
     if end_idx < 0 { end_idx = 0 }
 
@@ -167,11 +169,14 @@ pub fn construct_months_from_day_array(source_array: &SlotArray<i64>, dest_array
         if start_idx < 0 { start_idx = 0 }
 
         if !get_total {
-            dest_array.push(source_array.array[start_idx as usize]);
+            ret[i] = source_array.array[start_idx as usize];
             continue;
         }
 
-        let slice = source_array.slice(start_idx as usize, end_idx as usize);
+        start_idx -= 30;
+        if start_idx < 0 { start_idx = 0 }
+
+        let slice = source_array.slice(start_idx as usize - 30, end_idx as usize);
 
         let mut total = 0;
 
@@ -179,8 +184,10 @@ pub fn construct_months_from_day_array(source_array: &SlotArray<i64>, dest_array
             total += num as i128;
         }
 
-        dest_array.push(total as i64);
+        ret[i] = total as i64;
     }
+
+    ret
 }
 
 pub fn get_last_days(days: u16, source_array: &SlotArray<i64>) -> Vec<i64> {

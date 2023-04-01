@@ -8,9 +8,9 @@
         pinned?: boolean;
         prefix: string;
         historical: {
-            actual: GraphData,
-            predicted?: GraphData,
-        }
+            actual: GraphData;
+            predicted?: GraphData;
+        };
     }
 </script>
 
@@ -19,6 +19,7 @@
     import OverviewData from "../../templates/OverviewData.svelte";
 
     export let data: FinanceData;
+    console.log(data);
     let dataArray: DataItem[] = [
         {
             title: "Government Balance",
@@ -28,8 +29,8 @@
             pinned: false,
             historical: {
                 actual: data.government_balance_graph_data,
-                predicted: data.government_balance_prediction_graph_data
-            }
+                predicted: data.government_balance_prediction_graph_data,
+            },
         },
         {
             title: "Average Monthly Income",
@@ -39,7 +40,7 @@
             pinned: false,
             historical: {
                 actual: data.average_monthly_income_graph_data,
-            }
+            },
         },
         // {
         //     title: "Total Expected Government Income",
@@ -100,7 +101,12 @@
 
 <main>
     {#each dataArray as item (item.title)}
-        <OverviewData bind:dataArray title={item.title} data={item.data} history={item.historical} />
+        <OverviewData
+            bind:dataArray
+            title={item.title}
+            data={item.data}
+            history={item.historical}
+        />
     {/each}
 </main>
 

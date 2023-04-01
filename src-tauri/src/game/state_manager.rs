@@ -603,10 +603,6 @@ impl GameState {
             app_handle.emit_all("unemployed_high", json!({ "unemployed_count": unemployed_count, "percent": percentage, "severity": "high" })).unwrap();
         }
 
-        // self.government_balance -= self.welfare_owed
-        //     + (*funded_businesses as i64 * self.rules.business_funding_rule.fund)
-        //     + self.healthcare.budget;
-
         let losses = self.welfare_owed
             + (*funded_businesses as i64 * self.rules.business_funding_rule.fund)
             + self.healthcare.budget;
