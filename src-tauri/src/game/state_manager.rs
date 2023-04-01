@@ -31,6 +31,7 @@ use uuid::Uuid;
 
 const GOVERNMENT_START_BALANCE: u32 = 140000000;
 const THREE_YEAR_DAYS: usize = 1080; // days in three game years
+const EMPTY_DATA: i64 = -1;
 
 pub type GameStateSafe = Arc<Mutex<GameState>>;
 
@@ -74,24 +75,24 @@ impl Default for GameState {
 
             // Daily updates
 
-            population_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, -1),
-            births_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, -1),
-            deaths_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, -1),
-            life_expectancy_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, -1),
-            hospital_usage_capacity_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, -1),
-            average_welfare_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, -1),
-            average_unemployed_welfare_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, -1),
-            government_balance_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, -1),
-            government_balance_prediction_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, -1),
+            population_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            births_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            deaths_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            life_expectancy_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            hospital_usage_capacity_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            average_welfare_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            average_unemployed_welfare_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            government_balance_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            government_balance_prediction_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
 
             // Monthly updates
 
-            average_monthly_income_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, -1),
-            government_losses_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, -1),
-            business_count_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, -1),
-            average_employees_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, -1),
-            business_average_monthly_income_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, -1),
-            unemployed_count_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, -1),
+            average_monthly_income_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            government_losses_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            business_count_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            average_employees_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            business_average_monthly_income_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            unemployed_count_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
         }
     }
 }
