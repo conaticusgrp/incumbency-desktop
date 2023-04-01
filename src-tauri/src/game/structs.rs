@@ -130,7 +130,7 @@ pub struct GameState {
     pub average_welfare_graph_data: SlotArray<i64>,
     pub average_unemployed_welfare_graph_data: SlotArray<i64>,
     pub government_balance_graph_data: SlotArray<i64>,
-    pub government_balance_prediction_data: SlotArray<i64>,
+    pub government_balance_prediction_graph_data: SlotArray<i64>,
 
     // Monthly updates
 
