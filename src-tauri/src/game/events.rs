@@ -115,15 +115,15 @@ pub struct BusinessAppOpenedPayload {
 pub fn get_monthly_data(data: &SlotArray<i64>, get_total: bool) -> MonthlyGraphData {
     let mut monthly_graph_data = MonthlyGraphData::default();
 
-    monthly_graph_data.three_months = data.take(3);
-    monthly_graph_data.six_months = data.take(6);
-    monthly_graph_data.one_year = data.take(12);
-    construct_years_from_day_array(data, &mut monthly_graph_data.three_years, 3, get_total);
+    monthly_graph_data.three_months = data.take(90);
+    monthly_graph_data.six_months = data.take(180);
+    construct_months_from_day_array(data, &mut monthly_graph_data.one_year, 12, get_total);
+    construct_months_from_day_array(data, &mut monthly_graph_data.three_years, 36, get_total);
 
     monthly_graph_data
 }
 
-pub fn construct_months_from_day_array(source_array: &SlotArray<i64>, dest_array: &mut Vec<i64>, months: u8, get_total: bool) {
+pub fn construct_months_from_day_array(source_array: &SlotArray<i64>, dest_array: &mut Vec<i64>, months: u16, get_total: bool) {
     for i in 0..months {
         let current_days: usize = ((i + 1) * 30) as usize;
         if !get_total {
@@ -143,34 +143,13 @@ pub fn construct_months_from_day_array(source_array: &SlotArray<i64>, dest_array
     }
 }
 
-pub fn construct_years_from_day_array(source_array: &SlotArray<i64>, dest_array: &mut Vec<i64>, years: u16, get_total: bool) {
-    for i in 0..years {
-        let current_days: usize = ((i + 1) * 360) as usize;
-        if !get_total {
-            dest_array.push(source_array.array[current_days - 1]);
-            continue;
-        }
-
-        let slice = source_array.slice(current_days, current_days + 360);
-
-        let mut total = 0;
-
-        for num in slice {
-            total += num as i128;
-        }
-
-        dest_array.push(total as i64);
-    }
-}
-
-pub fn get_daily_data(data: &SlotArray<i64>, get_total: bool) -> DailyGraphData {
+pub fn get_daily_data(data: &SlotArray<i64>) -> DailyGraphData {
     let mut daily_graph_data = DailyGraphData::default();
 
-    daily_graph_data.one_week = data.take(7);
+    daily_graph_data.one_week = data.take(6);
     daily_graph_data.one_month = data.take(30);
-
-    construct_months_from_day_array(data, &mut daily_graph_data.three_months, 3, get_total);
-    construct_months_from_day_array(data, &mut daily_graph_data.six_months, 6, get_total);
+    daily_graph_data.three_months = data.take(90);
+    daily_graph_data.six_months = data.take(180);
 
     daily_graph_data
 }
@@ -251,11 +230,11 @@ pub fn app_open(state_mux: State<'_, GameStateSafe>, app_id: u8) -> IncResult<St
                     "deny_past_health": state.rules.deny_health_percentage_rule
                 }),
 
-                population_graph_data: get_daily_data(&state.population_graph_data, false),
-                births_graph_data: get_daily_data(&state.births_graph_data, true),
-                deaths_graph_data: get_daily_data(&state.deaths_graph_data, true),
-                life_expectancy_graph_data: get_daily_data(&state.life_expectancy_graph_data, false),
-                hospital_usage_capacity_graph_data: get_daily_data(&state.hospital_usage_capacity_graph_data, false),
+                population_graph_data: get_daily_data(&state.population_graph_data),
+                births_graph_data: get_daily_data(&state.births_graph_data),
+                deaths_graph_data: get_daily_data(&state.deaths_graph_data),
+                life_expectancy_graph_data: get_daily_data(&state.life_expectancy_graph_data),
+                hospital_usage_capacity_graph_data: get_daily_data(&state.hospital_usage_capacity_graph_data),
             };
 
             serde_json::to_string(&payload)
@@ -272,8 +251,8 @@ pub fn app_open(state_mux: State<'_, GameStateSafe>, app_id: u8) -> IncResult<St
                 }),
 
                 unemployed_count_graph_data: get_monthly_data(&state.unemployed_count_graph_data, false),
-                average_welfare_graph_data: get_daily_data(&state.average_welfare_graph_data, false),
-                average_unemployed_welfare_graph_data: get_daily_data(&state.average_unemployed_welfare_graph_data, false),
+                average_welfare_graph_data: get_daily_data(&state.average_welfare_graph_data),
+                average_unemployed_welfare_graph_data: get_daily_data(&state.average_unemployed_welfare_graph_data),
             };
 
             serde_json::to_string(&payload)
