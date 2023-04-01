@@ -7,12 +7,6 @@
   let volume = 0.5;
   
   
-  // Adjust volume
-  $: if (volume >= 0 && volume <= 1) {
-    // Adjust volume
-    console.log(`Volume: ${volume}`);
-  }
-
   const toggleFullscreen = async () => {
     const newVal = ! await appWindow.isFullscreen();
     appWindow.setFullscreen(newVal);

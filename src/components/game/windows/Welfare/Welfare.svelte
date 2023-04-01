@@ -17,9 +17,9 @@
                 people_count: number;
             };
         };
-        unemployed_count_graph_data: MonthlyGraphData;
-        average_welfare_graph_data: DailyGraphData;
-        average_unemployed_welfare_graph_data: DailyGraphData;
+        unemployed_count_graph_data: GraphData;
+        average_welfare_graph_data: GraphData;
+        average_unemployed_welfare_graph_data: GraphData;
     }
 </script>
 
@@ -28,8 +28,8 @@
     import TabWindow from "../TabWindow.svelte";
     import type {
         CriticalWindowData,
-        DailyGraphData,
-        MonthlyGraphData,
+        GraphData,
+        GraphData,
     } from "../Window.svelte";
 
     import WelfareTabButton from "./WelfareTabButton.svelte";

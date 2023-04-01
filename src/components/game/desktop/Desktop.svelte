@@ -1,5 +1,5 @@
 <script lang="ts" context="module">
-    interface DesktopAppShortcut {
+    type DesktopAppShortcut = {
         componentConstructor: any;
         name: string;
 

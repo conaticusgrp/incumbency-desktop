@@ -31,7 +31,7 @@ use uuid::Uuid;
 
 const GOVERNMENT_START_BALANCE: u32 = 140000000;
 const THREE_YEAR_DAYS: usize = 1080; // days in three game years
-const EMPTY_DATA: i64 = -1;
+pub const EMPTY_DATA: i64 = -1;
 
 pub type GameStateSafe = Arc<Mutex<GameState>>;
 
