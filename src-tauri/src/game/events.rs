@@ -140,8 +140,8 @@ pub struct BusinessAppOpenedPayload {
 pub fn get_monthly_data(data: &SlotArray<i64>, get_total: bool) -> MonthlyGraphData {
     let mut monthly_graph_data = MonthlyGraphData::default();
 
-    monthly_graph_data.three_months = data.take(90);
-    monthly_graph_data.six_months = data.take(180);
+    monthly_graph_data.three_months = get_last_days(90, &data);
+    monthly_graph_data.six_months = get_last_days(180, &data);
     construct_months_from_day_array(data, &mut monthly_graph_data.one_year, 12, get_total);
     construct_months_from_day_array(data, &mut monthly_graph_data.three_years, 36, get_total);
 
