@@ -17,13 +17,20 @@
                 people_count: number;
             };
         };
+        unemployed_count_graph_data: MonthlyGraphData;
+        average_welfare_graph_data: DailyGraphData;
+        average_unemployed_welfare_graph_data: DailyGraphData;
     }
 </script>
 
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
     import TabWindow from "../TabWindow.svelte";
-    import type { CriticalWindowData } from "../Window.svelte";
+    import type {
+        CriticalWindowData,
+        DailyGraphData,
+        MonthlyGraphData,
+    } from "../Window.svelte";
 
     import WelfareTabButton from "./WelfareTabButton.svelte";
     import Overview from "./Overview/Overview.svelte";
