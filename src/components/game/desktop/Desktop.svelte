@@ -142,7 +142,6 @@
 
     const toggleNotificationsSection = (): void => {
         notificationSectionExpanded = !notificationSectionExpanded;
-
         if (notificationSectionExpanded) {
             for (let i = 0; i < notifications.length; i++) {
                 notifications[i].shown = false;
@@ -169,7 +168,7 @@
         }
 
         n.date = date;
-        n.shown = !notificationSectionExpanded;
+        n.shown = true;
 
         notifications = [...notifications, n]; // for mutability updates
 
@@ -378,30 +377,29 @@
                     style="width: calc({NOTIFICATION_WIDTH} + {NOTIFICATION_MARGIN_X} * 2); border: none; background: none;"
                 >
                     {#each notifications.reverse() as notif, idx}
-                        {#if notif.shown}
-                            <Notification
-                                actionTitle={notif.actionTitle}
-                                actionFunction={notif.actionTitle?.toLowerCase() ===
-                                "open app"
-                                    ? () => {
-                                          apps.forEach((app, idx) => {
-                                              if (
-                                                  app.name.toLowerCase() ===
-                                                  notif.app?.toLowerCase()
-                                              ) {
-                                                  handleOpenApp(idx);
-                                              }
-                                          });
-                                      }
-                                    : () => {}}
-                                onDismissed={() => {
-                                    notifications[idx].shown = false;
-                                    notifications = [...notifications]; // so it updates :/
-                                }}
-                                justDisplayed={true}
-                                data={notif}
-                            />
-                        {/if}
+                        <Notification
+                            actionTitle={notif.actionTitle}
+                            actionFunction={notif.actionTitle?.toLowerCase() ===
+                            "open app"
+                                ? () => {
+                                      apps.forEach((app, idx) => {
+                                          if (
+                                              app.name.toLowerCase() ===
+                                              notif.app?.toLowerCase()
+                                          ) {
+                                              handleOpenApp(idx);
+                                          }
+                                      });
+                                  }
+                                : () => {}}
+                            onDismissed={() => {
+                                notifications[idx].shown = false;
+                                notifications = [...notifications]; // rerender ui
+                            }}
+                            bind:shown={notif.shown}
+                            justDisplayed={true}
+                            data={notif}
+                        />
                     {/each}
                 </div>
             {/if}

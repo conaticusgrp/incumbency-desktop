@@ -34,46 +34,58 @@
     export let actionFunction: any = () => {};
 
     let dismissClass: any = null;
+    export let shown = true;
+
+    if (justDisplayed) {
+        setTimeout(() => {
+            shown = false;
+        }, 10000);
+    }
+
+    $: console.log(shown);
 </script>
 
-<main
-    style="
+{#if (shown && justDisplayed) || !justDisplayed}
+    <main
+        style="
     --notification-color: {severityColors.get(data.severity ?? 'normal')};
     width: {NOTIFICATION_WIDTH}; height: {NOTIFICATION_HEIGHT};
     margin: {NOTIFICATION_MARGIN_Y} 0 {NOTIFICATION_MARGIN_X} 0;
   "
-    class={`${dismissClass ? dismissClass : ""} ${
-        justDisplayed && !dismissClass ? "new" : ""
-    }`}
->
-    <div class="header">
-        <button
-            on:click={() => {
-                dismissClass = "dismiss";
+        class={`${dismissClass ? dismissClass : ""} ${
+            justDisplayed && !dismissClass ? "new" : ""
+        }`}
+    >
+        <div class="header">
+            <button
+                on:click={() => {
+                    dismissClass = "dismiss";
 
-                setTimeout(() => {
-                    onDismissed();
-                }, 200);
-            }}>Dismiss</button
-        >
+                    setTimeout(() => {
+                        onDismissed();
+                        shown = false;
+                    }, 200);
+                }}>Dismiss</button
+            >
 
-        <h2>{data.app ?? ""}</h2>
+            <h2>{data.app ?? ""}</h2>
 
-        <span>{data.date && !justDisplayed ? data.date : "now"}</span>
-    </div>
-
-    <div class="content">
-        <h3>{data.header ?? "Notification"}</h3>
-
-        <p>{data.content ?? ""}</p>
-    </div>
-
-    {#if actionTitle}
-        <div class="actions">
-            <button on:click={actionFunction}>{actionTitle}</button>
+            <span>{data.date && !justDisplayed ? data.date : "now"}</span>
         </div>
-    {/if}
-</main>
+
+        <div class="content">
+            <h3>{data.header ?? "Notification"}</h3>
+
+            <p>{data.content ?? ""}</p>
+        </div>
+
+        {#if actionTitle}
+            <div class="actions">
+                <button on:click={actionFunction}>{actionTitle}</button>
+            </div>
+        {/if}
+    </main>
+{/if}
 
 <style>
     main {
