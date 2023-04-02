@@ -5,11 +5,31 @@
     import MultiplayerMenu from "./components/views/MultiplayerMenu.svelte";
     import SettingsMenu from "./components/views/SettingsMenu.svelte";
     import Credits from "./components/views/Credits.svelte";
-    import Loading from "./components/game/desktop/Loading.svelte";
+    import type Loading from "./components/game/desktop/Loading.svelte";
     import SingleplayerGame from "./components/views/SingleplayerGame.svelte";
     import MultiplayerGame from "./components/views/MultiplayerGame.svelte";
-
     import { appState } from "./stores/appState";
+    import {
+        Chart as ChartJS,
+        Title,
+        Tooltip,
+        Legend,
+        LineElement,
+        LinearScale,
+        PointElement,
+        CategoryScale,
+    } from "chart.js";
+
+    ChartJS.register(
+        Title,
+        Tooltip,
+        Legend,
+        LineElement,
+        LinearScale,
+        PointElement,
+        CategoryScale
+    );
+    import "chart.js/auto";
 
     type AnyAppState =
         | typeof MainMenu

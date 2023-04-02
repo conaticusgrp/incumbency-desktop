@@ -33,13 +33,18 @@
         child_care: CareCapacity;
         adult_care: CareCapacity;
         elder_care: CareCapacity;
+        population_graph_data: DailyGraphData;
+        births_graph_data: DailyGraphData;
+        deaths_graph_data: DailyGraphData;
+        life_expectancy_graph_data: DailyGraphData;
+        hospital_usage_capacity_graph_data: DailyGraphData;
     }
 </script>
 
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
     import TabWindow from "../TabWindow.svelte";
-    import type { CriticalWindowData } from "../Window.svelte";
+    import type { CriticalWindowData, DailyGraphData } from "../Window.svelte";
     import Capacity from "./Capacity/Capacity.svelte";
 
     import HealthcareTabButton from "./HealthcareTabButton.svelte";

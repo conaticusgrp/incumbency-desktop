@@ -28,52 +28,49 @@
 
     export let data: NotificationData;
     export let onDismissed: Function;
-    export let justDisplayed: boolean = false; // Dictates whether or not the notification will fade out
 
     export let actionTitle: string = "";
     export let actionFunction: any = () => {};
 
-    let dismissClass: any = null;
+    export let shown = false;
+    export let sectionExpanded = false;
+
+    if (!sectionExpanded) {
+        setTimeout(() => {
+            shown = false;
+        }, 5000);
+    }
 </script>
 
-<main
-    style="
+{#if (shown && !sectionExpanded) || sectionExpanded}
+    <main
+        style="
     --notification-color: {severityColors.get(data.severity ?? 'normal')};
     width: {NOTIFICATION_WIDTH}; height: {NOTIFICATION_HEIGHT};
     margin: {NOTIFICATION_MARGIN_Y} 0 {NOTIFICATION_MARGIN_X} 0;
   "
-    class={`${dismissClass ? dismissClass : ""} ${
-        justDisplayed && !dismissClass ? "new" : ""
-    }`}
->
-    <div class="header">
-        <button
-            on:click={() => {
-                dismissClass = "dismiss";
+    >
+        <div class="header">
+            <button on:click={() => onDismissed()}>Dismiss</button>
 
-                setTimeout(() => {
-                    onDismissed();
-                }, 200);
-            }}>Dismiss</button
-        >
+            <h2>{data.app ?? ""}</h2>
 
-        <h2>{data.app ?? ""}</h2>
-
-        <span>{data.date && !justDisplayed ? data.date : "now"}</span>
-    </div>
-
-    <div class="content">
-        <h3>{data.header ?? "Notification"}</h3>
-
-        <p>{data.content ?? ""}</p>
-    </div>
-
-    {#if actionTitle}
-        <div class="actions">
-            <button on:click={actionFunction}>{actionTitle}</button>
+            <span>{data.date && sectionExpanded ? data.date : "now"}</span>
         </div>
-    {/if}
-</main>
+
+        <div class="content">
+            <h3>{data.header ?? "Notification"}</h3>
+
+            <p>{data.content ?? ""}</p>
+        </div>
+
+        {#if actionTitle}
+            <div class="actions">
+                <button on:click={actionFunction}>{actionTitle}</button>
+            </div>
+        {/if}
+    </main>
+{/if}
 
 <style>
     main {
@@ -81,49 +78,6 @@
         flex-direction: column;
         border: 1px solid var(--notification-color);
         background-color: black;
-    }
-
-    .new {
-        animation-name: fadeout, popup;
-        animation-delay: 5s, 0s;
-        animation-duration: 5s, 0.5s;
-        animation-fill-mode: forwards;
-        animation-timing-function: none, ease-out;
-    }
-
-    .dismiss {
-        animation-name: dismissed;
-        animation-fill-mode: forwards;
-        animation-timing-function: ease-out;
-        animation-duration: 0.2s;
-        animation-delay: 0s;
-    }
-
-    @keyframes dismissed {
-        from {
-            scale: 1;
-        }
-        to {
-            scale: 0;
-        }
-    }
-
-    @keyframes popup {
-        from {
-            scale: 0;
-        }
-        to {
-            scale: 1;
-        }
-    }
-
-    @keyframes fadeout {
-        from {
-            opacity: 1;
-        }
-        to {
-            opacity: 0;
-        }
     }
 
     .header {

@@ -143,10 +143,8 @@
     const toggleNotificationsSection = (): void => {
         notificationSectionExpanded = !notificationSectionExpanded;
 
-        if (notificationSectionExpanded) {
-            for (let i = 0; i < notifications.length; i++) {
-                notifications[i].shown = false;
-            }
+        for (let i = 0; i < notifications.length; i++) {
+            notifications[i].shown = false;
         }
     };
 
@@ -169,7 +167,7 @@
         }
 
         n.date = date;
-        n.shown = !notificationSectionExpanded;
+        n.shown = true;
 
         notifications = [...notifications, n]; // for mutability updates
 
@@ -342,69 +340,39 @@
                 />
             {/each}
 
-            {#if notificationSectionExpanded}
-                <div
-                    class="notifications-section"
-                    style="width: calc({NOTIFICATION_WIDTH} + {NOTIFICATION_MARGIN_X} * 2);"
-                >
-                    {#each notifications.reverse() as notif, idx}
-                        <Notification
-                            actionTitle={notif.actionTitle}
-                            actionFunction={notif.actionTitle?.toLowerCase() ===
-                            "open app"
-                                ? () => {
-                                      apps.forEach((app, idx) => {
-                                          if (
-                                              app.name.toLowerCase() ===
-                                              notif.app?.toLowerCase()
-                                          ) {
-                                              handleOpenApp(idx);
-                                          }
-                                      });
-                                  }
-                                : () => {}}
-                            onDismissed={() => {
-                                notifications.splice(idx, 1);
-                                notifications = [...notifications]; // so it updates :/
-                            }}
-                            justDisplayed={false}
-                            data={notif}
-                        />
-                    {/each}
-                </div>
-            {:else}
-                <div
-                    class="notifications-section"
-                    style="width: calc({NOTIFICATION_WIDTH} + {NOTIFICATION_MARGIN_X} * 2); border: none; background: none;"
-                >
-                    {#each notifications.reverse() as notif, idx}
-                        {#if notif.shown}
-                            <Notification
-                                actionTitle={notif.actionTitle}
-                                actionFunction={notif.actionTitle?.toLowerCase() ===
-                                "open app"
-                                    ? () => {
-                                          apps.forEach((app, idx) => {
-                                              if (
-                                                  app.name.toLowerCase() ===
-                                                  notif.app?.toLowerCase()
-                                              ) {
-                                                  handleOpenApp(idx);
-                                              }
-                                          });
+            <div
+                class="notifications-section"
+                style="width: calc({NOTIFICATION_WIDTH} + {NOTIFICATION_MARGIN_X} * 2); {!notificationSectionExpanded
+                    ? 'border: none; background: none;'
+                    : ''}"
+            >
+                {#each notifications.reverse() as notif, nidx}
+                    <Notification
+                        actionTitle={notif.actionTitle}
+                        actionFunction={notif.actionTitle?.toLowerCase() ===
+                        "open app"
+                            ? () => {
+                                  apps.forEach((app, idx) => {
+                                      if (
+                                          app.name.toLowerCase() ===
+                                          notif.app?.toLowerCase()
+                                      ) {
+                                          handleOpenApp(idx);
                                       }
-                                    : () => {}}
-                                onDismissed={() => {
-                                    notifications[idx].shown = false;
-                                    notifications = [...notifications]; // so it updates :/
-                                }}
-                                justDisplayed={true}
-                                data={notif}
-                            />
-                        {/if}
-                    {/each}
-                </div>
-            {/if}
+                                  });
+                              }
+                            : () => {}}
+                        sectionExpanded={notificationSectionExpanded}
+                        bind:shown={notifications[nidx].shown}
+                        onDismissed={() => {
+                            notifications = notifications.filter(
+                                (_, i) => i !== nidx
+                            );
+                        }}
+                        data={notif}
+                    />
+                {/each}
+            </div>
         </div>
 
         <div class="toolbar" style="height: {TOOLBAR_HEIGHT};">

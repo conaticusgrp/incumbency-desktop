@@ -16,7 +16,7 @@ export const handleInvoke = async (
     let error = null;
 
     const result = await invokeRes.catch((e) => {
-        errorNotif(dispatcher, "An error occured", e.error, app);
+        errorNotif(dispatcher, "An error occured", e, app);
         error = e;
     });
 

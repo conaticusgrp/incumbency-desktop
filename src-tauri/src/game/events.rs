@@ -1,12 +1,12 @@
+use std::{ops::{Add, AddAssign}, default};
+
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use tauri::{AppHandle, Manager, State};
 
 use crate::{
-    as_decimal_percent,
-    common::errors::{Error, IncResult},
+    common::{errors::{Error, IncResult}, util::SlotArray},
     entities::{business::Business, person::person::Person},
-    percentage_of,
 };
 
 use super::{
@@ -20,6 +20,48 @@ pub enum App {
     Healthcare = 2,
     Welfare = 3,
     Business = 4,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct MonthlyGraphData {
+    three_months: Vec<i64>,
+    six_months: Vec<i64>,
+    one_year: Vec<i64>,
+    three_years: Vec<i64>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct DailyGraphData {
+    one_week: Vec<i64>,
+    one_month: Vec<i64>,
+    three_months: Vec<i64>,
+    six_months: Vec<i64>,
+    one_year: Vec<i64>,
+    three_years: Vec<i64>,
+}
+
+impl Default for MonthlyGraphData {
+    fn default() -> Self {
+        Self {
+            three_months: vec![-1; 90],
+            six_months: vec![-1; 180],
+            one_year: vec![-1; 12],
+            three_years: vec![-1; 36]
+        }
+    }
+}
+
+impl Default for DailyGraphData {
+    fn default() -> Self {
+        Self {
+            one_week: vec![-1; 7],
+            one_month: vec![-1; 30],
+            three_months: vec![-1; 90],
+            six_months: vec![-1; 180],
+            one_year: vec![-1; 12],
+            three_years: vec![-1; 36]
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -43,6 +85,11 @@ pub struct FinanceAppOpenedPayload {
     pub average_unemployed_welfare: i32,
     pub expected_balance: i64,
     pub rules: serde_json::Value,
+
+    pub government_balance_graph_data: MonthlyGraphData,
+    pub government_balance_prediction_graph_data: MonthlyGraphData,
+    pub average_monthly_income_graph_data: MonthlyGraphData,
+    pub government_losses_graph_data: MonthlyGraphData,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -58,6 +105,12 @@ pub struct HealthcareAppOpenedPayload {
     pub adult_care: HealthcareGroup,
     pub elder_care: HealthcareGroup,
     pub rules: serde_json::Value,
+
+    pub population_graph_data: DailyGraphData,
+    pub births_graph_data: DailyGraphData,
+    pub deaths_graph_data: DailyGraphData,
+    pub life_expectancy_graph_data: DailyGraphData,
+    pub hospital_usage_capacity_graph_data: DailyGraphData,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -66,6 +119,10 @@ pub struct WelfareAppOpenedPayload {
     pub average_unemployed_welfare: i32,
     pub unemployed_count: i32,
     pub rules: serde_json::Value,
+
+    pub unemployed_count_graph_data: MonthlyGraphData,
+    pub average_welfare_graph_data: DailyGraphData,
+    pub average_unemployed_welfare_graph_data: DailyGraphData,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -74,6 +131,67 @@ pub struct BusinessAppOpenedPayload {
     pub average_employees: i32,
     pub average_monthly_income: i64,
     pub rules: serde_json::Value,
+
+    pub business_count_graph_data: MonthlyGraphData,
+    pub average_employees_graph_data: MonthlyGraphData,
+    pub average_monthly_income_graph_data: MonthlyGraphData,
+}
+
+pub fn get_monthly_data(data: &SlotArray<i64>, get_total: bool) -> MonthlyGraphData {
+    let mut monthly_graph_data = MonthlyGraphData::default();
+
+    monthly_graph_data.three_months = get_last_days(90, &data);
+    monthly_graph_data.six_months = get_last_days(180, &data);
+    construct_months_from_day_array(data, &mut monthly_graph_data.one_year, 12, get_total);
+    construct_months_from_day_array(data, &mut monthly_graph_data.three_years, 36, get_total);
+
+    monthly_graph_data
+}
+
+pub fn construct_months_from_day_array(source_array: &SlotArray<i64>, dest_array: &mut Vec<i64>, months: u16, get_total: bool) {
+    let mut end_idx = (source_array.current_idx - 1) as isize;
+    if end_idx < 0 { end_idx = 0 }
+
+    for i in 0..months {
+        let mut start_idx: isize = ((i * 30) as isize) - 1;
+        if start_idx < 0 { start_idx = 0 }
+
+        if !get_total {
+            dest_array.push(source_array.array[start_idx as usize]);
+            continue;
+        }
+
+        let slice = source_array.slice(start_idx as usize, end_idx as usize);
+
+        let mut total = 0;
+
+        for num in slice {
+            total += num as i128;
+        }
+
+        dest_array.push(total as i64);
+    }
+}
+
+pub fn get_last_days(days: u16, source_array: &SlotArray<i64>) -> Vec<i64> {
+    let mut end_idx = (source_array.current_idx - 1) as isize;
+    if end_idx < 0 { end_idx = 0 }
+
+    let mut start_idx = end_idx - days as isize;
+    if start_idx < 0 { start_idx = 0 }
+
+    source_array.slice(start_idx as usize, end_idx as usize)
+}
+
+pub fn get_daily_data(data: &SlotArray<i64>) -> DailyGraphData {
+    let mut daily_graph_data = DailyGraphData::default();
+
+    daily_graph_data.one_week = get_last_days(7, &data);
+    daily_graph_data.one_month = get_last_days(30, &data);
+    daily_graph_data.three_months = get_last_days(90, &data);
+    daily_graph_data.six_months = get_last_days(180, &data);
+
+    daily_graph_data
 }
 
 pub fn get_app_from_id(app_id: u8) -> Option<App> {
@@ -126,6 +244,11 @@ pub fn app_open(state_mux: State<'_, GameStateSafe>, app_id: u8) -> IncResult<St
                     "tax": state.rules.tax_rule,
                     "business_tax": state.rules.business_tax_rule,
                 }),
+
+                government_balance_graph_data: get_monthly_data(&state.government_balance_graph_data, false),
+                government_balance_prediction_graph_data: get_monthly_data(&state.government_balance_prediction_graph_data, false),
+                average_monthly_income_graph_data: get_monthly_data(&state.average_monthly_income_graph_data, false),
+                government_losses_graph_data: get_monthly_data(&state.government_losses_graph_data, false),
             };
 
             serde_json::to_string(&payload)
@@ -147,6 +270,12 @@ pub fn app_open(state_mux: State<'_, GameStateSafe>, app_id: u8) -> IncResult<St
                     "deny_past_age": state.rules.deny_age_rule,
                     "deny_past_health": state.rules.deny_health_percentage_rule
                 }),
+
+                population_graph_data: get_daily_data(&state.population_graph_data),
+                births_graph_data: get_daily_data(&state.births_graph_data),
+                deaths_graph_data: get_daily_data(&state.deaths_graph_data),
+                life_expectancy_graph_data: get_daily_data(&state.life_expectancy_graph_data),
+                hospital_usage_capacity_graph_data: get_daily_data(&state.hospital_usage_capacity_graph_data),
             };
 
             serde_json::to_string(&payload)
@@ -161,6 +290,10 @@ pub fn app_open(state_mux: State<'_, GameStateSafe>, app_id: u8) -> IncResult<St
                     "cover_food": state.rules.cover_food_rule,
                     "cover_food_unemployed": state.rules.cover_food_unemployed_rule,
                 }),
+
+                unemployed_count_graph_data: get_monthly_data(&state.unemployed_count_graph_data, false),
+                average_welfare_graph_data: get_daily_data(&state.average_welfare_graph_data),
+                average_unemployed_welfare_graph_data: get_daily_data(&state.average_unemployed_welfare_graph_data),
             };
 
             serde_json::to_string(&payload)
@@ -174,10 +307,16 @@ pub fn app_open(state_mux: State<'_, GameStateSafe>, app_id: u8) -> IncResult<St
                 rules: json!({
                     "funding": state.rules.business_funding_rule,
                 }),
+
+                business_count_graph_data: get_monthly_data(&state.business_count_graph_data, false),
+                average_employees_graph_data: get_monthly_data(&state.average_employees_graph_data, false),
+                average_monthly_income_graph_data: get_monthly_data(&state.average_monthly_income_graph_data, false),
             };
 
             serde_json::to_string(&payload)
-        }
+        },
+
+        _ => Ok(String::new()),
     }?;
 
     *state.open_apps.entry(app).or_insert(true) = true;

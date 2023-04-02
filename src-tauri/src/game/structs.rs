@@ -119,6 +119,27 @@ pub struct GameState {
     pub unemployed_count: i32,
 
     pub expected_balance: i64,
+
+    // Daily updates
+
+    pub population_graph_data: SlotArray<i64>,
+    pub births_graph_data: SlotArray<i64>,
+    pub deaths_graph_data: SlotArray<i64>,
+    pub life_expectancy_graph_data: SlotArray<i64>,
+    pub hospital_usage_capacity_graph_data: SlotArray<i64>,
+    pub average_welfare_graph_data: SlotArray<i64>,
+    pub average_unemployed_welfare_graph_data: SlotArray<i64>,
+    pub government_balance_graph_data: SlotArray<i64>,
+    pub government_balance_prediction_graph_data: SlotArray<i64>,
+
+    // Monthly updates
+
+    pub average_monthly_income_graph_data: SlotArray<i64>,
+    pub government_losses_graph_data: SlotArray<i64>,
+    pub business_count_graph_data: SlotArray<i64>,
+    pub average_employees_graph_data: SlotArray<i64>,
+    pub business_average_monthly_income_graph_data: SlotArray<i64>,
+    pub unemployed_count_graph_data: SlotArray<i64>,
 }
 
 #[derive(Default, Clone, Copy, Serialize, Deserialize)]

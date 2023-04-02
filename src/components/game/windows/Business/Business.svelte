@@ -13,13 +13,19 @@
             };
         };
         business_budget: number;
+        business_count_graph_data: MonthlyGraphData;
+        average_employees_graph_data: MonthlyGraphData;
+        average_monthly_income_graph_data: MonthlyGraphData;
     }
 </script>
 
 <script lang="ts">
     import { createEventDispatcher } from "svelte";
     import TabWindow from "../TabWindow.svelte";
-    import type { CriticalWindowData } from "../Window.svelte";
+    import type {
+        CriticalWindowData,
+        MonthlyGraphData,
+    } from "../Window.svelte";
 
     import BusinessTabButton from "./BusinessTabButton.svelte";
     import Overview from "./Overview/Overview.svelte";

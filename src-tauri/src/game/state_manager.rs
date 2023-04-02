@@ -16,6 +16,10 @@ use crate::{
             person::{Job, Person},
         },
     },
+    game::events::{
+        get_monthly_data,
+        get_daily_data
+    }
 };
 use serde_json::json;
 use std::{
@@ -26,6 +30,8 @@ use tauri::{AppHandle, Manager};
 use uuid::Uuid;
 
 const GOVERNMENT_START_BALANCE: u32 = 140000000;
+const THREE_YEAR_DAYS: usize = 1080; // days in three game years
+const EMPTY_DATA: i64 = -1;
 
 pub type GameStateSafe = Arc<Mutex<GameState>>;
 
@@ -66,6 +72,27 @@ impl Default for GameState {
             unemployed_count: 0,
 
             expected_balance: 0,
+
+            // Daily updates
+
+            population_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            births_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            deaths_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            life_expectancy_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            hospital_usage_capacity_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            average_welfare_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            average_unemployed_welfare_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            government_balance_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            government_balance_prediction_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+
+            // Monthly updates
+
+            average_monthly_income_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            government_losses_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            business_count_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            average_employees_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            business_average_monthly_income_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            unemployed_count_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
         }
     }
 }
@@ -243,6 +270,17 @@ impl GameState {
             + (self.finance_data.expected_business_income
                 + self.finance_data.expected_person_income);
 
+        // Update graph data
+        self.population_graph_data.push(self.people.len() as i64);
+        self.births_graph_data.push(new_birth_count as i64);
+        self.deaths_graph_data.push(death_queue.len() as i64);
+        self.life_expectancy_graph_data.push(self.healthcare.life_expectancy as i64);
+        self.hospital_usage_capacity_graph_data.push(self.healthcare.get_current_capacity() as i64);
+        self.average_welfare_graph_data.push(self.average_welfare as i64);
+        self.average_unemployed_welfare_graph_data.push(self.average_welfare_unemployed as i64);
+        self.government_balance_graph_data.push(self.government_balance);
+        self.government_balance_prediction_graph_data.push(self.expected_balance);
+
         self.spare_budget = self.get_spare_budget();
         self.emit_daily_events(app_handle);
 
@@ -285,6 +323,11 @@ impl GameState {
                 "elder_care": self.healthcare.eldercare,
                 "births_per_month": self.healthcare.births_per_month,
                 "deaths_per_month": self.healthcare.deaths_per_month,
+                "population_graph_data": get_daily_data(&self.population_graph_data),
+                "births_graph_data": get_daily_data(&self.births_graph_data),
+                "deaths_graph_data": get_daily_data(&self.deaths_graph_data),
+                "life_expectancy_graph_data": get_daily_data(&self.life_expectancy_graph_data),
+                "hospital_usage_capacity_graph_data": get_daily_data(&self.hospital_usage_capacity_graph_data),
             }),
             app_handle,
             AppUpdateType::Day,
@@ -297,6 +340,8 @@ impl GameState {
                 "average_unemployed_welfare": self.average_welfare_unemployed,
                 "welfare_budget": self.welfare_budget,
                 "unemployed_count": self.unemployed_count,
+                "average_welfare_graph_data": get_daily_data(&self.average_welfare_graph_data),
+                "average_unemployed_welfare_graph_data": get_daily_data(&self.average_unemployed_welfare_graph_data),
             }),
             app_handle,
             AppUpdateType::Day,
@@ -558,6 +603,24 @@ impl GameState {
             app_handle.emit_all("unemployed_high", json!({ "unemployed_count": unemployed_count, "percent": percentage, "severity": "high" })).unwrap();
         }
 
+        // self.government_balance -= self.welfare_owed
+        //     + (*funded_businesses as i64 * self.rules.business_funding_rule.fund)
+        //     + self.healthcare.budget;
+
+        let losses = self.welfare_owed
+            + (*funded_businesses as i64 * self.rules.business_funding_rule.fund)
+            + self.healthcare.budget;
+
+        self.government_balance -= losses;
+
+        // Update graph data
+        self.average_monthly_income_graph_data.push(self.finance_data.average_monthly_income as i64);
+        self.government_losses_graph_data.push(losses);
+        self.business_count_graph_data.push(self.businesses.len() as i64);
+        self.average_employees_graph_data.push(self.business_data.average_employees as i64);
+        self.business_average_monthly_income_graph_data.push(self.business_data.average_monthly_income);
+        self.unemployed_count_graph_data.push(self.unemployed_count as i64);
+            
         update_app(
             App::Finance,
             json!({
@@ -568,6 +631,10 @@ impl GameState {
                 "business_budget": self.business_budget,
                 "healthcare_budget": self.healthcare.budget,
                 "expected_balance": self.expected_balance,
+                "government_balance_graph_data": get_monthly_data(&self.government_balance_graph_data, false),
+                "government_balance_prediction_graph_data": get_monthly_data(&self.government_balance_prediction_graph_data, false),
+                "average_monthly_income_graph_data": get_monthly_data(&self.average_monthly_income_graph_data, false),
+                "government_losses_graph_data": get_monthly_data(&self.government_losses_graph_data, false),
             }),
             app_handle,
             AppUpdateType::Month,
@@ -583,18 +650,26 @@ impl GameState {
         );
 
         update_app(
-            App::Business,
+            App::Welfare,
             json!({
-                "average_employees": self.business_data.average_employees,
-                "average_monthly_income": self.business_data.average_monthly_income,
+                "unemployed_count_graph_data": get_monthly_data(&self.unemployed_count_graph_data, false),
             }),
             app_handle,
             AppUpdateType::Month,
         );
 
-        self.government_balance -= self.welfare_owed
-            + (*funded_businesses as i64 * self.rules.business_funding_rule.fund)
-            + self.healthcare.budget;
+        update_app(
+            App::Business,
+            json!({
+                "average_employees": self.business_data.average_employees,
+                "average_monthly_income": self.business_data.average_monthly_income,
+                "business_count_graph_data": get_monthly_data(&self.business_count_graph_data, false),
+                "average_employees_graph_data": get_monthly_data(&self.average_employees_graph_data, false),
+                "average_monthly_income_graph_data": get_monthly_data(&self.average_monthly_income_graph_data, false),
+            }),
+            app_handle,
+            AppUpdateType::Month,
+        );
 
         self.healthcare.month_unhospitalised_count = 0;
         self.total_possible_purchases = 0;
