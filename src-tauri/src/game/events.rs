@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign};
+use std::{ops::{Add, AddAssign}, default};
 
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -22,7 +22,7 @@ pub enum App {
     Business = 4,
 }
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize)]
 pub struct MonthlyGraphData {
     three_months: Vec<i64>,
     six_months: Vec<i64>,
@@ -30,7 +30,7 @@ pub struct MonthlyGraphData {
     three_years: Vec<i64>,
 }
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize)]
 pub struct DailyGraphData {
     one_week: Vec<i64>,
     one_month: Vec<i64>,
@@ -38,6 +38,30 @@ pub struct DailyGraphData {
     six_months: Vec<i64>,
     one_year: Vec<i64>,
     three_years: Vec<i64>,
+}
+
+impl Default for MonthlyGraphData {
+    fn default() -> Self {
+        Self {
+            three_months: vec![-1; 90],
+            six_months: vec![-1; 180],
+            one_year: vec![-1; 12],
+            three_years: vec![-1; 36]
+        }
+    }
+}
+
+impl Default for DailyGraphData {
+    fn default() -> Self {
+        Self {
+            one_week: vec![-1; 7],
+            one_month: vec![-1; 30],
+            three_months: vec![-1; 90],
+            six_months: vec![-1; 180],
+            one_year: vec![-1; 12],
+            three_years: vec![-1; 36]
+        }
+    }
 }
 
 #[derive(Serialize, Deserialize)]
@@ -63,6 +87,7 @@ pub struct FinanceAppOpenedPayload {
     pub rules: serde_json::Value,
 
     pub government_balance_graph_data: MonthlyGraphData,
+    pub government_balance_prediction_graph_data: MonthlyGraphData,
     pub average_monthly_income_graph_data: MonthlyGraphData,
     pub government_losses_graph_data: MonthlyGraphData,
 }
@@ -115,8 +140,8 @@ pub struct BusinessAppOpenedPayload {
 pub fn get_monthly_data(data: &SlotArray<i64>, get_total: bool) -> MonthlyGraphData {
     let mut monthly_graph_data = MonthlyGraphData::default();
 
-    monthly_graph_data.three_months = data.take(90);
-    monthly_graph_data.six_months = data.take(180);
+    monthly_graph_data.three_months = get_last_days(90, &data);
+    monthly_graph_data.six_months = get_last_days(180, &data);
     construct_months_from_day_array(data, &mut monthly_graph_data.one_year, 12, get_total);
     construct_months_from_day_array(data, &mut monthly_graph_data.three_years, 36, get_total);
 
@@ -124,14 +149,19 @@ pub fn get_monthly_data(data: &SlotArray<i64>, get_total: bool) -> MonthlyGraphD
 }
 
 pub fn construct_months_from_day_array(source_array: &SlotArray<i64>, dest_array: &mut Vec<i64>, months: u16, get_total: bool) {
+    let mut end_idx = (source_array.current_idx - 1) as isize;
+    if end_idx < 0 { end_idx = 0 }
+
     for i in 0..months {
-        let current_days: usize = ((i + 1) * 30) as usize;
+        let mut start_idx: isize = ((i * 30) as isize) - 1;
+        if start_idx < 0 { start_idx = 0 }
+
         if !get_total {
-            dest_array.push(source_array.array[current_days - 1]);
+            dest_array.push(source_array.array[start_idx as usize]);
             continue;
         }
 
-        let slice = source_array.slice(current_days, current_days + 30);
+        let slice = source_array.slice(start_idx as usize, end_idx as usize);
 
         let mut total = 0;
 
@@ -143,13 +173,23 @@ pub fn construct_months_from_day_array(source_array: &SlotArray<i64>, dest_array
     }
 }
 
+pub fn get_last_days(days: u16, source_array: &SlotArray<i64>) -> Vec<i64> {
+    let mut end_idx = (source_array.current_idx - 1) as isize;
+    if end_idx < 0 { end_idx = 0 }
+
+    let mut start_idx = end_idx - days as isize;
+    if start_idx < 0 { start_idx = 0 }
+
+    source_array.slice(start_idx as usize, end_idx as usize)
+}
+
 pub fn get_daily_data(data: &SlotArray<i64>) -> DailyGraphData {
     let mut daily_graph_data = DailyGraphData::default();
 
-    daily_graph_data.one_week = data.take(6);
-    daily_graph_data.one_month = data.take(30);
-    daily_graph_data.three_months = data.take(90);
-    daily_graph_data.six_months = data.take(180);
+    daily_graph_data.one_week = get_last_days(7, &data);
+    daily_graph_data.one_month = get_last_days(30, &data);
+    daily_graph_data.three_months = get_last_days(90, &data);
+    daily_graph_data.six_months = get_last_days(180, &data);
 
     daily_graph_data
 }
@@ -206,6 +246,7 @@ pub fn app_open(state_mux: State<'_, GameStateSafe>, app_id: u8) -> IncResult<St
                 }),
 
                 government_balance_graph_data: get_monthly_data(&state.government_balance_graph_data, false),
+                government_balance_prediction_graph_data: get_monthly_data(&state.government_balance_prediction_graph_data, false),
                 average_monthly_income_graph_data: get_monthly_data(&state.average_monthly_income_graph_data, false),
                 government_losses_graph_data: get_monthly_data(&state.government_losses_graph_data, false),
             };

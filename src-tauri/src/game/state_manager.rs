@@ -31,6 +31,7 @@ use uuid::Uuid;
 
 const GOVERNMENT_START_BALANCE: u32 = 140000000;
 const THREE_YEAR_DAYS: usize = 1080; // days in three game years
+const EMPTY_DATA: i64 = -1;
 
 pub type GameStateSafe = Arc<Mutex<GameState>>;
 
@@ -74,24 +75,24 @@ impl Default for GameState {
 
             // Daily updates
 
-            population_graph_data: SlotArray::new(THREE_YEAR_DAYS),
-            births_graph_data: SlotArray::new(THREE_YEAR_DAYS),
-            deaths_graph_data: SlotArray::new(THREE_YEAR_DAYS),
-            life_expectancy_graph_data: SlotArray::new(THREE_YEAR_DAYS),
-            hospital_usage_capacity_graph_data: SlotArray::new(THREE_YEAR_DAYS),
-            average_welfare_graph_data: SlotArray::new(THREE_YEAR_DAYS),
-            average_unemployed_welfare_graph_data: SlotArray::new(THREE_YEAR_DAYS),
-            government_balance_graph_data: SlotArray::new(THREE_YEAR_DAYS),
-            government_balance_prediction_data: SlotArray::new(THREE_YEAR_DAYS),
+            population_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            births_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            deaths_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            life_expectancy_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            hospital_usage_capacity_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            average_welfare_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            average_unemployed_welfare_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            government_balance_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            government_balance_prediction_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
 
             // Monthly updates
 
-            average_monthly_income_graph_data: SlotArray::new(THREE_YEAR_DAYS),
-            government_losses_graph_data: SlotArray::new(THREE_YEAR_DAYS),
-            business_count_graph_data: SlotArray::new(THREE_YEAR_DAYS),
-            average_employees_graph_data: SlotArray::new(THREE_YEAR_DAYS),
-            business_average_monthly_income_graph_data: SlotArray::new(THREE_YEAR_DAYS),
-            unemployed_count_graph_data: SlotArray::new(THREE_YEAR_DAYS),
+            average_monthly_income_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            government_losses_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            business_count_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            average_employees_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            business_average_monthly_income_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
+            unemployed_count_graph_data: SlotArray::new_default(THREE_YEAR_DAYS, EMPTY_DATA),
         }
     }
 }
@@ -278,7 +279,7 @@ impl GameState {
         self.average_welfare_graph_data.push(self.average_welfare as i64);
         self.average_unemployed_welfare_graph_data.push(self.average_welfare_unemployed as i64);
         self.government_balance_graph_data.push(self.government_balance);
-        self.government_balance_prediction_data.push(self.expected_balance);
+        self.government_balance_prediction_graph_data.push(self.expected_balance);
 
         self.spare_budget = self.get_spare_budget();
         self.emit_daily_events(app_handle);
@@ -631,6 +632,7 @@ impl GameState {
                 "healthcare_budget": self.healthcare.budget,
                 "expected_balance": self.expected_balance,
                 "government_balance_graph_data": get_monthly_data(&self.government_balance_graph_data, false),
+                "government_balance_prediction_graph_data": get_monthly_data(&self.government_balance_prediction_graph_data, false),
                 "average_monthly_income_graph_data": get_monthly_data(&self.average_monthly_income_graph_data, false),
                 "government_losses_graph_data": get_monthly_data(&self.government_losses_graph_data, false),
             }),

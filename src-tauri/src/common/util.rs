@@ -204,13 +204,24 @@ pub fn chance_one_in(amount: i32) -> bool {
 #[derive(Default, Debug, Clone, Serialize, Deserialize)]
 pub struct SlotArray<T> {
     pub array: Vec<T>,
-    current_idx: usize,
+    pub current_idx: usize,
 }
 
 impl<T: Default + Clone> SlotArray<T> {
     pub fn new(size: usize) -> Self {
         Self {
             array: vec![T::default(); size],
+            current_idx: 0,
+        }
+    }
+
+    pub fn get(&self, idx: usize) -> &T {
+        &self.array[idx]
+    }
+
+    pub fn new_default(size: usize, default_value: T) -> Self {
+        Self {
+            array: vec![default_value; size],
             current_idx: 0,
         }
     }
