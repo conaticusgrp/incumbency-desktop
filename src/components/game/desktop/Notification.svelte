@@ -28,49 +28,34 @@
 
     export let data: NotificationData;
     export let onDismissed: Function;
-    export let justDisplayed: boolean = false; // Dictates whether or not the notification will fade out
 
     export let actionTitle: string = "";
     export let actionFunction: any = () => {};
 
-    let dismissClass: any = null;
-    export let shown = true;
+    export let shown = false;
+    export let sectionExpanded = false;
 
-    if (justDisplayed) {
+    if (!sectionExpanded) {
         setTimeout(() => {
             shown = false;
-        }, 10000);
+        }, 5000);
     }
-
-    $: console.log(shown);
 </script>
 
-{#if (shown && justDisplayed) || !justDisplayed}
+{#if (shown && !sectionExpanded) || sectionExpanded}
     <main
         style="
     --notification-color: {severityColors.get(data.severity ?? 'normal')};
     width: {NOTIFICATION_WIDTH}; height: {NOTIFICATION_HEIGHT};
     margin: {NOTIFICATION_MARGIN_Y} 0 {NOTIFICATION_MARGIN_X} 0;
   "
-        class={`${dismissClass ? dismissClass : ""} ${
-            justDisplayed && !dismissClass ? "new" : ""
-        }`}
     >
         <div class="header">
-            <button
-                on:click={() => {
-                    dismissClass = "dismiss";
-
-                    setTimeout(() => {
-                        onDismissed();
-                        shown = false;
-                    }, 200);
-                }}>Dismiss</button
-            >
+            <button on:click={() => onDismissed()}>Dismiss</button>
 
             <h2>{data.app ?? ""}</h2>
 
-            <span>{data.date && !justDisplayed ? data.date : "now"}</span>
+            <span>{data.date && sectionExpanded ? data.date : "now"}</span>
         </div>
 
         <div class="content">
@@ -93,49 +78,6 @@
         flex-direction: column;
         border: 1px solid var(--notification-color);
         background-color: black;
-    }
-
-    .new {
-        animation-name: fadeout, popup;
-        animation-delay: 5s, 0s;
-        animation-duration: 5s, 0.5s;
-        animation-fill-mode: forwards;
-        animation-timing-function: none, ease-out;
-    }
-
-    .dismiss {
-        animation-name: dismissed;
-        animation-fill-mode: forwards;
-        animation-timing-function: ease-out;
-        animation-duration: 0.2s;
-        animation-delay: 0s;
-    }
-
-    @keyframes dismissed {
-        from {
-            scale: 1;
-        }
-        to {
-            scale: 0;
-        }
-    }
-
-    @keyframes popup {
-        from {
-            scale: 0;
-        }
-        to {
-            scale: 1;
-        }
-    }
-
-    @keyframes fadeout {
-        from {
-            opacity: 1;
-        }
-        to {
-            opacity: 0;
-        }
     }
 
     .header {
