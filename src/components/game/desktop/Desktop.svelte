@@ -61,7 +61,7 @@
     let modalTimerCountdown = 0;
 
     $: if (modalState !== "closed") {
-        new Promise<void>(async (resolve, reject) => {
+        new Promise<void>(async (resolve) => {
             modalTimerResolve = resolve;
             for (let i = 0; i < MODAL_TIMER_DELAY; i++) {
                 modalTimerCountdown = MODAL_TIMER_DELAY - i;
@@ -345,7 +345,7 @@
             <div
                 class="notifications-section"
                 style="width: calc({NOTIFICATION_WIDTH} + {NOTIFICATION_MARGIN_X} * 2); {!notificationSectionExpanded
-                    ? 'border: none; background: none;'
+                    ? 'border: none; background: none; height: auto;'
                     : ''}"
             >
                 {#each notifications.reverse() as notif, nidx}

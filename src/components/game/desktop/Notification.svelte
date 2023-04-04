@@ -78,6 +78,7 @@
         flex-direction: column;
         border: 1px solid var(--notification-color);
         background-color: black;
+        z-index: 200000;
     }
 
     .header {
