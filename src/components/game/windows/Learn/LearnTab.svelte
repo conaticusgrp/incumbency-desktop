@@ -1,0 +1,35 @@
+<!-- Tab contain youtube videos -->
+<script lang="ts">
+    export let tabData: string[] = []; // Array containing YouTube links
+    const RESOLUTION_WIDTH = 1920;
+    const RESOLUTION_HEIGHT = 1080;
+
+    const VIDEO_WIDTH_VW = 1200;
+</script>
+
+<main>
+    {#if tabData != null}
+        {#each tabData as embedLink}
+            <iframe
+                width={`${VIDEO_WIDTH_VW}vw`}
+                height={`${
+                    VIDEO_WIDTH_VW * (RESOLUTION_HEIGHT / RESOLUTION_WIDTH)
+                }vw`}
+                src={embedLink}
+                title="YouTube Video Player"
+                frameborder="0"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                allowfullscreen
+            />
+        {/each}
+    {/if}
+</main>
+
+<style>
+    main {
+        margin-top: 40px;
+        width: 100%;
+        height: 100%;
+        text-align: center;
+    }
+</style>
