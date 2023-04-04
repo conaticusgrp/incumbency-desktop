@@ -4,16 +4,16 @@
     const RESOLUTION_WIDTH = 1920;
     const RESOLUTION_HEIGHT = 1080;
 
-    const VIDEO_WIDTH_VW = 20;
+    const VIDEO_WIDTH_PERCENT = 20;
 </script>
 
 <main>
     {#if tabData != null}
         {#each tabData as embedLink}
             <iframe
-                width={`${VIDEO_WIDTH_VW}%`}
+                width={`${VIDEO_WIDTH_PERCENT}%`}
                 height={`${
-                    VIDEO_WIDTH_VW * (RESOLUTION_HEIGHT / RESOLUTION_WIDTH)
+                    VIDEO_WIDTH_PERCENT * (RESOLUTION_HEIGHT / RESOLUTION_WIDTH)
                 }vw`}
                 src={embedLink}
                 title="YouTube Video Player"
