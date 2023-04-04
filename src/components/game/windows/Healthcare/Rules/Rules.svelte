@@ -36,7 +36,7 @@
         );
 
         if (success !== false) {
-            data.rules.deny_past_age.enabled = true;
+            data.rules.deny_past_age.enabled = false;
         }
     };
 
