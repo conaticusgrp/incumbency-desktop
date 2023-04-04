@@ -1,51 +1,31 @@
 <script lang="ts">
-    import ConfirmModal from "../../../ui/ConfirmModal.svelte";
-
-    export let title: string;
-    export let value: any;
-    export let shown = false;
-    export let updateValueFn: (newValue: any) => any;
-    export let appendValueStart: string; // TODO: use these
-    export let appendValueEnd: string;
-
-    let confirmResult: any;
-
-    $: if (confirmResult === false) {
-        shown = true;
-    }
+    export let result = null;
+    let shown = true;
 </script>
 
 {#if shown}
     <div class="bg" />
     <div class="container">
         <div class="title-container">
-            <p>{title}</p>
-        </div>
-        <div class="input-container">
-            <input type="text" bind:value />
+            <p>Are you sure you want to cancel?</p>
         </div>
         <div class="btns">
             <button
                 on:click={() => {
-                    updateValueFn(value);
                     shown = false;
-                    confirmResult = false;
+                    result = true;
                 }}
-                class="left-btn">Confirm</button
+                class="left-btn">Yes</button
             >
             <button
                 on:click={() => {
                     shown = false;
-                    confirmResult = null;
+                    result = false;
                 }}
-                class="right-btn">Cancel</button
+                class="right-btn">No</button
             >
         </div>
     </div>
-{/if}
-
-{#if !shown && confirmResult === null}
-    <ConfirmModal bind:result={confirmResult} />
 {/if}
 
 <style>
@@ -65,7 +45,7 @@
         left: 50%;
         transform: translate(-50%, -50%);
         width: 500px;
-        height: 180px;
+        height: 105px;
         border-radius: 10px;
         background-color: black;
         border: solid 1px var(--color-accent);
@@ -86,34 +66,6 @@
 
     .title-container p {
         font-size: 20px;
-    }
-
-    .input-container {
-        position: relative;
-    }
-
-    .input-container p {
-        position: absolute;
-        font-size: 40px;
-        font-weight: bold;
-        color: grey;
-    }
-
-    input {
-        background: none;
-        border: none;
-        color: white;
-        font-size: 40px;
-        font-weight: bold;
-        outline: none;
-        width: 80%;
-        text-align: center;
-        margin-top: 10px;
-        border-bottom: solid 1px #3b530b;
-    }
-
-    input:focus {
-        border-bottom: solid 1px var(--color-accent);
     }
 
     div .btns {
