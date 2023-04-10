@@ -1,15 +1,13 @@
 <script lang="ts" context="module">
-    import type { GraphData } from "../../Window.svelte";
-
-    export interface DataItem {
+    export interface DataItem<T = number> {
         title: string;
-        dataKey: keyof FinanceData;
+        dataKey: keyof FinanceData<T>;
         data: any;
         pinned?: boolean;
         prefix: string;
         historical: {
-            actual: GraphData;
-            predicted?: GraphData;
+            actual: GraphData<T>;
+            predicted?: GraphData<T>;
         };
     }
 </script>
@@ -17,9 +15,9 @@
 <script lang="ts">
     import type { FinanceData } from "../Finance.svelte";
     import OverviewData from "../../templates/OverviewData.svelte";
+    import type { GraphData } from "../../../../../scripts/data";
 
-    export let data: FinanceData;
-    console.log(data);
+    export let data: FinanceData<number>;
     let dataArray: DataItem[] = [
         {
             title: "Government Balance",
@@ -86,25 +84,12 @@
         //     }
         // },
     ];
-
-    $: dataArray.forEach((d, i) => {
-        if (d.title === "Total Expected Income") {
-            dataArray[i].data = `${d.prefix}${
-                data.expected_person_income + data.expected_business_income
-            }`;
-            return;
-        }
-
-        dataArray[i].data = `${d.prefix ? d.prefix : ""}${data[d.dataKey]}`;
-    });
 </script>
 
 <main>
     {#each dataArray as item (item.title)}
         <OverviewData
-            bind:dataArray
             title={item.title}
-            data={item.data}
             history={item.historical}
         />
     {/each}

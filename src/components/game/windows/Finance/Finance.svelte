@@ -1,5 +1,5 @@
 <script lang="ts" context="module">
-    export interface FinanceData {
+    export interface FinanceData<T> {
         average_monthly_income: number;
         business_budget: number;
         business_tax_rate: number;
@@ -26,10 +26,10 @@
         used_welfare_budget: number;
         used_business_budget: number;
         expected_balance: number;
-        government_balance_graph_data: GraphData;
-        government_balance_prediction_graph_data: GraphData;
-        average_monthly_income_graph_data: GraphData;
-        government_losses_graph_data: GraphData;
+        government_balance_graph_data: GraphData<T>;
+        government_balance_prediction_graph_data: GraphData<T>;
+        average_monthly_income_graph_data: GraphData<T>;
+        government_losses_graph_data: GraphData<T>;
     }
 </script>
 
@@ -37,7 +37,6 @@
     import { createEventDispatcher } from "svelte";
     import type {
         CriticalWindowData,
-        GraphData,
     } from "../Window.svelte";
 
     import FinanceTabButton from "./FinanceTabButton.svelte";
@@ -45,6 +44,7 @@
     import Budgets from "./Budgets/Budgets.svelte";
     import Rules from "./Rules/Rules.svelte";
     import TabWindow from "../TabWindow.svelte";
+    import type { GraphData } from "../../../../scripts/data";
 
     export let windowData: CriticalWindowData;
 
@@ -59,9 +59,9 @@
     tabButtonComponent={FinanceTabButton}
     tabButtonData={["Overview", "Budgets", "Rules"]}
     tabs={[
-        { c: Overview, data: {} },
-        { c: Budgets, data: {} },
-        { c: Rules, data: {} },
+        { c: Overview },
+        { c: Budgets },
+        { c: Rules },
     ]}
     on:criticalWindowEvent={(e) => dispatcher("criticalWindowEvent", e.detail)}
 />

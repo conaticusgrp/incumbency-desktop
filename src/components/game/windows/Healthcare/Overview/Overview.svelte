@@ -46,25 +46,11 @@
         },
     ];
 
-    $: {
-        dataArray.forEach((d, i) => {
-            if (d.title === "Capacity") {
-                dataArray[i].data = `${data.used_capacity}/${
-                    data.total_capacity
-                } (${Math.floor(
-                    (data.used_capacity / data.total_capacity) * 100
-                )}%)`;
-                return;
-            }
-
-            dataArray[i].data = data[d.dataKey];
-        });
-    }
 </script>
 
 <main>
     {#each dataArray as item (item.title)}
-        <OverviewData bind:dataArray title={item.title} data={item.data} />
+        <OverviewData title={item.title} data={item.data} />
     {/each}
 </main>
 

@@ -37,14 +37,11 @@
         },
     ];
 
-    $: dataArray.forEach((d, i) => {
-        dataArray[i].data = `${d.prefix ? d.prefix : ""}${data[d.dataKey]}`;
-    });
 </script>
 
 <main>
     {#each dataArray as item (item.title)}
-        <OverviewData bind:dataArray title={item.title} data={item.data} />
+        <OverviewData title={item.title} history={item.data} />
     {/each}
 </main>
 
