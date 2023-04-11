@@ -2,23 +2,23 @@
 name = "incumbency-desktop"
 version = "0.1.0"
 description = "Incumbancy Desktop"
-authors = ["you"]
+authors = ["Conaticus"]
 license = ""
-repository = ""
+repository = "https://github.com/conaticusgrp/incumbency-desktop"
 default-run = "incumbency-desktop"
 edition = "2021"
 rust-version = "1.59"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [build-dependencies]
 tauri-build = { version = "1.2.0", features = [] }
 cc = "1.0"
 
 [dependencies]
-serde_json = "1.0"
-serde = { version = "1.0", features = ["derive"] }
+# tauri = { version = "1.2", features = ["shell-open"] }
 tauri = { version = "1.2.0", features = ["dialog-all", "window-all"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 toml = "0.5.9"
 rand = "0.8.5"
 maplit = "1.0.2"
