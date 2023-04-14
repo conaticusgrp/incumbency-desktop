@@ -18,8 +18,7 @@ defineProps<{
 const slots = useSlots();
 const slotArray = Object.keys(slots);
 const currentTabI = ref(0);
-
-const onTabSelect = (newTabI: number) => () => {
+const onTabSelect = (newTabI: number) => {
   currentTabI.value = newTabI;
 }
 

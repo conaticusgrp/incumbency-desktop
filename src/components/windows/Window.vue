@@ -9,6 +9,9 @@ import {
   WINDOW_HEADER_HEIGHT,
 } from "../../constants";
 import { PropType, computed, ref, nextTick } from "vue";
+import { Action, Severity, useNotificationsStore } from "src/store/notifications";
+import { useEmailsStore } from "src/store/emails";
+import { useWindowStore } from 'src/store/windows';
 
 enum Apps {
   Finance = 1,
@@ -40,6 +43,9 @@ const props = defineProps({
 });
 
 const defaultCriticalWindowData = () => ({ opened: false, focused: false, index: -1 });
+const notiStore = useNotificationsStore();
+const emails = useEmailsStore();
+const windows = useWindowStore();
 const pos = ref<Pos>(props.pos);
 const size = ref<Size>(props.size);
 const windowData = ref<CriticalWindowData>(defaultCriticalWindowData());
@@ -51,8 +57,6 @@ const resizeType = ref<{
 const boundsBeforeMaximizing = ref({ x: 0, y: 0, width: 0, height: 0, });
 const emits = defineEmits<{
   (e: 'appUpdate', data: UpdateAppPayloads): void;
-  (e: 'windowSendNotification', data: NotificationData): void;
-  (e: 'emailCreate', data: EmailData): void;
   (e: 'windowOpened', data: OpenEvents): void;
   (e: 'windowMaximize', status: boolean): void;
   (e: 'windowMinimize', status: boolean): void;
@@ -72,11 +76,12 @@ nextTick(async () => {
   } catch (e) {
     console.error(e);
 
-    emits('windowSendNotification', {
+    notiStore.addNotification({
       app: props.title,
       header: "App open error",
       content: "Error occured while opening the app",
-      severity: "error",
+      severity: Severity.Error,
+      action: Action.Nothing,
     });
   }
 })
@@ -109,7 +114,7 @@ listen<UpdateAppEventTypes>("update_app", ({ payload }) => {
       appData.expected_balance - totalBudgetSpending * 0.3 > 0;
 
     if (!enoughToSpend) {
-      emits("emailCreate", {
+      emails.createEmail({
         title: "EXPECTED CRISIS",
         content: `
 ${USERNAME}! I have done some calculations and based on our statistics I estimate that we are going to experience a financial crash next month and our budget is going to fall to -$${-appData.expected_balance}. You need to save at least $${-appData.expected_balance + totalBudgetSpending} to gain a digit above $0.
@@ -121,10 +126,10 @@ You can save by either increasing tax rates or reducing budget allocations.
 If action isn't taken, the damage could be irreversible,
 Tarun.`,
         sender: "Tarun",
-        severity: "error",
+        severity: Severity.Error,
       });
     } else if (!enoughSaved) {
-      emits("emailCreate", {
+      emails.createEmail({
         title: "Expected Balance Below Safe Zone",
         content: `
 Hello ${USERNAME},
@@ -140,7 +145,7 @@ Thanks for reading and good luck,
 Tarun.
                         `,
         sender: "Tarun",
-        severity: "warning",
+        severity: Severity.Warning,
       });
     }
   }
@@ -331,9 +336,9 @@ const handleResizeEnd = (e: MouseEvent): void => {
 
 const unlisten = listen("game_generated", () => {
   setTimeout(() => {
-    emits('emailCreate', {
+    emails.createEmail({
       title: "The Start of Your Incumbency",
-      severity: 'normal',
+      severity: Severity.Normal,
       content: `
 Hello, ${USERNAME}. You are now in leading position for the country's economy. Gary set the bar high during his incumbency, however, his sex scandal led him to step down from office. My name is Ned, I will be here to advise you about your user interface and and updates it may receive.
 
@@ -343,13 +348,13 @@ Kind regards,
 Ned
 `,
       sender: "Ned",
-    })
+    });
   }, 5000);
 });
 
 listen("unemployed_high", ({ payload }: any) => {
   if (payload.severity === "mild") {
-    emits('emailCreate', {
+    emails.createEmail({
       title: "High Unemployment Rate",
       content: `
 Hi ${USERNAME}, hope you're doing well. It has been brought to my attention that the unemployment rate for the country needs to be addressed, as it currently sits at ${payload.unemployed_count
@@ -360,10 +365,10 @@ This was likely caused by a large coorporation going bust. Ensure that you cover
 Many thanks, Ralph
 `,
       sender: "Ralph",
-      severity: "warning",
+      severity: Severity.Warning,
     });
   } else {
-    emits('emailCreate', {
+    emails.createEmail({
       title: "Huge business has gone bust!",
       content: `
 Hello ${USERNAME}, you need to act ASAP! A large business has just gone bust and ${payload.unemployed_count
@@ -372,8 +377,7 @@ Hello ${USERNAME}, you need to act ASAP! A large business has just gone bust and
         )}%) are now unemployed. Fund expenses for as many people as you can while they seek new employment.
 `,
       sender: "Ralph",
-      severity: "error",
-
+      severity: Severity.Error,
     });
   }
 });
