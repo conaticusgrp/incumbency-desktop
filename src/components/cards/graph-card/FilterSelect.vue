@@ -54,7 +54,7 @@ const getChoices = (typeId: 0 | 1, length: number) => {
 
 const choices = getChoices(props.type, props.length);
 const selected = ref(choices[0]);
-const onSelect = (choice: string) => () => {
+const onSelect = (choice: string) => {
   selected.value = choice;
   emits('selected', choice as Selected);
 }
