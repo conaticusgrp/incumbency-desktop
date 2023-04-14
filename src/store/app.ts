@@ -11,9 +11,8 @@ export enum AppState {
 export const useAppStore = defineStore('app', {
   state: () => ({ state: AppState.LoadGameMenu }),
   actions: {
-    setState(state: AppState) {
+    goto(state: AppState) {
       this.state = state;
     },
   },
-});
-
+}); 
