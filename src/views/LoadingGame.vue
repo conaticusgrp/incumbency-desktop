@@ -6,11 +6,11 @@ const saves = ref<string[]>([]);
 const appStore = useAppStore();
 
 const clickSave = () => {
-  appStore.setState(AppState.Singleplayer);
+  appStore.goto(AppState.Singleplayer);
 }
 
 const gotoMainMenu = () => {
-  appStore.setState(AppState.MainMenu);
+  appStore.goto(AppState.MainMenu);
 }
 
 </script>

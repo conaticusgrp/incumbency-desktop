@@ -28,7 +28,7 @@
     </div>
 
     <div>
-      <button @click={appStore.setState(AppState.MainMenu)}>Back</button>
+      <button @click={appStore.goto(AppState.MainMenu)}>Back</button>
       <button @click={createGame} type="submit">Create!</button>
     </div>
 

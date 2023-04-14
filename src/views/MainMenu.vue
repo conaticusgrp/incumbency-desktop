@@ -3,16 +3,15 @@
   import Logo from "../assets/logo.svg";
 
   const appStore = useAppStore();
-  const goto = (state: AppState) => () => appStore.setState(state);
 </script>
 
 <template>
   <main>
     <img :src=Logo alt="Game logo">
     <!-- TODO(dylhack): use routes instead -->
-    <button @click=goto(AppState.NewGameMenu)>New Game</button>
-    <button @click=goto(AppState.LoadGameMenu)>Load Game</button>
-    <button @click=goto(AppState.SettingsMenu)>Settings</button>
+    <button @click=appStore.goto(AppState.NewGameMenu)>New Game</button>
+    <button @click=appStore.goto(AppState.LoadGameMenu)>Load Game</button>
+    <button @click=appStore.goto(AppState.SettingsMenu)>Settings</button>
   </main>
 </template>
 

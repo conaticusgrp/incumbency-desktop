@@ -27,7 +27,7 @@ ChartJS.register(
     CategoryScale
 );
 
-// TODO(dylhack): replace with "vue-router"
+// TODO(dylhack): replace with "vue-router" (For some reason it doesn't during runtime.)
 type Component = DefineComponent<{}, {}, {}, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, {}, string, {}, Readonly<ExtractPropTypes<{}>>, {}>
 const appStore = useAppStore();
 const component = ref<Component | null>(null);
@@ -54,10 +54,9 @@ onMounted(() => {
 </script>
 
 <template>
-    <Finances></Finances>
-    <!-- <div>
+    <div>
         <component :is="component" />
-    </div> -->
+    </div>
 </template>
 
 <style scoped>

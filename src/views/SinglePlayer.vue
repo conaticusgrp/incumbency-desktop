@@ -3,8 +3,8 @@ import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/tauri";
 import { onMounted, ref } from "vue";
 import LoadingGame from "./LoadingGame.vue";
-// import Desktop from "../game/desktop/Desktop.svelte";
-// import Loading from "../game/desktop/Loading.svelte";
+import Desktop from "./singleplayer/Desktop.vue";
+import Loading from "./singleplayer/Loading.vue";
 
 const gameGenerated = ref(false);
 const unlisten = await listen("game_generated", () => {

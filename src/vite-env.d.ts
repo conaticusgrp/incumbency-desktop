@@ -6,18 +6,6 @@ declare module "*.vue" {
   export default component;
 }
 
-type Severity = "normal" | "warning" | "error";
-
-type NotificationData = {
-  app?: string;
-  header?: string;
-  content?: string;
-  date?: string;
-  severity?: Severity;
-  action?: () => void;
-  actionTitle?: string;
-}
-
 type CardData = {
   title: string;
   data: number;

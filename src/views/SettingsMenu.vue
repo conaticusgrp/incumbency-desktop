@@ -16,7 +16,7 @@
   const toggleFullscreen = async () => {
     appWindow.setFullscreen(isFullscreen());
   };
-  const gotoMainMenu = () => appStore.setState(AppState.MainMenu);
+  const gotoMainMenu = () => appStore.goto(AppState.MainMenu);
 
 </script>
 
