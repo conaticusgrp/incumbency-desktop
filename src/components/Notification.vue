@@ -1,40 +1,36 @@
 <script setup lang="ts">
-import { PropType, computed, ref } from 'vue';
+import { PropType, computed, nextTick, ref } from 'vue';
 import * as constants from '../constants';
+import { NotificationData, Severity, justDisplayed, useNotificationsStore } from 'src/store/notifications';
 
 const severityColors = new Map<Severity, string>()
-  .set("normal", "var(--color-accent)")
-  .set("warning", "#D47A21")
-  .set("error", "#C82525");
+  .set(Severity.Normal, "var(--color-accent)")
+  .set(Severity.Warning, "#D47A21")
+  .set(Severity.Error, "#C82525");
 
 const props = defineProps({
   data: {
     type: Object as PropType<NotificationData>,
     required: true,
   },
-  justDisplayed: {
-    type: Boolean,
-    default: false,
-  },
-  actionTitle: {
-    type: String,
-    default: "",
-  },
 });
 const emits = defineEmits<{
   (e: 'dismissed'): void;
-  (e: 'action'): void;
+  (e: 'action', data: NotificationData): void;
 }>();
 const dismissClass = ref('');
-const getNotiClass = computed(() => {
-  return `${dismissClass.value} ${props.justDisplayed && !dismissClass.value ? "new" : ""}}`
-})
-const onDismissed = () => emits('dismissed');
-const onAction = () => emits('action');
+const notiClass = ref(`${dismissClass.value} ${justDisplayed(props.data) && !dismissClass.value ? "new" : ""}}`);
+
+const onDismissed = () => {
+  emits('dismissed');
+}
+const onAction = () => emits('action', props.data);
 const onClick = () => {
     dismissClass.value = "dismiss";
     setTimeout(onDismissed, 200);
 }
+
+// Styles
 const notiStyle = `
   --notification-color: ${severityColors.get(props.data.severity ?? 'normal')};
   width: ${constants.NOTIFICATION_WIDTH}; height: ${constants.NOTIFICATION_HEIGHT};
@@ -43,7 +39,7 @@ const notiStyle = `
 </script>
 
 <template>
-  <main :style=notiStyle :class=getNotiClass>
+  <main :style=notiStyle :class=notiClass>
     <div class="header">
       <button @click=onClick>Dismiss</button>
       <h2>{{ data.app ?? "" }}</h2>
@@ -55,7 +51,7 @@ const notiStyle = `
       <p>{{ data.content ?? ""}}</p>
     </div>
 
-    <div v-if="actionTitle" class="actions">
+    <div v-if="data.actionTitle" class="actions">
       <button @click=onAction>{actionTitle}</button>
     </div>
   </main>
