@@ -289,3 +289,13 @@ type OpenEvents =
     | FinanceAppOpenedPayload
     | HealthcareAppOpenedPayload
     | BusinessAppOpenedPayload;
+
+enum Rules {
+    Tax,
+    BusinessTax,
+    BusinessFunding,
+    DenyAge,
+    DenyHealthPercentage,
+    CoverFood,
+    CoverFoodUnemployed,
+}
