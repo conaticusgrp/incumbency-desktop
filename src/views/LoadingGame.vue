@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { AppState, useAppStore } from '../store/app';
+import { AppState, useAppStore } from '../store/gamee';
 
 const saves = ref<string[]>([]);
 const appStore = useAppStore();

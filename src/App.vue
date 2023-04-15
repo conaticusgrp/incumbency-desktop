@@ -10,12 +10,11 @@ import {
     CategoryScale,
 } from "chart.js";
 import { ref, onMounted, DefineComponent, ComponentOptionsMixin, ExtractPropTypes } from "vue";
-import { AppState, useAppStore } from "./store/app";
+import { GameState, useGameStore } from "./store/game";
 import LoadingGameVue from "./views/LoadingGame.vue";
 import MainMenu from "./views/MainMenu.vue";
 import SinglePlayer from "./views/SinglePlayer.vue";
 import SettingsMenu from "./views/SettingsMenu.vue";
-import Finances from "./windows/Finances.vue";
 
 ChartJS.register(
     Title,
@@ -29,13 +28,13 @@ ChartJS.register(
 
 // TODO(dylhack): replace with "vue-router" (For some reason it doesn't during runtime.)
 type Component = DefineComponent<{}, {}, {}, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, {}, string, {}, Readonly<ExtractPropTypes<{}>>, {}>
-const appStore = useAppStore();
+const appStore = useGameStore();
 const component = ref<Component | null>(null);
 const routes = new Map([
-    [AppState.LoadGameMenu, LoadingGameVue],
-    [AppState.MainMenu, MainMenu],
-    [AppState.Singleplayer, SinglePlayer],
-    [AppState.SettingsMenu, SettingsMenu],
+    [GameState.LoadGameMenu, LoadingGameVue],
+    [GameState.MainMenu, MainMenu],
+    [GameState.Singleplayer, SinglePlayer],
+    [GameState.SettingsMenu, SettingsMenu],
 ]);
 
 appStore.$subscribe((_, value) => {

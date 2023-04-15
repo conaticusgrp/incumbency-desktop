@@ -1,260 +1,80 @@
 <script setup lang="ts">
 import { listen } from "@tauri-apps/api/event";
+import { exit as shutdownTauri } from "@tauri-apps/api/process";
 import {
     APP_LIST_MIN_WIDTH,
     APP_LIST_WIDTH,
     TOP_PANEL_HEIGHT,
     TOOLBAR_HEIGHT,
-    MODAL_TIMER_DELAY,
 } from "src/constants";
-import { computed, nextTick, ref, useSlots } from "vue";
-import { NotificationData } from "src/store/notifications";
-import Notifications from "src/components/Notifications.vue";
+import { computed, ref } from "vue";
+import { useAppStore, type AppState } from 'src/store/apps.js';
+import { useGameStore, GameState } from 'src/store/game';
+import { APPS } from 'src/windows/index';
+import Window from "src/components/Window.vue";
 
-// import Email from "../windows/Email/Email.svelte";
-// import Finance from "../windows/Finance/Finance.svelte";
-// import Healthcare from "../windows/Healthcare/Healthcare.svelte";
-// import Welfare from "../windows/Welfare/Welfare.svelte";
-// import Business from "../windows/Business/Business.svelte";
-// import Notification from "src/components/Notification.vue";
+const startMenu = ref<HTMLElement | null>(null);
+const startMenuExpanded = ref(false);
+const date = ref("undefined date");
+const wallpaperPath: string | null = "./src/assets/Wallpaper.png";
+const appStore = useAppStore();
+const gameStore = useGameStore();
+APPS.forEach(app => appStore.registerApp(app));
 
-type DesktopAppShortcut = {
-    componentConstructor: any;
-    name: string;
-    component?: any;
-    props?: any;
-    badgeCount: number;
-    opened?: boolean;
-    minimized?: boolean;
-}
-
-type ModalState = "closed" | "log off" | "shut down";
-
-type AppState = {
-    badgeCount: number;
-    opened: boolean;
-    minimized: boolean;
-}
-
-let startMenu: HTMLElement;
-let startMenuExpanded: boolean = false;
-let notificationSectionExpanded = false;
-let date: string = "undefined date";
-let wallpaperPath: string | null = "./src/assets/Wallpaper.png";
-const apps = useSlots();
-const appNames = Object.keys(apps);
-const appStates = ref<AppState[]>([]);
-const focusedApp = ref<number | null>(null);
-// let apps: DesktopAppShortcut[] = [
-//     { componentConstructor: Email, name: "Email", badgeCount: 0 },
-//     { componentConstructor: Finance, name: "Finance", badgeCount: 0 },
-//     { componentConstructor: Healthcare, name: "Healthcare", badgeCount: 0 },
-//     { componentConstructor: Welfare, name: "Welfare", badgeCount: 0 },
-//     { componentConstructor: Business, name: "Business", badgeCount: 0 },
-// ];
-
-const notifications = ref<NotificationData[]>([]);
-const modalState = ref<ModalState>("closed");
-let modalTimerResolve: (() => void) | null = null;
-let modalTimerCountdown = 0;
-
-nextTick(() => {
-    if (modalState.value !== "closed") {
-        new Promise<void>(async (resolve) => {
-            modalTimerResolve = resolve;
-            for (let i = 0; i < MODAL_TIMER_DELAY; i++) {
-                modalTimerCountdown = MODAL_TIMER_DELAY - i;
-                await new Promise<void>((res0) => {
-                    setTimeout(res0, 1_000);
-                });
-            }
-            modalTimerResolve = null;
-            modalResolve();
-            resolve();
-        });
-    }
-});
-
-const onWindowSendNotification = (i: number, n: NotificationData) => receiveNotification(n);
-
-const handleCriticalEvent = (index: number, e: CustomEvent): void => {
-    switch (e.detail.type) {
-        case WINDOW_CLOSE:
-            {
-            }
-            break;
-
-        case WINDOW_AQUIRE_FOCUS:
-            {
-            }
-            break;
-
-        case WINDOW_MINIMIZE:
-            {
-            }
-            break;
-
-        case WINDOW_SEND_NOTIFICATION:
-            {
-            }
-            break;
-
-        default:
-            break;
-    }
-};
+const onWindowClose = (appName: string) => appStore.close(appName);
+const onWindowAquireFocus = (appName: string) => appStore.acquireFocus(appName);
+const onWindowOpen = (appName: string) => appStore.openApp(appName);
+const onWindowMinimize = (appName: string) => appStore.hide(appName);
+const onWindowUnminimize = (appName: string) => appStore.show(appName);
 
 const openStartMenu = (): void => {
-    startMenuExpanded = true;
-
+    startMenuExpanded.value = true;
     document.addEventListener("click", closeStartMenuIfClickedAway);
 };
 
-// const toggleNotificationsSection = (): void => {
-//     notificationSectionExpanded = !notificationSectionExpanded;
-
-//     if (notificationSectionExpanded) {
-//         notifications.value.forEach((noti, i) => {
-//             noti.shown = true;
-//             notifications.value[i] = noti;
-//         });
-//         for (let i = 0; i < notifications.value.length; i++) {
-//             notifications.value[i].shown = false;
-//         }
-//     }
-// };
-
 const closeStartMenuIfClickedAway = (e: MouseEvent): void => {
-    if (startMenu == null) return;
+    if (startMenu.value == null) return;
 
-    if (e.target == null || startMenu.contains(e.target as HTMLElement))
+    if (e.target == null || startMenu.value.contains(e.target as HTMLElement))
         return;
 
-    startMenuExpanded = false;
+    startMenuExpanded.value = false;
 };
 
-// const receiveNotification = (n: NotificationData): void => {
-//     const app = apps.find(
-//         (app) => app.name.toLowerCase() === n.app?.toLowerCase()
-//     );
+const getApp = (appName: string) => {
+    const app = appStore.apps[appName];
+    console.error(`appStore app [${appName}] is undefined!`);
+    return app ?? { opened: false, minimized: false, badgeCount: 0 }
+}
 
-//     if (app && !app.opened) {
-//         app.badgeCount += 1;
-//     }
+const updateApp = (appName: string, cb: (app: AppState) => void): void => {
+    appStore.setAppState(appName, cb);
+}
 
-//     n.date = date;
-//     n.shown = !notificationSectionExpanded;
+const getBadgeCount = (appName: string) => getApp(appName).badgeCount;
+const shutdown = () => shutdownTauri(0);
+const logOff = () => gameStore.goto(GameState.NewGameMenu);
 
-//     notifications = [...notifications, n]; // for mutability updates
-
-//     updateUI();
-// };
-
-const modalTitle = computed(() => {
-    switch (modalState.value) {
-        case "log off":
-            return "logoff";
-        case "shut down":
-            return "shutdown";
-        default:
-            return "";
-    }
-});
-
-const modalAutoAction = computed(() => {
-    switch (modalState.value) {
-        case "log off":
-            return "Logging off";
-        case "shut down":
-            return "Shutting down";
-        default:
-            return "";
-    }
-});
-
-const modalAction = computed(() => {
-    switch (modalState.value) {
-        case "log off":
-            return "Log off";
-        case "shut down":
-            return "Shut down";
-        default:
-            return "";
-    }
-});
-
-const modalResolve = (): void => {
-    if (modalTimerResolve != null) modalTimerResolve();
-
-    switch (modalState.value) {
-        case "log off":
-            break;
-        case "shut down":
-            break;
-        default:
-            break;
-    }
-    modalState.value = "closed";
-};
-
-const modalReject = (): void => {
-    if (modalTimerResolve != null) modalTimerResolve();
-
-    switch (modalState.value) {
-        case "log off":
-            break;
-        case "shut down":
-            break;
-        default:
-            break;
-    }
-    modalState.value = "closed";
-};
-
+// Events
 listen<{ date: string }>("new_day", ({ payload }) => {
-    date = payload.date as string;
+    date.value = payload.date;
 });
 
 document.addEventListener("keydown", (e) => {
     if (e.altKey && e.key == "F4") {
-        if (focusedApp.value !== null) {
-            updateApp(focusedApp.value, (app) => app.opened = false);
-            focusedApp.value = null;
+        const focusedApp = appStore.focusedApp;
+        if (focusedApp !== null) {
+            updateApp(focusedApp, (app) => app.opened = false);
+            appStore.acquireFocus(null);
         }
         e.preventDefault();
     }
 });
 
-const getApp = (i: number) => {
-    const app = appStates.value[i];
-    console.error(`appStates.value[${i}] is undefined!`);
-    return app ?? { opened: false, minimized: false, badgeCount: 0 }
-}
-
-const updateApp = (i: number, cb: (app: AppState) => void): void => {
-    const app = appStates.value[i];
-    if (app) {
-        cb(app);
-        appStates.value[i] = app;
-    } else {
-        console.log(`appStates.value[${i}] is undefined!`);
-    }
-}
-
-const getBadgeCount = (i: number) => getApp(i).badgeCount;
-
-const shutdown = () => modalState.value = "shut down";
-const restart = () => { };
-const logOff = () => modalState.value = "log off";
-const setFocusedApp = (i: number) => {
-    focusedApp.value = i;
-    unminimizeApp(i);
-}
-
 // styles
 const appListSectionStyle = `width: ${APP_LIST_WIDTH}; min-width: ${APP_LIST_MIN_WIDTH};`;
-const appShortcutStyle = (i: number): string => {
-    const cssVar = getApp(i).opened
+const getAppShortcutStyle = (appName: string): string => {
+    const cssVar = getApp(appName).opened
         ? "--color-highlight"
         : "--color-shaded";
     return `color: var(${cssVar});`;
@@ -275,9 +95,10 @@ const windowsStyle = computed(() => {
             <h2>Installed Software</h2>
 
             <div class="app-list">
-                <div v-for="appName, i in appNames" :style={ appShortcutStyle(i) } @click="handleOpenApp(i)">
-                    {{ appName }}
-                    <span v-if="getBadgeCount(i) > 0">({{ getBadgeCount(i) }})</span>
+                <div v-for="app in appStore.apps" :style=getAppShortcutStyle(app.appName)
+                    @click="onWindowOpen(app.appName)">
+                    {{ app.appName }}
+                    <span v-if="getBadgeCount(app.appName) > 0">({{ getBadgeCount(app.appName) }})</span>
                 </div>
             </div>
         </div>
@@ -292,7 +113,6 @@ const windowsStyle = computed(() => {
                         <button>{date}</button>
                         <button @click=shutdown()>Shut down</button>
                         <button @click=logOff()>Logoff</button>
-                        <button @click=restart()>Restart</button>
                     </div>
                 </div>
 
@@ -302,31 +122,21 @@ const windowsStyle = computed(() => {
             </div>
 
             <div class="windows" :style="windowsStyle">
-                <div v-for="appName, i in appNames">
-                    <slot :name="appName" v-if="getApp(i).opened"></slot>
-                </div>
+                <Window v-for="app in appStore.apps" :app-name="app.appName" :tabs="app.tabs"
+                    :title="app.window.title" @window-close="onWindowClose(app.appName)"
+                    @window-maximize="onWindowAquireFocus(app.appName)" @window-resize="onWindowAquireFocus(app.appName)"
+                    @window-aquire-focus="onWindowAquireFocus(app.appName)" @window-opened="onWindowOpen(app.appName)"
+                    @window-minimize="onWindowMinimize(app.appName)" @window-unminimize="onWindowUnminimize(app.appName)">
+                    <component :is="app.component" />
+                </Window>
                 <Notifications />
             </div>
 
             <div class="toolbar" :style=toolbarStyle>
-                <div v-for="state, i in appStates">
-                    <span v-if="state.opened" @click="setFocusedApp(i)">
-                        {{ appNames[i] }}
+                <div v-for="state in appStore.apps">
+                    <span v-if="state.opened" @click="onWindowAquireFocus(state.appName)">
+                        {{ state.appName }}
                     </span>
-                </div>
-            </div>
-        </div>
-
-        <div v-if="modalState !== 'closed'" class="modal">
-            <div class="modal-label">
-                <div class="content">
-                    <h1>{{ modalTitle }}</h1>
-                    <span>{{ modalAutoAction }} automatically in {{ modalTimerCountdown }}s</span>
-                </div>
-
-                <div class="actions">
-                    <button @click=modalResolve()>{{ modalAction }}</button>
-                    <button @click=modalReject()>Cancel</button>
                 </div>
             </div>
         </div>

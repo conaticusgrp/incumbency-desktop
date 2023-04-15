@@ -13,6 +13,7 @@
     "@tauri-apps/api": "^1.2.0",
     "chart.js": "^4.2.1",
     "pinia": "^2.0.34",
+    "vite-tsconfig-paths": "^4.2.0",
     "vue": "^3.2.45",
     "vue-chartjs": "^5.2.0"
   },

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 
-export enum AppState {
+export enum GameState {
   MainMenu = 'MainMenu',
   NewGameMenu = 'NewGameMenu',
   LoadGameMenu = 'LoadGameMenu',
@@ -8,10 +8,10 @@ export enum AppState {
   Singleplayer = 'Singleplayer',
 }
 
-export const useAppStore = defineStore('app', {
-  state: () => ({ state: AppState.LoadGameMenu }),
+export const useGameStore = defineStore('game', {
+  state: () => ({ state: GameState.LoadGameMenu }),
   actions: {
-    goto(state: AppState) {
+    goto(state: GameState) {
       this.state = state;
     },
   },

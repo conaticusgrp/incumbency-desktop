@@ -14,11 +14,11 @@ const emits = defineEmits<{
   (e: 'openApp', v: string): void;
 }>();
 const notiStore = useNotificationsStore();
-const notifications = ref(notiStore.$state);
+const notifications = ref(notiStore.$state.data);
 const reversed = computed(() => notifications.value.reverse());
 
 const openApp = (noti: NotificationData) => emits('openApp', noti.app ?? '');
-notiStore.$subscribe((_, state) => notifications.value = state);
+notiStore.$subscribe((_, state) => notifications.value = state.data);
 
 const onDismiss = (noti: NotificationData) => notiStore.dismiss(noti.id);
 const onAction = (noti: NotificationData) => {

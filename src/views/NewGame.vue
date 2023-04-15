@@ -1,5 +1,5 @@
 <script setup lang="ts">
-  import { AppState, useAppStore } from "../store/app";
+  import { AppState, useAppStore } from "../store/gamee";
   import { invoke } from "@tauri-apps/api/tauri";
   import { ref } from "vue";
 

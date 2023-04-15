@@ -1,17 +1,21 @@
 <script setup lang="ts">
-import { listen } from "@tauri-apps/api/event";
+import { listen, once } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/tauri";
 import {
   MIN_WINDOW_HEIGHT,
   MIN_WINDOW_WIDTH,
   RESIZE_BAR_SIZE,
+  TAB_LIST_ENTRY_MARGIN,
+  TAB_LIST_MIN_WIDTH,
+  TAB_LIST_WIDTH,
   USERNAME,
+  USERNAME_HEIGHT,
   WINDOW_HEADER_HEIGHT,
-} from "../../constants";
-import { PropType, computed, ref, nextTick } from "vue";
+} from "../constants";
+import { PropType, computed, ref, nextTick, useSlots, Component } from "vue";
 import { Action, Severity, useNotificationsStore } from "src/store/notifications";
-import { useEmailsStore } from "src/store/emails";
-import { useWindowStore } from 'src/store/windows';
+import { useEmailsStore, useEmails } from "src/store/emails";
+import { type WindowEvents } from 'src/store/apps';
 
 enum Apps {
   Finance = 1,
@@ -21,11 +25,6 @@ enum Apps {
 }
 
 type AppString = "finance" | "healthcare" | "welfare" | "business";
-
-type WindowOpened = {
-  window: string;
-  data: OpenEvents;
-}
 
 const props = defineProps({
   title: {
@@ -40,12 +39,16 @@ const props = defineProps({
     type: Object as PropType<Size>,
     default: () => ({ width: 0, height: 0, maximized: false }),
   },
+  appName: { required: true, type: String },
+  tabs: { type: Array as PropType<Component[]>, default: () => [] },
 });
+const isTabbed = computed(() => props.tabs.length > 0);
+const emits = defineEmits<WindowEvents>();
 
 const defaultCriticalWindowData = () => ({ opened: false, focused: false, index: -1 });
 const notiStore = useNotificationsStore();
-const emails = useEmailsStore();
-const windows = useWindowStore();
+const emailStore = useEmailsStore();
+const emails = useEmails(USERNAME);
 const pos = ref<Pos>(props.pos);
 const size = ref<Size>(props.size);
 const windowData = ref<CriticalWindowData>(defaultCriticalWindowData());
@@ -55,16 +58,10 @@ const resizeType = ref<{
   w?: "r" | "l", h?: "t" | "b"
 }>();
 const boundsBeforeMaximizing = ref({ x: 0, y: 0, width: 0, height: 0, });
-const emits = defineEmits<{
-  (e: 'appUpdate', data: UpdateAppPayloads): void;
-  (e: 'windowOpened', data: OpenEvents): void;
-  (e: 'windowMaximize', status: boolean): void;
-  (e: 'windowMinimize', status: boolean): void;
-  (e: 'windowResize'): void;
-  (e: 'windowClose'): void;
-  (e: 'windowAquireFocus'): void;
-}>();
 const transition = ref("");
+const getAppNameFromId = (id: number): AppString => {
+  return Apps[id].toLowerCase() as any;
+};
 
 nextTick(async () => {
   if (!windowData.value.opened || windowData.value.focused) return;
@@ -85,10 +82,6 @@ nextTick(async () => {
     });
   }
 })
-
-const getAppNameFromId = (id: number): AppString => {
-  return Apps[id].toLowerCase() as any;
-};
 
 listen<UpdateAppEventTypes>("update_app", ({ payload }) => {
   if (payload.app_id === windowData.value.index) {
@@ -114,39 +107,12 @@ listen<UpdateAppEventTypes>("update_app", ({ payload }) => {
       appData.expected_balance - totalBudgetSpending * 0.3 > 0;
 
     if (!enoughToSpend) {
-      emails.createEmail({
-        title: "EXPECTED CRISIS",
-        content: `
-${USERNAME}! I have done some calculations and based on our statistics I estimate that we are going to experience a financial crash next month and our budget is going to fall to -$${-appData.expected_balance}. You need to save at least $${-appData.expected_balance + totalBudgetSpending} to gain a digit above $0.
-
-To gain a safe budget with 30% spare you need to save at least $${-appData.expected_balance + totalBudgetSpending + totalBudgetSpending * 0.3}.
-
-You can save by either increasing tax rates or reducing budget allocations.
-
-If action isn't taken, the damage could be irreversible,
-Tarun.`,
-        sender: "Tarun",
-        severity: Severity.Error,
-      });
+      const safeBudget = -appData.expected_balance + totalBudgetSpending + totalBudgetSpending * 0.3
+      emailStore.createEmail(emails.tarun.expectedCrisis(safeBudget, appData.expected_balance, totalBudgetSpending));
     } else if (!enoughSaved) {
-      emails.createEmail({
-        title: "Expected Balance Below Safe Zone",
-        content: `
-Hello ${USERNAME},
-
-I have been doing some digging and I wanted to give you a quick heads up. The expected balance next month is $${appData.expected_balance}.
-
-It is generally good practise to keep at least 30% of our expected budget spending for some leeyway incase of miscalculation.
-Our estimated budget spending next month is $${totalBudgetSpending}. This means that you need to save at least $${totalBudgetSpending * 0.3 + totalBudgetSpending} to maintain a safe budget.
-
-You can save by either increasing tax rates or reducing budget allocations.
-
-Thanks for reading and good luck,
-Tarun.
-                        `,
-        sender: "Tarun",
-        severity: Severity.Warning,
-      });
+      const safeBudget = totalBudgetSpending * 0.3 + totalBudgetSpending
+      const expectedBalance = appData.expected_balance;
+      emailStore.createEmail(emails.tarun.expectedBalance(totalBudgetSpending, safeBudget, expectedBalance))
     }
   }
 });
@@ -204,7 +170,6 @@ const unmaximize = (): void => {
 
 const handleClose = (): void => {
   windowData.value.focused = true;
-  emits('windowClose');
   invoke("app_close", { appId: windowData.value.index });
 };
 
@@ -217,7 +182,6 @@ const handleMaximize = (): void => {
 };
 
 const handleMinimize = (): void => {
-  emits('windowMinimize', true);
   invoke("app_close", { appId: windowData.value.index });
 };
 
@@ -334,9 +298,9 @@ const handleResizeEnd = (e: MouseEvent): void => {
   document.removeEventListener("mouseup", handleResizeEnd);
 };
 
-const unlisten = listen("game_generated", () => {
+once("game_generated", () => {
   setTimeout(() => {
-    emails.createEmail({
+    emailStore.createEmail({
       title: "The Start of Your Incumbency",
       severity: Severity.Normal,
       content: `
@@ -352,33 +316,11 @@ Ned
   }, 5000);
 });
 
-listen("unemployed_high", ({ payload }: any) => {
+listen<{ severity: string; percent: number; unemployed_count: number }>("unemployed_high", ({ payload }) => {
   if (payload.severity === "mild") {
-    emails.createEmail({
-      title: "High Unemployment Rate",
-      content: `
-Hi ${USERNAME}, hope you're doing well. It has been brought to my attention that the unemployment rate for the country needs to be addressed, as it currently sits at ${payload.unemployed_count
-        } people (${Number(payload.percent)}%).
-
-This was likely caused by a large coorporation going bust. Ensure that you cover expenses for these people to keep them healthy while they seek for new employment.
-
-Many thanks, Ralph
-`,
-      sender: "Ralph",
-      severity: Severity.Warning,
-    });
+    emailStore.createEmail(emails.ralph.highUneploymentEmail(payload.percent, payload.unemployed_count));
   } else {
-    emails.createEmail({
-      title: "Huge business has gone bust!",
-      content: `
-Hello ${USERNAME}, you need to act ASAP! A large business has just gone bust and ${payload.unemployed_count
-        } people (${Number(
-          payload.percent
-        )}%) are now unemployed. Fund expenses for as many people as you can while they seek new employment.
-`,
-      sender: "Ralph",
-      severity: Severity.Error,
-    });
+    emailStore.createEmail(emails.ralph.businessBust(payload.percent, payload.unemployed_count))
   }
 });
 
@@ -399,22 +341,37 @@ const resizeBarCornerStyle = `
 `;
 const resizeBarBottomStyle = resizeBarTopStyle;
 const resizeBarRightStyle = resizeBarLeftStyle;
-const parentStyle = computed(() => `
+const parentStyle = `
     display: ${windowData.value.opened ? 'initial' : 'none'};
     left: ${pos.value.x}px;
     top: ${pos.value.y}px;
     width: ${size.value.width}px;
     height: ${size.value.height}px;
     z-index: ${windowData.value.focused ? 10_000 : 9999};
-`);
+`;
 const viewPortStyle = `
   width: 100%;
   height: calc(100% - ${WINDOW_HEADER_HEIGHT});
 `;
 const parentHeaderStyle = `height: ${WINDOW_HEADER_HEIGHT};`;
+
+
+const slots = useSlots();
+const slotArray = Object.keys(slots);
+const currentTabI = ref(0);
+const onTabSelect = (newTabI: number) => {
+  currentTabI.value = newTabI;
+}
+
+// styles
+const tabbedWindow = `
+  --tab-list-width: ${TAB_LIST_WIDTH};
+  --tab-list-min-width: ${TAB_LIST_MIN_WIDTH};
+  --tab-list-entry-margin: ${TAB_LIST_ENTRY_MARGIN};
+  --username-height: ${USERNAME_HEIGHT};
+`;
 </script>
 
-<!-- PARENT COMPONENT -->
 <template v-model="thisObj">
   <div class="header" :style=parentHeaderStyle @mousedown=handleDragStart>
     <button class="close-button" title="Close" @click=handleClose>
@@ -434,9 +391,9 @@ const parentHeaderStyle = `height: ${WINDOW_HEADER_HEIGHT};`;
     </div>
   </div>
 
-  <!-- Viewport -->
-  <div class="viewport" :style=viewPortStyle>
-    <slot />
+  <!-- Regular Window -->
+  <div v-if="!isTabbed" class="window regular-window" :style=viewPortStyle>
+    <slot/>
 
     <div class="resize-bar-left" :style=resizeBarLeftStyle @mousedown=handleResizeStart></div>
     <div class="resize-bar-right" :style=resizeBarRightStyle @mousedown=handleResizeStart></div>
@@ -447,6 +404,29 @@ const parentHeaderStyle = `height: ${WINDOW_HEADER_HEIGHT};`;
     <div class="resize-bar-bottom resize-bar-right" :style=resizeBarCornerStyle @mousedown=handleResizeStart></div>
     <div class="resize-bar-bottom resize-bar-left" :style=resizeBarCornerStyle @mousedown=handleResizeStart></div>
     <div class="resize-bar-top resize-bar-right" :style=resizeBarCornerStyle @mousedown=handleResizeStart></div>
+  </div>
+  <!-- Tabbed Window -->
+  <div v-else :style=tabbedWindow class="window tabbed-window">
+      <section>
+        <div class="tab-list">
+          <div v-for="tabName, i in slotArray">
+            <TabButton :selected="i === currentTabI" @select-tab=onTabSelect(i)>
+              {{ tabName }}
+            </TabButton>
+          </div>
+        </div>
+
+        <div class="username">
+          Authenticated as:
+          <div>{{ USERNAME }}</div>
+        </div>
+      </section>
+
+      <section>
+        <div v-for="slotName, i in slotArray">
+          <slot :name=slotName v-if="i === currentTabI"></slot>
+        </div>
+      </section>
   </div>
 </template>
 
@@ -500,7 +480,7 @@ main {
   margin: auto;
 }
 
-.viewport {
+.regular-window {
   background-color: var(--color-bg);
   border-bottom: 1px solid var(--color-accent);
   isolation: isolate;
