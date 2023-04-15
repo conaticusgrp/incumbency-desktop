@@ -102,6 +102,47 @@ type BusinessData = {
     average_monthly_income_graph_data: MonthlyGraphData;
 };
 
+type CareCapacity = {
+    budget: number;
+    current_capacity: number;
+    total_capacity: number;
+};
+
+type HealthcareData = {
+    age_ranges: {
+        "0-18": number;
+        "19-29": number;
+        "30-44": number;
+        "45-60": number;
+        "61-84": number;
+        "85+": number;
+    };
+    births_per_month: number;
+    deaths_per_month: number;
+    life_expectancy: number;
+    population: number;
+    used_capacity: number;
+    total_capacity: number;
+    rules: {
+        deny_past_age: {
+            enabled: boolean;
+            maximum_age: number;
+        };
+        deny_past_health: {
+            enabled: boolean;
+            maximum_percentage: number;
+        };
+    };
+    child_care: CareCapacity;
+    adult_care: CareCapacity;
+    elder_care: CareCapacity;
+    population_graph_data: DailyGraphData;
+    births_graph_data: DailyGraphData;
+    deaths_graph_data: DailyGraphData;
+    life_expectancy_graph_data: DailyGraphData;
+    hospital_usage_capacity_graph_data: DailyGraphData;
+};
+
 type Filter =
     | "one_week"
     | "one_month"

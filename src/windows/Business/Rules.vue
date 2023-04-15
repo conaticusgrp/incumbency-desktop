@@ -10,7 +10,7 @@ const data = ref<BusinessData>(graphStore.$state.data);
 
 const onFundingEnabled = async (activated: boolean) => {
     if (activated) {
-        invoke("enable_rule", {
+        await invoke("enable_rule", {
             ruleId: Rules.BusinessFunding,
         });
 
@@ -18,7 +18,7 @@ const onFundingEnabled = async (activated: boolean) => {
         return;
     }
 
-    invoke("disable_rule", {
+    await invoke("disable_rule", {
         ruleId: Rules.BusinessFunding,
     }),
         (data.rules.funding.enabled = false);
