@@ -1,22 +1,9 @@
 <script setup lang="ts" context="module">
 import { useBusinessStore } from "src/store/graphs";
-import { NotificationData } from "src/store/notifications";
 import { ref } from "vue";
-
-interface DataItem {
-    title: string;
-    dataKey: keyof BusinessData;
-    data: any;
-    pinned?: boolean;
-    prefix?: string;
-}
 
 const graphStore = useBusinessStore();
 const data = ref<BusinessData>(graphStore.$state.data);
-const app = "finance";
-const emits = defineEmits<{
-    (e: "windowSendNotification", v: NotificationData): void;
-}>();
 </script>
 
 <template>
