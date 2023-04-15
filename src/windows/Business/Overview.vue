@@ -7,14 +7,7 @@ const data = ref<BusinessData>(graphStore.$state.data);
 </script>
 
 <template>
-    <div v-for="(value, key) in data" :key="key">
-        <div class="container">
-            <div style="display: flex">
-                <h1>{{ key.replace("_", " ").toUpperCase() }}</h1>
-            </div>
-            <h3>{{ value }}</h3>
-        </div>
-    </div>
+    <div v-for="(value, key) in data" :key="key"></div>
 </template>
 
 <style scoped>
