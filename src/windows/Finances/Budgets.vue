@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { handleInvoke } from "src/util/events";
-import { useGraphStore } from "src/store/graphs";
+import { useFinanceStore } from "src/store/graphs";
 import { ref } from "vue";
 import ValueCard from "../../components/cards/ValueCard.vue";
 
@@ -18,7 +18,7 @@ enum GameValue {
     SpareBudget,
 }
 
-const graphStore = useGraphStore();
+const graphStore = useFinanceStore();
 const data = ref<FinanceData>(graphStore.$state.data);
 const app = "finance";
 const emits = defineEmits<{
