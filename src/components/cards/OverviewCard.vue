@@ -1,6 +1,9 @@
-<!-- <script setup lang="ts">
+<script setup lang="ts">
+import { PropType } from "vue";
+
 const props = defineProps({
     key: { type: String, required: true },
+    value: { type: Object as PropType<string | number> },
 });
 </script>
 
@@ -11,4 +14,4 @@ const props = defineProps({
         </div>
         <h3>{{ value }}</h3>
     </div>
-</template> -->
+</template>

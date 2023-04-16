@@ -1,42 +1,32 @@
 <script setup lang="ts">
-    import { PropType } from "vue";
+import { PropType } from "vue";
 import ToggleButton from "../buttons/ToggleButton.vue";
 import FancyButton from "../buttons/FancyButton.vue";
 
-    enum Rules {
-        Tax,
-        BusinessTax,
-        BusinessFunding,
-        DenyAge,
-        DenyHealthPercentage,
-        CoverFood,
-        CoverFoodUnemployed,
-    }
+interface RuleCardValue {
+    startStr?: string;
+    value: any;
+    endStr?: string;
+}
 
-    interface RuleCardValue {
-        startStr?: string;
-        value: any;
-        endStr?: string;
-    }
+type ActivationToggleFn = (activated: boolean) => void;
+type UpdateRuleFn = (data: any[]) => void;
 
-    type ActivationToggleFn = (activated: boolean) => void;
-    type UpdateRuleFn = (data: any[]) => void;
+const props = defineProps({
+    category: { type: String, required: true },
+    title: { type: String, required: true },
+    values: { type: Object as PropType<RuleCardValue[]>, required: true },
+    data: { type: Object as PropType<{ [key: string]: any }>, required: true },
+    enabled: { type: Boolean, required: true },
+    onActivationToggle: { type: Object as PropType<ActivationToggleFn> },
+    updateRuleFn: { type: Object as PropType<UpdateRuleFn> },
+})
 
-    const props = defineProps({
-        category: { type: String, required: true },
-        title: { type: String, required: true },
-        values: { type: Object as PropType<RuleCardValue[]>, required: true },
-        data: { type: Object, required: true },
-        enabled: { type: Boolean, required: true },
-        onActivationToggle: { type: Object as PropType<ActivationToggleFn> },
-        updateRuleFn: { type: Object as PropType<UpdateRuleFn> },
-    })
-
-    let showAmendModal = false;
+let showAmendModal = false;
 </script>
 
 <template>
-<div style="opacity: {enabled ? 1 : 0.5}" class="container">
+<div style="opacity: {{enabled}} ? 1 : 0.5" class="container">
     <div v-if="showAmendModal">
         <AmendRule
             {updateRuleFn}
@@ -76,11 +66,11 @@ import FancyButton from "../buttons/FancyButton.vue";
 
     <div class="right">
         <div class="keys">
-            <p v-for="(_, key) in data">{{key}}:&nbsp;</p> <!-- chinese -->
+            <p v-for="(_, key) in data">{{key}}:&nbsp;</p>
         </div>
 
         <div class="values">
-            <p v-for="(value) in data">{{value}}</p> <!-- polish (idk anymore im losing the plot, delerium) -->
+            <p v-for="(value) in data">{{value}}</p>
         </div>
     </div>
 </div>

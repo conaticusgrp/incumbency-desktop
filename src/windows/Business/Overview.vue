@@ -1,4 +1,5 @@
 <script setup lang="ts" context="module">
+import OverviewCard from "src/components/cards/OverviewCard.vue";
 import { useBusinessStore } from "src/store/graphs";
 import { ref } from "vue";
 
@@ -7,7 +8,9 @@ const data = ref<BusinessData>(graphStore.$state.data);
 </script>
 
 <template>
-    <div v-for="(value, key) in data" :key="key"></div>
+    <div v-for="(value, key) in data" :key="key">
+        <OverviewCard :key="key" :value="value" />
+    </div>
 </template>
 
 <style scoped>

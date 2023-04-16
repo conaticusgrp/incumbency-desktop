@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { invoke } from "@tauri-apps/api/tauri";
+import RuleCard from "src/components/cards/RuleCard.vue";
 import { useBusinessStore } from "src/store/graphs";
 import { ref } from "vue";
 
@@ -14,14 +15,14 @@ const onFundingEnabled = async (activated: boolean) => {
             ruleId: Rules.BusinessFunding,
         });
 
-        data.rules.funding.enabled = true; // BEEPBOOP(conaticus): it's crying about rules and idk why :(
+        data.value.rules.funding.enabled = true; // BEEPBOOP(conaticus): it's crying about rules and idk why :(
         return;
     }
 
     await invoke("disable_rule", {
         ruleId: Rules.BusinessFunding,
     }),
-        (data.rules.funding.enabled = false);
+        (data.value.rules.funding.enabled = false);
 };
 
 const onFundingUpdate = async (updateData: any[]) => {
@@ -36,23 +37,34 @@ const onFundingUpdate = async (updateData: any[]) => {
         data: payload,
     });
 
-    data.rules.funding.budget_cost = res.budget_cost;
-    data.rules.funding = {
-        ...data.rules.funding,
+    data.value.rules.funding.budget_cost = res.budget_cost;
+    data.value.rules.funding = {
+        ...data.value.rules.funding,
         ...payload,
     };
 };
 </script>
 
 <template>
-    <!-- BEEPBOOP BEEPBOOP BEEPBOOP(conaticus): Idk the fuckin syntax -->
-    <!-- <RuleCard category="Funds" title="Fund low incomes" values={[ { startStr:
-    "Each month, fund ", value: data.rules.funding.business_count, endStr: "
-    businesses", }, { startStr: " with $", value: data.rules.funding.fund, }, {
-    startStr: " with an income of $", value: data.rules.funding.maximum_income,
-    endStr: " or below", }, ]} data={{
-            "Budget Cost": `$${fundBudgetCost}/$${data.business_budget}`,
-    }}
-    onActivationToggle={onFundingEnabled} updateRuleFn={onFundingUpdate}
-    enabled={data.rules.funding.enabled} /> -->
+    <RuleCard
+        category="Funds"
+        title="Fund low incomes"
+        :values="[
+            {
+                startStr: `Each month, fund `,
+                value: data.rules.funding.business_count,
+                endStr: `businesses`,
+            },
+            { startStr: ` with $`, value: data.rules.funding.fund },
+            {
+                startStr: ` with an income of $`,
+                value: data.rules.funding.maximum_income,
+                endStr: ` or below`,
+            },
+        ]"
+        :data="{ `Budget Cost`: `$${fundBudgetCost}/$${data.value.business_budget}}` }"
+        @onActivationToggle="onFundingEnabled"
+        @updateRuleFn="onFundingUpdate"
+        :enabled="data.value.rules.funding.enabled"
+    />
 </template>
