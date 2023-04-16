@@ -13,6 +13,20 @@ import { onMounted } from "vue";
 import Desktop from "./views/singleplayer/Desktop.vue";
 import { APPS } from "src/windows/index";
 import { useAppStore } from "./store/apps";
+import { listen } from "@tauri-apps/api/event";
+import * as graphs from 'src/store/graphs';
+
+const financeStore = graphs.useFinanceStore();
+const businessStore = graphs.useBusinessStore();
+const welfareStore = graphs.useWelfareStore();
+const healthcareStore = graphs.useHealthcareStore();
+
+enum App {
+    Finance = 1,
+    Healthcare = 2,
+    Business = 3,
+    Welfare = 4,
+}
 
 ChartJS.register(
     Title,
@@ -30,12 +44,33 @@ onMounted(() => {
     document.addEventListener("contextmenu", (event) => event.preventDefault());
     APPS.forEach((app) => appStore.registerApp(app));
 });
+
+listen<UpdateAppEventTypes>("update_app", (event) => {
+    const data = event.payload.data;
+    const app_id = event.payload.app_id;
+    switch (app_id) {
+        case App.Finance:
+            financeStore.setGraphData(() => data);
+            break;
+        case App.Business:
+            businessStore.setGraphData(() => data);
+            break;
+        case App.Welfare:
+            welfareStore.setGraphData(() => data);
+            break;
+        case App.Healthcare:
+            healthcareStore.setGraphData(() => data);
+            break;
+        default:
+            console.error(`Unhandled app_id: ${app_id}`);
+    }
+});
 </script>
 
 <template>
     <!-- <div>
-        <RouterView></RouterView>
-    </div> -->
+            <RouterView></RouterView>
+        </div> -->
     <Desktop />
 </template>
 
