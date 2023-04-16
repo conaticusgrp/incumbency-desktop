@@ -1,17 +1,13 @@
 <script setup lang="ts">
-  import { GameState, useGameStore } from "src/store/game";
-  import Logo from "../assets/logo.svg";
-
-  const appStore = useGameStore();
+import Logo from "../assets/logo.svg";
 </script>
 
 <template>
   <main>
     <img :src=Logo alt="Game logo">
-    <!-- TODO(dylhack): use routes instead -->
-    <button @click=appStore.goto(GameState.NewGameMenu)>New Game</button>
-    <button @click=appStore.goto(GameState.LoadGameMenu)>Load Game</button>
-    <button @click=appStore.goto(GameState.SettingsMenu)>Settings</button>
+    <RouterLink :to="{ name: 'new-game' }">New Game</RouterLink>
+    <RouterLink :to="{ name: 'load-game' }">Load Game</RouterLink>
+    <RouterLink :to="{ name: 'settings' }">Settings</RouterLink>
   </main>
 </template>
 

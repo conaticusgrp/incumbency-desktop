@@ -1,9 +1,7 @@
 <script setup lang="ts">
-  import { GameState, useGameStore } from "src/store/game";
   import { invoke } from "@tauri-apps/api/tauri";
   import { ref } from "vue";
 
-  const appStore = useGameStore();
   const name = ref("");
   const saveAlreadyExists = ref(false);
 
@@ -28,7 +26,7 @@
     </div>
 
     <div>
-      <button @click={appStore.goto(GameState.MainMenu)}>Back</button>
+      <RouterLink :to="{ name: 'main-menu' }">Back</RouterLink>
       <button @click={createGame} type="submit">Create!</button>
     </div>
 

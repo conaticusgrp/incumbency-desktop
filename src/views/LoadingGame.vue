@@ -1,16 +1,15 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { GameState, useGameStore } from 'src/store/game';
+import { useGameStore } from 'src/store/game';
+import { useRouter } from 'vue-router';
+
+const router =  useRouter();
 
 const saves = ref<string[]>([]);
 const appStore = useGameStore();
 
 const clickSave = () => {
-  appStore.goto(GameState.Singleplayer);
-}
-
-const gotoMainMenu = () => {
-  appStore.goto(GameState.MainMenu);
+  router.push({ name: 'singleplayer'})
 }
 
 </script>
@@ -27,7 +26,7 @@ const gotoMainMenu = () => {
       </ul>
 
     </div>
-    <button class="button_back" @click="gotoMainMenu">Back</button>
+    <RouterLink class="button_back" :to="{ name: 'main-menu' }">Back</RouterLink>
   </main>
 </template>
 
