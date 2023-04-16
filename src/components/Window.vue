@@ -62,7 +62,6 @@ const defaultCriticalWindowData = () => ({
     focused: false,
     index: -1,
 });
-const notiStore = useNotificationsStore();
 const emailStore = useEmailsStore();
 const emails = useEmails(USERNAME);
 const pos = ref<Pos>(props.pos);
@@ -81,10 +80,6 @@ const getAppNameFromId = (id: number): AppString => {
 };
 
 listen<UpdateAppEventTypes>("update_app", ({ payload }) => {
-    if (payload.app_id === windowData.value.index) {
-        emits("appUpdate", payload.data);
-    }
-
     const app = getAppNameFromId(payload.app_id);
     const { data, update_type } = payload;
 
@@ -405,19 +400,11 @@ const tabbedWindow = `
             Close
         </button>
 
-        <button
-            class="minimize-button"
-            title="Minimize"
-            @click="handleMinimize"
-        >
+        <button class="minimize-button" title="Minimize" @click="handleMinimize">
             Minimize
         </button>
 
-        <button
-            class="maximize-button"
-            title="Maximize"
-            @click="handleMaximize"
-        >
+        <button class="maximize-button" title="Maximize" @click="handleMaximize">
             Maximize
         </button>
 
@@ -430,57 +417,22 @@ const tabbedWindow = `
     <div v-if="!isTabbed" class="window regular-window" :style="viewPortStyle">
         <slot />
 
-        <div
-            class="resize-bar-left"
-            :style="resizeBarLeftStyle"
-            @mousedown="handleResizeStart"
-        ></div>
-        <div
-            class="resize-bar-right"
-            :style="resizeBarRightStyle"
-            @mousedown="handleResizeStart"
-        ></div>
-        <div
-            class="resize-bar-top"
-            :style="resizeBarTopStyle"
-            @mousedown="handleResizeStart"
-        ></div>
-        <div
-            class="resize-bar-bottom"
-            :style="resizeBarBottomStyle"
-            @mousedown="handleResizeStart"
-        ></div>
+        <div class="resize-bar-left" :style="resizeBarLeftStyle" @mousedown="handleResizeStart"></div>
+        <div class="resize-bar-right" :style="resizeBarRightStyle" @mousedown="handleResizeStart"></div>
+        <div class="resize-bar-top" :style="resizeBarTopStyle" @mousedown="handleResizeStart"></div>
+        <div class="resize-bar-bottom" :style="resizeBarBottomStyle" @mousedown="handleResizeStart"></div>
 
-        <div
-            class="resize-bar-top resize-bar-left"
-            :style="resizeBarCornerStyle"
-            @mousedown="handleResizeStart"
-        ></div>
-        <div
-            class="resize-bar-bottom resize-bar-right"
-            :style="resizeBarCornerStyle"
-            @mousedown="handleResizeStart"
-        ></div>
-        <div
-            class="resize-bar-bottom resize-bar-left"
-            :style="resizeBarCornerStyle"
-            @mousedown="handleResizeStart"
-        ></div>
-        <div
-            class="resize-bar-top resize-bar-right"
-            :style="resizeBarCornerStyle"
-            @mousedown="handleResizeStart"
-        ></div>
+        <div class="resize-bar-top resize-bar-left" :style="resizeBarCornerStyle" @mousedown="handleResizeStart"></div>
+        <div class="resize-bar-bottom resize-bar-right" :style="resizeBarCornerStyle" @mousedown="handleResizeStart"></div>
+        <div class="resize-bar-bottom resize-bar-left" :style="resizeBarCornerStyle" @mousedown="handleResizeStart"></div>
+        <div class="resize-bar-top resize-bar-right" :style="resizeBarCornerStyle" @mousedown="handleResizeStart"></div>
     </div>
     <!-- Tabbed Window -->
     <div v-else :style="tabbedWindow" class="window tabbed-window">
         <section>
             <div class="tab-list">
                 <div v-for="(tab, i) in tabs">
-                    <TabButton
-                        :selected="i === currentTabI"
-                        @select-tab="onTabSelect(i)"
-                    >
+                    <TabButton :selected="i === currentTabI" @select-tab="onTabSelect(i)">
                         {{ tab.name }}
                     </TabButton>
                 </div>
@@ -535,18 +487,18 @@ main {
     border-bottom: 1px solid var(--color-accent);
 }
 
-.header > button {
+.header>button {
     padding: 0 1em 0 1em;
     border-right: 1px solid var(--color-accent);
 }
 
-.header > button:hover {
+.header>button:hover {
     color: var(--color-bg);
     background-color: var(--color-accent);
     font-weight: bold;
 }
 
-.header > div {
+.header>div {
     margin: auto;
 }
 

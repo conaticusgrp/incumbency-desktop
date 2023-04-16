@@ -11,6 +11,22 @@ import {
 } from "chart.js";
 import { onMounted } from "vue";
 import Desktop from "./views/singleplayer/Desktop.vue";
+import { APPS } from "src/windows/index";
+import { useAppStore } from "./store/apps";
+import { listen } from "@tauri-apps/api/event";
+import * as graphs from 'src/store/graphs';
+
+const financeStore = graphs.useFinanceStore();
+const businessStore = graphs.useBusinessStore();
+const welfareStore = graphs.useWelfareStore();
+const healthcareStore = graphs.useHealthcareStore();
+
+enum App {
+    Finance = 1,
+    Healthcare = 2,
+    Welfare = 3,
+    Business = 4,
+}
 
 ChartJS.register(
     Title,
@@ -22,15 +38,35 @@ ChartJS.register(
     CategoryScale
 );
 
+const appStore = useAppStore();
+
 onMounted(() => {
     document.addEventListener("contextmenu", (event) => event.preventDefault());
+    APPS.forEach((app) => appStore.registerApp(app));
+});
+
+listen<UpdateAppEventTypes>("update_app", (event) => {
+    const data = event.payload.data;
+    const app_id = event.payload.app_id;
+    console.log({ event, data, app_id });
+    if (app_id === App.Finance) {
+        financeStore.setGraphData((old) => ({ ...old, ...data }));
+    } else if (app_id === App.Business) {
+        businessStore.setGraphData((old) => ({ ...old, ...data }));
+    } else if (app_id === App.Welfare) {
+        welfareStore.setGraphData((old) => ({ ...old, ...data }));
+    } else if (app_id === App.Healthcare) {
+        healthcareStore.setGraphData((old) => ({ ...old, ...data }));
+    } else {
+        console.error(`Unhandled app_id: ${app_id}`);
+    }
 });
 </script>
 
 <template>
     <!-- <div>
-        <RouterView></RouterView>
-    </div> -->
+            <RouterView></RouterView>
+        </div> -->
     <Desktop />
 </template>
 

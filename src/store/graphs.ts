@@ -10,7 +10,7 @@ const initGraphData: GraphData<number> = {
     three_years: [],
 };
 
-export const useFinanceStore = defineStore("graphs", {
+export const useFinanceStore = defineStore("finance-store", {
     state: () => ({
         data: {
             average_monthly_income: -1,
@@ -46,13 +46,18 @@ export const useFinanceStore = defineStore("graphs", {
         } as FinanceData,
     }),
     actions: {
-        setGraphData(data: FinanceData) {
-            this.data = data;
+        setGraphData(cb: (data: FinanceData) => FinanceData) {
+            this.data = cb(this.data);
+        },
+    },
+    getters: {
+        graphData(state) {
+            return state.data;
         },
     },
 });
 
-export const useBusinessStore = defineStore("graphs", {
+export const useBusinessStore = defineStore("business-store", {
     state: () => ({
         data: {
             average_employees: -1,
@@ -74,10 +79,15 @@ export const useBusinessStore = defineStore("graphs", {
         } as BusinessData,
     }),
     actions: {
-        setGraphData(data: BusinessData) {
-            this.data = data;
+        setGraphData(cb: (data: BusinessData) => BusinessData) {
+            this.data = cb(this.data);
         },
     },
+    getters: {
+        graphData(state) {
+            return state.data;
+        }
+    }
 });
 
 const defaultHealthcareCapacity: CareCapacity = {
@@ -86,7 +96,7 @@ const defaultHealthcareCapacity: CareCapacity = {
     total_capacity: -1,
 };
 
-export const useHealthcareStore = defineStore("graphs", {
+export const useHealthcareStore = defineStore("healthcare-store", {
     state: () => ({
         data: {
             age_ranges: {
@@ -124,13 +134,18 @@ export const useHealthcareStore = defineStore("graphs", {
         } as HealthcareData,
     }),
     actions: {
-        setGraphData(data: HealthcareData) {
-            this.data = data;
+        setGraphData(cb: (data: HealthcareData) => HealthcareData) {
+            this.data = cb(this.data);
         },
+    },
+    getters: {
+        graphData(state) {
+            return state.data;
+        }
     },
 });
 
-export const useWelfareStore = defineStore("graphs", {
+export const useWelfareStore = defineStore("welfare-store", {
     state: () => ({
         data: {
             average_welfare: -1,
@@ -157,8 +172,13 @@ export const useWelfareStore = defineStore("graphs", {
         },
     }),
     actions: {
-        setGraphData(data: WelfareData) {
-            this.data = data;
+        setGraphData(cb: (data: WelfareData) => WelfareData) {
+            this.data = cb(this.data);
         },
     },
+    getters: {
+        graphData(state) {
+            return state.data;
+        }
+    }
 });

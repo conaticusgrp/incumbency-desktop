@@ -9,7 +9,6 @@ import {
 } from "src/constants";
 import { computed, onMounted, ref } from "vue";
 import { useAppStore, type AppState } from "src/store/apps.js";
-import { APPS } from "src/windows/index";
 import Window from "src/components/Window.vue";
 import { useRouter } from "vue-router";
 import { invoke } from "@tauri-apps/api/tauri";
@@ -20,7 +19,6 @@ const startMenuExpanded = ref(false);
 const date = ref("undefined date");
 const wallpaperPath = "./src/assets/Wallpaper.png";
 const appStore = useAppStore();
-APPS.forEach((app) => appStore.registerApp(app));
 
 const onWindowClose = (appName: string) => appStore.close(appName);
 const onWindowAquireFocus = (appName: string) => appStore.acquireFocus(appName);

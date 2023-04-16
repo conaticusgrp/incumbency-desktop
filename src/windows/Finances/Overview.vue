@@ -4,32 +4,30 @@ import { useFinanceStore } from "../../store/graphs";
 import { computed, ref } from "vue";
 
 const graphStore = useFinanceStore();
-const data = ref<FinanceData>(graphStore.$state.data);
+const data = graphStore.graphData;
 
 const governmentBalance = computed<CardGraphData<number>>(() => ({
-    type: data.value.government_balance_graph_data.type_id,
+    type: data.government_balance_graph_data.type_id,
     title: "Government Balance",
     historical: {
-        actual: data.value.government_balance_graph_data,
-        predicted: data.value.government_balance_prediction_graph_data,
+        actual: data.government_balance_graph_data,
+        predicted: data.government_balance_prediction_graph_data,
     },
 }));
 const unemploymentRate = computed<CardGraphData<number>>(() => ({
-    type: data.value.average_monthly_income_graph_data.type_id,
+    type: data.average_monthly_income_graph_data.type_id,
     title: "Average Monthly Income",
     historical: {
-        actual: data.value.average_monthly_income_graph_data,
+        actual: data.average_monthly_income_graph_data,
     },
 }));
 const governmentLosses = computed<CardGraphData<number>>(() => ({
-    type: data.value.government_losses_graph_data.type_id,
+    type: data.government_losses_graph_data.type_id,
     title: "Government Losses",
     historical: {
-        actual: data.value.government_losses_graph_data,
+        actual: data.government_losses_graph_data,
     },
 }));
-
-graphStore.$subscribe((_, val) => (data.value = val.data));
 </script>
 
 <template>
