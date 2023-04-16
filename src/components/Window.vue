@@ -39,7 +39,7 @@ const props = defineProps({
     default: () => ({ width: 0, height: 0, maximized: false }),
   },
   appName: { required: true, type: String },
-  tabs: { type: Array as PropType<Component[]>, default: () => [] },
+  tabs: { type: Array as PropType<Tab[]>, default: () => [] },
 });
 const isTabbed = computed(() => props.tabs.length > 0);
 const emits = defineEmits<{
@@ -363,9 +363,6 @@ const viewPortStyle = `
 `;
 const parentHeaderStyle = `height: ${WINDOW_HEADER_HEIGHT};`;
 
-
-const slots = useSlots();
-const slotArray = Object.keys(slots);
 const currentTabI = ref(0);
 const onTabSelect = (newTabI: number) => {
   currentTabI.value = newTabI;
@@ -417,9 +414,9 @@ const tabbedWindow = `
   <div v-else :style=tabbedWindow class="window tabbed-window">
       <section>
         <div class="tab-list">
-          <div v-for="tabName, i in slotArray">
+          <div v-for="tab, i in tabs">
             <TabButton :selected="i === currentTabI" @select-tab=onTabSelect(i)>
-              {{ tabName }}
+              {{ tab.name }}
             </TabButton>
           </div>
         </div>
@@ -431,8 +428,8 @@ const tabbedWindow = `
       </section>
 
       <section>
-        <div v-for="slotName, i in slotArray">
-          <slot :name=slotName v-if="i === currentTabI"></slot>
+        <div v-for="tab, i in tabs">
+          <component :is="tab.component"></component>
         </div>
       </section>
   </div>

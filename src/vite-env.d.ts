@@ -1,9 +1,14 @@
 /// <reference types="vite/client" />
 
 declare module "*.vue" {
-    import type { DefineComponent } from "vue";
+    import type { Component, DefineComponent } from "vue";
     const component: DefineComponent<{}, {}, any>;
     export default component;
+}
+
+type Tab = {
+    name: string;
+    component: Component;
 }
 
 type CardData = {

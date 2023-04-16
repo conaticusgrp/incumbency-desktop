@@ -4,7 +4,7 @@ import { Component, ref } from "vue";
 export type CreateApp = {
   appName: string;
   component: Component;
-  tabs: Component[];
+  tabs: Tab[];
   window: {
     title: string;
     pos: Pos;

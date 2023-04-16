@@ -37,9 +37,9 @@ import WelfareRules from './Welfare/Rules.vue';
 const defaultPos = (): Pos => ({ x: 100, y: 50 });
 const defaultSize = (): Size => ({ width: 800, height: 600 });
 export const APPS: CreateApp[] = [
-    { component: Finances, tabs: [FinancesOverview, FinancesBudgets], appName: "finance", window: { title: "Finance", pos: defaultPos(), size: defaultSize() } },
-    { component: Business, tabs: [BusinessOverview, BusinessRules], appName: "business", window: { title: "Business", pos: defaultPos(), size: defaultSize() } },
+    { component: Finances, tabs: [{ name: 'Overview', component: FinancesOverview }, { name: 'Budgets', component: FinancesBudgets }], appName: "finance", window: { title: "Finance", pos: defaultPos(), size: defaultSize() } },
+    { component: Business, tabs: [{ name: 'Overivew', component: BusinessOverview }, { name: 'Rules', component: BusinessRules }], appName: "business", window: { title: "Business", pos: defaultPos(), size: defaultSize() } },
     { component: Email, tabs: [], appName: "email", window: { title: "Email", pos: defaultPos(), size: defaultSize() } },
-    { component: Healthcare, tabs: [HealthcareOverview, HealthcareCapacity, HealthcareRules], appName: "healthcare", window: { title: "Healthcare", pos: defaultPos(), size: defaultSize() } },
-    { component: Welfare, tabs: [WelfareOverview, WelfareRules], appName: "welfare", window: { title: "Welfare", pos: defaultPos(), size: defaultSize() } },
+    { component: Healthcare, tabs: [{ name: 'Overview', component: HealthcareOverview }, { name: 'Capacity', component: HealthcareCapacity }, { name: 'Rules', component: HealthcareRules }], appName: "healthcare", window: { title: "Healthcare", pos: defaultPos(), size: defaultSize() } },
+    { component: Welfare, tabs: [{ name: 'Overview', component: WelfareOverview }, { name: 'Rules', component: WelfareRules}], appName: "welfare", window: { title: "Welfare", pos: defaultPos(), size: defaultSize() } },
 ];
