@@ -7,11 +7,12 @@ import {
     TOP_PANEL_HEIGHT,
     TOOLBAR_HEIGHT,
 } from "src/constants";
-import { computed, ref } from "vue";
-import { useAppStore, type AppState } from 'src/store/apps.js';
-import { APPS } from 'src/windows/index';
+import { computed, onMounted, ref } from "vue";
+import { useAppStore, type AppState } from "src/store/apps.js";
+import { APPS } from "src/windows/index";
 import Window from "src/components/Window.vue";
 import { useRouter } from "vue-router";
+import { invoke } from "@tauri-apps/api/tauri";
 
 const router = useRouter();
 const startMenu = ref<HTMLElement | null>(null);
@@ -19,7 +20,7 @@ const startMenuExpanded = ref(false);
 const date = ref("undefined date");
 const wallpaperPath = "./src/assets/Wallpaper.png";
 const appStore = useAppStore();
-APPS.forEach(app => appStore.registerApp(app));
+APPS.forEach((app) => appStore.registerApp(app));
 
 const onWindowClose = (appName: string) => appStore.close(appName);
 const onWindowAquireFocus = (appName: string) => appStore.acquireFocus(appName);
@@ -43,20 +44,25 @@ const closeStartMenuIfClickedAway = (e: MouseEvent): void => {
 
 const getApp = (appName: string) => {
     const app = appStore.apps[appName];
-    console.error(`appStore app [${appName}] is undefined!`);
-    return app ?? { opened: false, minimized: false, badgeCount: 0 }
-}
+
+    if (!app) {
+        console.error(`appStore app [${appName}] is undefined!`);
+    }
+
+    return app ?? { opened: false, minimized: false, badgeCount: 0 };
+};
 
 const updateApp = (appName: string, cb: (app: AppState) => void): void => {
     appStore.setAppState(appName, cb);
-}
+};
 
 const getBadgeCount = (appName: string) => getApp(appName).badgeCount;
 const shutdown = () => shutdownTauri(0);
-const logOff = () => router.push({ name: 'new-game-menu' })
+const logOff = () => router.push({ name: "new-game-menu" });
 
 // Events
 listen<{ date: string }>("new_day", ({ payload }) => {
+    console.log(payload);
     date.value = payload.date;
 });
 
@@ -64,7 +70,7 @@ document.addEventListener("keydown", (e) => {
     if (e.altKey && e.key == "F4") {
         const focusedApp = appStore.focusedApp;
         if (focusedApp !== null) {
-            updateApp(focusedApp, (app) => app.opened = false);
+            updateApp(focusedApp, (app) => (app.opened = false));
             appStore.acquireFocus(null);
         }
         e.preventDefault();
@@ -78,65 +84,99 @@ const getAppShortcutStyle = (appName: string): string => {
         ? "--color-highlight"
         : "--color-shaded";
     return `color: var(${cssVar});`;
-}
+};
 const contentStyle = `width: calc(100% - ${APP_LIST_WIDTH});`;
 const topPanelStyle = `height: ${TOP_PANEL_HEIGHT};`;
 const toolbarStyle = `height: ${TOOLBAR_HEIGHT};`;
 const windowsStyle = computed(() => {
-    const background = wallpaperPath !== null ? `url(${wallpaperPath})` : "none";
+    const background =
+        wallpaperPath !== null ? `url(${wallpaperPath})` : "none";
     const style = `height: calc(100% - ${TOP_PANEL_HEIGHT} - ${TOOLBAR_HEIGHT}); background-image: ${background};`;
     return style;
+});
+
+onMounted(async () => {
+    await invoke("create_game", {
+        name: "some dumbass name idc anymore lets just finish this on time",
+    });
 });
 </script>
 
 <template>
     <main>
-        <div class="app-list-section" :style=appListSectionStyle>
+        <div class="app-list-section" :style="appListSectionStyle">
             <h2>Installed Software</h2>
 
             <div class="app-list">
-                <div v-for="app in appStore.apps" :style=getAppShortcutStyle(app.appName)
-                    @click="onWindowOpen(app.appName)">
+                <div
+                    v-for="app in appStore.apps"
+                    :style="getAppShortcutStyle(app.appName)"
+                    @click="onWindowOpen(app.appName)"
+                >
                     {{ app.appName }}
-                    <span v-if="getBadgeCount(app.appName) > 0">({{ getBadgeCount(app.appName) }})</span>
+                    <span v-if="getBadgeCount(app.appName) > 0"
+                        >({{ getBadgeCount(app.appName) }})</span
+                    >
                 </div>
             </div>
         </div>
 
         <div class="content" :style="contentStyle">
-            <div class="top-panel" :style=topPanelStyle @click=openStartMenu()>
-                <div class="start-menu" :aria-expanded="startMenuExpanded" bind:this={startMenu}>
+            <div
+                class="top-panel"
+                :style="topPanelStyle"
+                @click="openStartMenu()"
+            >
+                <div
+                    class="start-menu"
+                    :aria-expanded="startMenuExpanded"
+                    bind:this="{startMenu}"
+                >
                     <span v-if="!startMenuExpanded">
                         {{ date }}
                     </span>
                     <div v-else>
-                        <button>{date}</button>
-                        <button @click=shutdown()>Shut down</button>
-                        <button @click=logOff()>Logoff</button>
+                        <button>{{ date }}</button>
+                        <button @click="shutdown()">Shut down</button>
+                        <button @click="logOff()">Logoff</button>
                     </div>
                 </div>
 
-                <button class="notification-section-toggle" on:click={toggleNotificationsSection}>
+                <button
+                    class="notification-section-toggle"
+                    on:click="{toggleNotificationsSection}"
+                >
                     Notifications
                 </button>
             </div>
 
             <div class="windows" :style="windowsStyle">
                 <div v-for="app in appStore.apps">
-                    <Window v-if="app.appName === appStore.focusedApp" :app-name="app.appName" :tabs="app.tabs" :title="app.window.title"
-                        @window-close="onWindowClose(app.appName)" @window-maximize="onWindowAquireFocus(app.appName)"
+                    <Window
+                        v-if="app.appName === appStore.focusedApp"
+                        :app-name="app.appName"
+                        :tabs="app.tabs"
+                        :title="app.window.title"
+                        @window-close="onWindowClose(app.appName)"
+                        @window-maximize="onWindowAquireFocus(app.appName)"
                         @window-resize="onWindowAquireFocus(app.appName)"
-                        @window-aquire-focus="onWindowAquireFocus(app.appName)" @window-opened="onWindowOpen(app.appName)"
-                        @window-minimize="onWindowMinimize(app.appName)" @window-unminimize="onWindowUnminimize(app.appName)">
+                        @window-aquire-focus="onWindowAquireFocus(app.appName)"
+                        @window-opened="onWindowOpen(app.appName)"
+                        @window-minimize="onWindowMinimize(app.appName)"
+                        @window-unminimize="onWindowUnminimize(app.appName)"
+                    >
                         <component :is="app.component" />
                     </Window>
                 </div>
                 <Notifications />
             </div>
 
-            <div class="toolbar" :style=toolbarStyle>
+            <div class="toolbar" :style="toolbarStyle">
                 <div v-for="state in appStore.apps">
-                    <span v-if="state.opened" @click="onWindowAquireFocus(state.appName)">
+                    <span
+                        v-if="state.opened"
+                        @click="onWindowAquireFocus(state.appName)"
+                    >
                         {{ state.appName }}
                     </span>
                 </div>
@@ -165,7 +205,7 @@ main {
     border-right: 1px solid var(--color-accent);
 }
 
-.app-list-section>h2 {
+.app-list-section > h2 {
     margin: 2em;
     font-size: 14px;
     font-weight: bolder;
@@ -180,14 +220,14 @@ main {
     font-size: 14px;
 }
 
-.app-list>div {
+.app-list > div {
     width: 100%;
     margin: 0.5em 0 0.5em 0;
     text-align: left;
     cursor: pointer;
 }
 
-.app-list>div>span {
+.app-list > div > span {
     color: var(--color-critical);
     font-weight: bold;
 }
@@ -228,11 +268,11 @@ main {
     border-top: none;
 }
 
-.start-menu[aria-expanded="true"]>button {
+.start-menu[aria-expanded="true"] > button {
     width: 100%;
 }
 
-.start-menu[aria-expanded="true"]>button:hover {
+.start-menu[aria-expanded="true"] > button:hover {
     background-color: var(--color-accent);
     color: var(--color-bg);
     font-weight: bold;
@@ -269,7 +309,7 @@ main {
     border-top: 1px solid var(--color-accent);
 }
 
-.toolbar>span {
+.toolbar > span {
     position: relative;
     display: flex;
     justify-content: center;
@@ -282,7 +322,7 @@ main {
     font-weight: bold;
 }
 
-.toolbar>span[data-minimized="true"] {
+.toolbar > span[data-minimized="true"] {
     background-color: unset;
     color: unset;
     font-weight: unset;
@@ -324,7 +364,7 @@ main {
     border-radius: 1rem;
 }
 
-.modal-label>.content {
+.modal-label > .content {
     height: 100%;
     border-radius: 0.5em;
     background-color: var(--color-accent);
@@ -332,7 +372,7 @@ main {
     font-weight: bold;
 }
 
-.modal-label>.content>h1 {
+.modal-label > .content > h1 {
     padding: 1em 0 0.5em 0;
     letter-spacing: 0.25em;
     text-align: center;
@@ -343,15 +383,15 @@ main {
     font-size: 20px;
 }
 
-.modal-label>.actions {
+.modal-label > .actions {
     display: flex;
 }
 
-.modal-label>.actions>button {
+.modal-label > .actions > button {
     width: 100%;
 }
 
-.modal-label>.actions>button:last-of-type {
+.modal-label > .actions > button:last-of-type {
     border-left: 1px solid var(--color-accent);
     color: grey;
 }

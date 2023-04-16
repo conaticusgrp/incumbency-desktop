@@ -31,7 +31,7 @@ onMounted(() => {
     <!-- <div>
         <RouterView></RouterView>
     </div> -->
-    <Desktop/>
+    <Desktop />
 </template>
 
 <style scoped>
