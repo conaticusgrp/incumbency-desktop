@@ -151,6 +151,7 @@ onMounted(async () => {
                 <div v-for="app in appStore.apps">
                     <Window
                         v-if="app.appName === appStore.focusedApp"
+                        :index="app.index"
                         :app-name="app.appName"
                         :tabs="app.tabs"
                         :title="app.window.title"
