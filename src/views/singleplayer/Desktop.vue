@@ -62,7 +62,6 @@ const logOff = () => router.push({ name: "new-game-menu" });
 
 // Events
 listen<{ date: string }>("new_day", ({ payload }) => {
-    console.log(payload);
     date.value = payload.date;
 });
 
