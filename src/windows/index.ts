@@ -45,21 +45,7 @@ export const APPS: CreateApp[] = [
         ],
         appName: "Finance",
         window: { title: "Finance", pos: defaultPos(), size: defaultSize() },
-    },
-    {
-        component: Business,
-        tabs: [
-            { name: "Overivew", component: BusinessOverview },
-            { name: "Rules", component: BusinessRules },
-        ],
-        appName: "Business",
-        window: { title: "Business", pos: defaultPos(), size: defaultSize() },
-    },
-    {
-        component: Email,
-        tabs: [],
-        appName: "Email",
-        window: { title: "Email", pos: defaultPos(), size: defaultSize() },
+        index: 1,
     },
     {
         component: Healthcare,
@@ -70,6 +56,7 @@ export const APPS: CreateApp[] = [
         ],
         appName: "Healthcare",
         window: { title: "Healthcare", pos: defaultPos(), size: defaultSize() },
+        index: 2,
     },
     {
         component: Welfare,
@@ -79,5 +66,23 @@ export const APPS: CreateApp[] = [
         ],
         appName: "Welfare",
         window: { title: "Welfare", pos: defaultPos(), size: defaultSize() },
+        index: 3,
+    },
+    {
+        component: Business,
+        tabs: [
+            { name: "Overivew", component: BusinessOverview },
+            { name: "Rules", component: BusinessRules },
+        ],
+        appName: "Business",
+        window: { title: "Business", pos: defaultPos(), size: defaultSize() },
+        index: 4,
+    },
+    {
+        component: Email,
+        tabs: [],
+        appName: "Email",
+        window: { title: "Email", pos: defaultPos(), size: defaultSize() },
+        index: -1,
     },
 ];
