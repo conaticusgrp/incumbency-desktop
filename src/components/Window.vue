@@ -12,7 +12,7 @@ import {
   USERNAME_HEIGHT,
   WINDOW_HEADER_HEIGHT,
 } from "../constants";
-import { PropType, computed, ref, nextTick, useSlots, Component } from "vue";
+import { PropType, computed, ref, nextTick, useSlots } from "vue";
 import { Action, Severity, useNotificationsStore } from "src/store/notifications";
 import { useEmailsStore, useEmails } from "src/store/emails";
 
