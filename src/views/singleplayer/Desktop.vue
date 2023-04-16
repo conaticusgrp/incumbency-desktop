@@ -13,12 +13,11 @@ import { APPS } from 'src/windows/index';
 import Window from "src/components/Window.vue";
 import { useRouter } from "vue-router";
 
-
 const router = useRouter();
 const startMenu = ref<HTMLElement | null>(null);
 const startMenuExpanded = ref(false);
 const date = ref("undefined date");
-const wallpaperPath: string | null = "./src/assets/Wallpaper.png";
+const wallpaperPath = "./src/assets/Wallpaper.png";
 const appStore = useAppStore();
 APPS.forEach(app => appStore.registerApp(app));
 
@@ -123,13 +122,15 @@ const windowsStyle = computed(() => {
             </div>
 
             <div class="windows" :style="windowsStyle">
-                <Window v-for="app in appStore.apps" :app-name="app.appName" :tabs="app.tabs"
-                    :title="app.window.title" @window-close="onWindowClose(app.appName)"
-                    @window-maximize="onWindowAquireFocus(app.appName)" @window-resize="onWindowAquireFocus(app.appName)"
-                    @window-aquire-focus="onWindowAquireFocus(app.appName)" @window-opened="onWindowOpen(app.appName)"
-                    @window-minimize="onWindowMinimize(app.appName)" @window-unminimize="onWindowUnminimize(app.appName)">
-                    <component :is="app.component" />
-                </Window>
+                <div v-for="app in appStore.apps">
+                    <Window v-if="app.appName === appStore.focusedApp" :app-name="app.appName" :tabs="app.tabs" :title="app.window.title"
+                        @window-close="onWindowClose(app.appName)" @window-maximize="onWindowAquireFocus(app.appName)"
+                        @window-resize="onWindowAquireFocus(app.appName)"
+                        @window-aquire-focus="onWindowAquireFocus(app.appName)" @window-opened="onWindowOpen(app.appName)"
+                        @window-minimize="onWindowMinimize(app.appName)" @window-unminimize="onWindowUnminimize(app.appName)">
+                        <component :is="app.component" />
+                    </Window>
+                </div>
                 <Notifications />
             </div>
 

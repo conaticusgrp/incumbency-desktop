@@ -7,14 +7,14 @@ import Desktop from "./singleplayer/Desktop.vue";
 import Loading from "./singleplayer/Loading.vue";
 
 const gameGenerated = ref(false);
-const unlisten = await listen("game_generated", () => {
-  gameGenerated.value = true;
-  unlisten();
-});
-
 // The invoke call is in onMount because the backend could potentially instantly create the game,
 // which will lead to other frontend events ignored
 onMounted(async () => {
+  const unlisten = await listen("game_generated", () => {
+    gameGenerated.value = true;
+    unlisten();
+  });
+
   await invoke('create_game')
 });
 </script>

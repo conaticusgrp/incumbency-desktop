@@ -6,12 +6,10 @@ import { useRouter } from 'vue-router';
 const router =  useRouter();
 
 const saves = ref<string[]>([]);
-const appStore = useGameStore();
 
 const clickSave = () => {
-  router.push({ name: 'singleplayer'})
+  router.push({ name: 'singleplayer'});
 }
-
 </script>
 
 <template>

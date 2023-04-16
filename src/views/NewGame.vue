@@ -22,12 +22,12 @@
 
     <div class="save_name">
       <label for="name">Enter save name: </label>
-      <input type="text" required bind:value={name} min="1" max="30" @keyup={checkAlreadyExists} />
+      <input type="text" required bind:value={name} min="1" max="30" @keyup=checkAlreadyExists() />
     </div>
 
     <div>
       <RouterLink :to="{ name: 'main-menu' }">Back</RouterLink>
-      <button @click={createGame} type="submit">Create!</button>
+      <button @click=createGame() type="submit">Create!</button>
     </div>
 
   </main>

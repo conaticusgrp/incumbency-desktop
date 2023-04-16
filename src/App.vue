@@ -10,6 +10,7 @@ import {
     CategoryScale,
 } from "chart.js";
 import { onMounted } from "vue";
+import Desktop from "./views/singleplayer/Desktop.vue";
 
 ChartJS.register(
     Title,
@@ -21,16 +22,16 @@ ChartJS.register(
     CategoryScale
 );
 
-
 onMounted(() => {
     document.addEventListener("contextmenu", (event) => event.preventDefault());
 });
 </script>
 
 <template>
-    <div>
+    <!-- <div>
         <RouterView></RouterView>
-    </div>
+    </div> -->
+    <Desktop/>
 </template>
 
 <style scoped>
