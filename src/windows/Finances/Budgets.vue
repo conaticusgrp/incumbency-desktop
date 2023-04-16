@@ -19,16 +19,10 @@ enum GameValue {
 }
 
 const graphStore = useFinanceStore();
-const data = ref<FinanceData>(graphStore.$state.data);
+const data = graphStore.graphData;
 const app = "Finance";
-graphStore.$subscribe((_, d) => (data.value = d.data));
 
 // NOTE(dylhack): side effect
-const setData = (cb: (data: FinanceData) => void) => {
-    cb(data.value);
-    graphStore.setGraphData(data.value);
-};
-
 const updateGameValue = async (gameValue: GameValue, newValue: number) => {
     if (gameValue === GameValue.TaxRate) {
         const { value: taxRes, success } = await handleInvoke<number>(
@@ -38,9 +32,10 @@ const updateGameValue = async (gameValue: GameValue, newValue: number) => {
         );
 
         if (success) {
-            setData((data) => {
+            graphStore.setGraphData((data) => {
                 data.tax_rate = newValue;
                 data.expected_person_income = taxRes;
+                return data;
             });
         }
     } else if (gameValue === GameValue.BusinessTaxRate) {
@@ -51,7 +46,10 @@ const updateGameValue = async (gameValue: GameValue, newValue: number) => {
         );
 
         if (success) {
-            setData((data) => (data.business_tax_rate = newValue));
+            graphStore.setGraphData((data) => {
+                data.business_tax_rate = newValue
+                return data;
+            });
         }
     } else if (gameValue === GameValue.HealthcareBudget) {
         const { value: healthRes, success } = await handleInvoke<HealthRes>(
@@ -61,11 +59,11 @@ const updateGameValue = async (gameValue: GameValue, newValue: number) => {
         );
 
         if (success) {
-            setData((data) => {
+            graphStore.setGraphData((data) => {
                 data.healthcare_budget = newValue;
                 data.used_hospital_capacity = healthRes.used_hospital_capacity;
-                data.total_hospital_capacity =
-                    healthRes.total_hospital_capacity;
+                data.total_hospital_capacity = healthRes.total_hospital_capacity;
+                return data;
             });
         }
     } else if (gameValue === GameValue.WelfareBudget) {
@@ -74,7 +72,10 @@ const updateGameValue = async (gameValue: GameValue, newValue: number) => {
         });
 
         if (success) {
-            setData((data) => (data.welfare_budget = newValue));
+            graphStore.setGraphData((data) => {
+                data.welfare_budget = newValue;
+                return data;
+            });
         }
     } else if (gameValue === GameValue.BusinessBudget) {
         const { success } = await handleInvoke(app, "update_business_budget", {
@@ -82,7 +83,10 @@ const updateGameValue = async (gameValue: GameValue, newValue: number) => {
         });
 
         if (success) {
-            setData((data) => (data.business_budget = newValue));
+            graphStore.setGraphData((data) => {
+                data.business_budget = newValue;
+                return data;
+            });
         }
     }
 };

@@ -6,8 +6,6 @@ import { ref } from "vue";
 const graphStore = useHealthcareStore();
 const data = ref<HealthcareData>(graphStore.$state.data);
 graphStore.$subscribe((_, d) => (data.value = d.data));
-
-console.log("health", data);
 </script>
 
 <template>

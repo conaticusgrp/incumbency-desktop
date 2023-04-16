@@ -18,11 +18,15 @@ export const EMAIL_CREATE = "emailCreate";
 // Apps
 export const APP_UPDATE = "appUpdate";
 
+type DataEvent = { detail: { data: any, type: string } };
+
 export const handleDataEvents = (
-    { detail: { data, type } }: any,
+    { detail: { data, type } }: DataEvent,
     appData: any
 ): any => {
     if (!data) return;
+
+    console.log(data);
 
     switch (type) {
         case WINDOW_OPENED:

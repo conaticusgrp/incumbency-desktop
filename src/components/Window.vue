@@ -62,7 +62,6 @@ const defaultCriticalWindowData = () => ({
     focused: false,
     index: -1,
 });
-const notiStore = useNotificationsStore();
 const emailStore = useEmailsStore();
 const emails = useEmails(USERNAME);
 const pos = ref<Pos>(props.pos);

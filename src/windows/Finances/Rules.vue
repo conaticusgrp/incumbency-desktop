@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import { ref } from "vue";
 import { useFinanceStore } from "/src/store/graphs";
 import { invoke } from "@tauri-apps/api/tauri";
 import RuleCard from "/src/components/cards/RuleCard.vue";
 
 const graphStore = useFinanceStore();
-const data = ref<FinanceData>(graphStore.$state.data);
-graphStore.$subscribe((_, d) => (data.value = d.data));
+const data = graphStore.graphData;
 
 const updateTaxRule = async (updateData: any[]) => {
     const payload = {
@@ -19,7 +17,10 @@ const updateTaxRule = async (updateData: any[]) => {
         data: payload,
     });
 
-    data.value.rules.tax = { ...data.value.rules.tax, ...payload };
+    graphStore.setGraphData((data) => {
+        data.rules.tax = { ...data.rules.tax, ...payload };
+        return data;
+    });
 };
 const onTaxRuleEnable = async (activated: boolean) => {
     if (activated) {
@@ -27,7 +28,10 @@ const onTaxRuleEnable = async (activated: boolean) => {
             ruleId: Rules.Tax,
         });
 
-        data.value.rules.tax.enabled = true;
+        graphStore.setGraphData((data) => {
+            data.rules.tax.enabled = true;
+            return data;
+        })
         return;
     }
 
@@ -35,7 +39,10 @@ const onTaxRuleEnable = async (activated: boolean) => {
         ruleId: Rules.Tax,
     });
 
-    data.value.rules.tax.enabled = false;
+    graphStore.setGraphData((data) => {
+        data.rules.tax.enabled = false;
+        return data;
+    });
 };
 
 const updateBusinessTaxRule = async (updateData: any[]) => {
@@ -49,10 +56,13 @@ const updateBusinessTaxRule = async (updateData: any[]) => {
         data: payload,
     });
 
-    data.value.rules.business_tax = {
-        ...data.value.rules.business_tax,
-        ...payload,
-    };
+    graphStore.setGraphData((data) => {
+        data.rules.business_tax = {
+            ...data.rules.business_tax,
+            ...payload,
+        };
+        return data;
+    });
 };
 const onBusinessRuleEnabled = async (activated: boolean) => {
     if (activated) {
@@ -60,7 +70,10 @@ const onBusinessRuleEnabled = async (activated: boolean) => {
             ruleId: Rules.BusinessTax,
         });
 
-        data.value.rules.business_tax.enabled = true;
+        graphStore.setGraphData((data) => {
+            data.rules.business_tax.enabled = true;
+            return data;
+        })
         return;
     }
 
@@ -68,7 +81,10 @@ const onBusinessRuleEnabled = async (activated: boolean) => {
         ruleId: Rules.BusinessTax,
     });
 
-    data.value.rules.business_tax.enabled = false;
+    graphStore.setGraphData((data) => {
+        data.rules.business_tax.enabled = false;
+        return data;
+    })
 };
 </script>
 

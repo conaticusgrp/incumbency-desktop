@@ -11,6 +11,8 @@ import {
 } from "chart.js";
 import { onMounted } from "vue";
 import Desktop from "./views/singleplayer/Desktop.vue";
+import { APPS } from "src/windows/index";
+import { useAppStore } from "./store/apps";
 
 ChartJS.register(
     Title,
@@ -22,8 +24,11 @@ ChartJS.register(
     CategoryScale
 );
 
+const appStore = useAppStore();
+
 onMounted(() => {
     document.addEventListener("contextmenu", (event) => event.preventDefault());
+    APPS.forEach((app) => appStore.registerApp(app));
 });
 </script>
 

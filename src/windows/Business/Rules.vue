@@ -2,13 +2,11 @@
 import { invoke } from "@tauri-apps/api/tauri";
 import RuleCard from "src/components/cards/RuleCard.vue";
 import { useBusinessStore } from "src/store/graphs";
-import { ref } from "vue";
 
 /* BEEPBOOP BEEPBOOP (conaticus): REMEMBER TO DO ERROR HANDLING DYLAN thx */
 
 const graphStore = useBusinessStore();
-const data = ref<BusinessData>(graphStore.$state.data);
-graphStore.$subscribe((_, d) => data.value = d.data);
+const data = graphStore.$state.data;
 
 const onFundingEnabled = async (activated: boolean) => {
     if (activated) {
@@ -16,14 +14,21 @@ const onFundingEnabled = async (activated: boolean) => {
             ruleId: Rules.BusinessFunding,
         });
 
-        data.value.rules.funding.enabled = true; // BEEPBOOP(conaticus): it's crying about rules and idk why :(
+        graphStore.setGraphData((data) => {
+            data.rules.funding.enabled = true;
+            return data;
+        })
         return;
     }
 
     await invoke("disable_rule", {
         ruleId: Rules.BusinessFunding,
-    }),
-        (data.value.rules.funding.enabled = false);
+    });
+
+    graphStore.setGraphData((data) => {
+        data.rules.funding.enabled = false;
+        return data;
+    })
 };
 
 const onFundingUpdate = async (updateData: any[]) => {
@@ -38,11 +43,14 @@ const onFundingUpdate = async (updateData: any[]) => {
         data: payload,
     });
 
-    data.value.rules.funding.budget_cost = res.budget_cost;
-    data.value.rules.funding = {
-        ...data.value.rules.funding,
-        ...payload,
-    };
+    graphStore.setGraphData((data) => {
+        data.rules.funding.budget_cost = res.budget_cost;
+        data.rules.funding = {
+            ...data.rules.funding,
+            ...payload,
+        };
+        return data;
+    })
 };
 </script>
 

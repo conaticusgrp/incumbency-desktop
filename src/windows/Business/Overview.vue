@@ -1,27 +1,30 @@
 <script setup lang="ts">
 import { useBusinessStore } from "src/store/graphs";
-import { computed, ref } from "vue";
+import { computed } from "vue";
 import GraphCard from "/src/components/cards/GraphCard.vue";
 
 const graphStore = useBusinessStore();
-const data = ref<BusinessData>(graphStore.$state.data);
-graphStore.$subscribe((_, d) => (data.value = d.data));
+const data = graphStore.graphData;
 
-const businessCount = computed<CardGraphData<number>>(() => ({
-    type: data.value.business_count_graph_data.type_id,
-    title: "Business Count",
-    historical: {
-        actual: data.value.business_count_graph_data,
-    },
-}));
+const businessCount = computed<CardGraphData<number>>(() => {
+    return {
+        type: data.business_count_graph_data.type_id,
+        title: "Business Count",
+        historical: {
+            actual: data.business_count_graph_data,
+        },
+    }
+});
 
-const averageEmployees = computed<CardGraphData<number>>(() => ({
-    type: data.value.average_employees_graph_data.type_id,
-    title: "Average Employees",
-    historical: {
-        actual: data.value.average_employees_graph_data,
-    },
-}));
+const averageEmployees = computed<CardGraphData<number>>(() => { 
+    return {
+        type: data.average_employees_graph_data.type_id,
+        title: "Average Employees",
+        historical: {
+            actual: data.average_employees_graph_data,
+        },
+    }
+});
 </script>
 
 <template>
