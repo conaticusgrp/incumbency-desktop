@@ -204,9 +204,9 @@ const unmaximize = (): void => {
 };
 
 const handleClose = (): void => {
-  windowData.value.focused = true;
-  invoke("app_close", { appId: windowData.value.index });
-  emits('windowClose');
+    windowData.value.focused = true;
+    invoke("app_close", { appId: windowData.value.index });
+    emits("windowClose");
 };
 
 const handleMaximize = (): void => {
