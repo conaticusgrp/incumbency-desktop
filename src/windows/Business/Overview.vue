@@ -1,17 +1,41 @@
-<script setup lang="ts" context="module">
-import OverviewCard from "src/components/cards/OverviewCard.vue";
+<script setup lang="ts">
 import { useBusinessStore } from "src/store/graphs";
-import { ref } from "vue";
+import { computed, ref } from "vue";
+import GraphCard from "/src/components/cards/GraphCard.vue";
 
 const graphStore = useBusinessStore();
 const data = ref<BusinessData>(graphStore.$state.data);
-graphStore.$subscribe((_, d) => data.value = d.data);
+graphStore.$subscribe((_, d) => (data.value = d.data));
+
+const businessCount = computed<CardGraphData<number>>(() => ({
+    type: data.value.business_count_graph_data.type_id,
+    title: "Business Count",
+    historical: {
+        actual: data.value.business_count_graph_data,
+    },
+}));
+
+const averageEmployees = computed<CardGraphData<number>>(() => ({
+    type: data.value.average_employees_graph_data.type_id,
+    title: "Average Employees",
+    historical: {
+        actual: data.value.average_employees_graph_data,
+    },
+}));
 </script>
 
 <template>
-    <div v-for="(value, key) in data" :key="key">
-        <OverviewCard :key="key" :value="value" />
-    </div>
+    <GraphCard
+        :type="businessCount.type"
+        :title="businessCount.title"
+        :history="businessCount.historical"
+    />
+
+    <GraphCard
+        :type="averageEmployees.type"
+        :title="averageEmployees.title"
+        :history="averageEmployees.historical"
+    />
 </template>
 
 <style scoped>

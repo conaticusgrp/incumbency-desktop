@@ -43,7 +43,7 @@ let showAmendModal = false;
 
         <div>
             <p>
-                <div v-for="({ value }, key) in data">
+                <div v-for="(value, key) in data">
                     {{ value.startStr || "" }}<strong>{{ value }}</strong>
                 </div>
             </p>

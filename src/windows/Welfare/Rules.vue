@@ -6,6 +6,7 @@ import { ref } from "vue";
 
 const graphStore = useWelfareStore();
 const data = ref<WelfareData>(graphStore.$state.data);
+graphStore.$subscribe((_, d) => (data.value = d.data));
 
 // beepboop(conaticus): error handling
 

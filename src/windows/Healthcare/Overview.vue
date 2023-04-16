@@ -1,14 +1,17 @@
-<script setup lang="ts" context="module">
+<script setup lang="ts">
 import OverviewCard from "src/components/cards/OverviewCard.vue";
 import { useHealthcareStore } from "src/store/graphs";
 import { ref } from "vue";
 
 const graphStore = useHealthcareStore();
 const data = ref<HealthcareData>(graphStore.$state.data);
+graphStore.$subscribe((_, d) => (data.value = d.data));
+
+console.log("health", data);
 </script>
 
 <template>
-    <div v-for="(value, key) in data" :key="key">
+    <div v-for="(value, key) in data">
         <OverviewCard :key="key" :value="value" />
     </div>
 </template>

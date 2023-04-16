@@ -9,7 +9,7 @@ declare module "*.vue" {
 type Tab = {
     name: string;
     component: Component;
-}
+};
 
 type CardData = {
     title: string;

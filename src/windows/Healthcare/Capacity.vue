@@ -6,6 +6,7 @@ import ValueCard from "src/components/cards/ValueCard.vue";
 
 const graphStore = useHealthcareStore();
 const data = ref<HealthcareData>(graphStore.$state.data);
+graphStore.$subscribe((_, d) => (data.value = d.data));
 
 enum GameValue {
     ChildcareCapacity,
@@ -51,7 +52,9 @@ const updateGameValue = async (gameValue: GameValue, newValue: number) => {
         <ValueCard
             title="Childcare Capacity"
             :value="data.child_care.total_capacity"
-            @amend="updateGameValue(GameValue.ChildcareCapacity, $event.valueOf())"
+            @amend="
+                updateGameValue(GameValue.ChildcareCapacity, $event.valueOf())
+            "
             :hasAmendButton="true"
             :detail="{}"
         />
@@ -59,7 +62,9 @@ const updateGameValue = async (gameValue: GameValue, newValue: number) => {
         <ValueCard
             title="Adultcare Capacity"
             :value="data.adult_care.total_capacity"
-            @amend="updateGameValue(GameValue.AdultcareCapacity, $event.valueOf())"
+            @amend="
+                updateGameValue(GameValue.AdultcareCapacity, $event.valueOf())
+            "
             :hasAmendButton="true"
             :detail="{}"
         />
@@ -67,7 +72,9 @@ const updateGameValue = async (gameValue: GameValue, newValue: number) => {
         <ValueCard
             title="Eldercare Capacity"
             :value="data.elder_care.total_capacity"
-            @amend="updateGameValue(GameValue.EldercareCapacity, $event.valueOf())"
+            @amend="
+                updateGameValue(GameValue.EldercareCapacity, $event.valueOf())
+            "
             :hasAmendButton="true"
             :detail="{}"
         />

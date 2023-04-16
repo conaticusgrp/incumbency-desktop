@@ -6,6 +6,7 @@ import RuleCard from "/src/components/cards/RuleCard.vue";
 
 const graphStore = useFinanceStore();
 const data = ref<FinanceData>(graphStore.$state.data);
+graphStore.$subscribe((_, d) => (data.value = d.data));
 
 const updateTaxRule = async (updateData: any[]) => {
     const payload = {

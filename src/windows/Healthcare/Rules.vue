@@ -5,6 +5,7 @@ import { ref } from "vue";
 
 const graphStore = useHealthcareStore();
 const data = ref<HealthcareData>(graphStore.$state.data);
+graphStore.$subscribe((_, d) => (data.value = d.data));
 
 // beepboop(conaticus): error handling
 
@@ -30,7 +31,7 @@ const onAgeRuleUpdated = async (updateData: any[]) => {
         maximum_age: Number(updateData[0]),
     };
 
-     await invoke("update_rule", {
+    await invoke("update_rule", {
         ruleId: Rules.DenyAge,
         data: payload,
     });

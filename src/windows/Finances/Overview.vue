@@ -29,16 +29,6 @@ const governmentLosses = computed<CardGraphData<number>>(() => ({
     },
 }));
 
-// expected_business_income: number;
-// expected_person_income: number;
-// expected_balance: number;
-
-// average_welfare: number;
-// average_welfare_unemployed: number;
-
-// used_welfare_budget: number;
-// used_business_budget: number;
-
 graphStore.$subscribe((_, val) => (data.value = val.data));
 </script>
 

@@ -20,7 +20,7 @@ enum GameValue {
 
 const graphStore = useFinanceStore();
 const data = ref<FinanceData>(graphStore.$state.data);
-const app = "finance";
+const app = "Finance";
 graphStore.$subscribe((_, d) => (data.value = d.data));
 
 // NOTE(dylhack): side effect
@@ -69,21 +69,17 @@ const updateGameValue = async (gameValue: GameValue, newValue: number) => {
             });
         }
     } else if (gameValue === GameValue.WelfareBudget) {
-        const { success } = await handleInvoke(
-            app,
-            "update_welfare_budget",
-            { newBudget: newValue }
-        );
+        const { success } = await handleInvoke(app, "update_welfare_budget", {
+            newBudget: newValue,
+        });
 
         if (success) {
             setData((data) => (data.welfare_budget = newValue));
         }
     } else if (gameValue === GameValue.BusinessBudget) {
-        const { success } = await handleInvoke(
-            app,
-            "update_business_budget",
-            { newBudget: newValue }
-        );
+        const { success } = await handleInvoke(app, "update_business_budget", {
+            newBudget: newValue,
+        });
 
         if (success) {
             setData((data) => (data.business_budget = newValue));

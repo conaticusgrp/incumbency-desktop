@@ -12,7 +12,7 @@ import {
     USERNAME_HEIGHT,
     WINDOW_HEADER_HEIGHT,
 } from "../constants";
-import { PropType, computed, ref, nextTick } from "vue";
+import { PropType, computed, ref } from "vue";
 import {
     Action,
     Severity,
@@ -79,26 +79,6 @@ const transition = ref("");
 const getAppNameFromId = (id: number): AppString => {
     return Apps[id].toLowerCase() as any;
 };
-
-nextTick(async () => {
-    if (!windowData.value.opened || windowData.value.focused) return;
-    try {
-        const d = await invoke<OpenEvents>("app_open", {
-            appId: windowData.value.index,
-        });
-        emits("windowOpened", d);
-    } catch (e) {
-        console.error(e);
-
-        notiStore.addNotification({
-            app: props.title,
-            header: "App open error",
-            content: "Error occured while opening the app",
-            severity: Severity.Error,
-            action: Action.Nothing,
-        });
-    }
-});
 
 listen<UpdateAppEventTypes>("update_app", ({ payload }) => {
     if (payload.app_id === windowData.value.index) {
