@@ -1,24 +1,28 @@
 import { InvokeArgs, invoke } from "@tauri-apps/api/tauri";
-import { Action, Severity, useNotificationsStore } from "src/store/notifications";
+import {
+    Action,
+    Severity,
+    useNotificationsStore,
+} from "src/store/notifications";
 
 export type AppString =
-    | "finance"
-    | "email"
-    | "welfare"
-    | "business"
-    | "healthcare";
+    | "Finance"
+    | "Email"
+    | "Welfare"
+    | "Business"
+    | "Healthcare";
 
 type If<T, Y, N> = T extends true ? Y : N;
-type TypedResult<T, K extends boolean> = { 
-    value: If<K, T, null>,
-    success: K, 
-}
+type TypedResult<T, K extends boolean> = {
+    value: If<K, T, null>;
+    success: K;
+};
 type Result<T> = TypedResult<T, true> | TypedResult<T, false>;
 
 export const handleInvoke = async <T>(
     app: AppString,
     cmd: string,
-    args?: InvokeArgs,
+    args?: InvokeArgs
 ): Promise<Result<T>> => {
     try {
         // TODO(dylhack): investigate if we need to handle returned errors
@@ -28,7 +32,7 @@ export const handleInvoke = async <T>(
         if (err instanceof Error) {
             errorNotif("An error occured", err.message, app);
         }
-        return { value: null, success: false};
+        return { value: null, success: false };
     }
 };
 
@@ -36,7 +40,7 @@ export const handleInvoke = async <T>(
 export const errorNotif = (
     errorTitle: string,
     errorMessage: string,
-    app: AppString,
+    app: AppString
 ) => {
     const notis = useNotificationsStore();
     notis.addNotification({
