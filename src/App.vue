@@ -24,8 +24,8 @@ const healthcareStore = graphs.useHealthcareStore();
 enum App {
     Finance = 1,
     Healthcare = 2,
-    Business = 3,
-    Welfare = 4,
+    Welfare = 3,
+    Business = 4,
 }
 
 ChartJS.register(
@@ -48,21 +48,17 @@ onMounted(() => {
 listen<UpdateAppEventTypes>("update_app", (event) => {
     const data = event.payload.data;
     const app_id = event.payload.app_id;
-    switch (app_id) {
-        case App.Finance:
-            financeStore.setGraphData(() => data);
-            break;
-        case App.Business:
-            businessStore.setGraphData(() => data);
-            break;
-        case App.Welfare:
-            welfareStore.setGraphData(() => data);
-            break;
-        case App.Healthcare:
-            healthcareStore.setGraphData(() => data);
-            break;
-        default:
-            console.error(`Unhandled app_id: ${app_id}`);
+    console.log({ event, data, app_id });
+    if (app_id === App.Finance) {
+        financeStore.setGraphData((old) => ({ ...old, ...data }));
+    } else if (app_id === App.Business) {
+        businessStore.setGraphData((old) => ({ ...old, ...data }));
+    } else if (app_id === App.Welfare) {
+        welfareStore.setGraphData((old) => ({ ...old, ...data }));
+    } else if (app_id === App.Healthcare) {
+        healthcareStore.setGraphData((old) => ({ ...old, ...data }));
+    } else {
+        console.error(`Unhandled app_id: ${app_id}`);
     }
 });
 </script>
