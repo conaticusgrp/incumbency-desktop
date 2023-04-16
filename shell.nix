@@ -17,5 +17,9 @@ mkShell {
   packages = [
     cargo
     cargo-tauri
+
+    nodePackages_latest.typescript
+    nodePackages_latest.typescript-language-server
+    nodePackages_latest.vls
   ];
 }
