@@ -2,6 +2,7 @@
 import { invoke } from "@tauri-apps/api/tauri";
 import { ref } from "vue";
 import { useHealthcareStore } from "src/store/graphs";
+import ValueCard from "src/components/cards/ValueCard.vue";
 
 const graphStore = useHealthcareStore();
 const data = ref<HealthcareData>(graphStore.$state.data);
@@ -22,21 +23,21 @@ const updateGameValue = async (gameValue: GameValue, newValue: any) => {
                 newCapacity: newValue,
             });
 
-            data.child_care.total_capacity = newValue; // idk why it complains :(
+            data.value.child_care.total_capacity = newValue; // idk why it complains :(
             break;
         case GameValue.AdultcareCapacity:
             await invoke("update_adultcare_capacity", {
                 newCapacity: newValue,
             });
 
-            data.adult_care.total_capacity = newValue;
+            data.value.adult_care.total_capacity = newValue;
             break;
-        case GameValue.EldercareCapacity: // I am racing against my vision rn it's in 360p
+        case GameValue.EldercareCapacity:
             await invoke("update_eldercare_capacity", {
                 newCapacity: newValue,
             });
 
-            data.elder_care.total_capacity = newValue;
+            data.value.elder_care.total_capacity = newValue;
             break;
         default:
             break;
@@ -47,23 +48,29 @@ const updateGameValue = async (gameValue: GameValue, newValue: any) => {
 <template>
     <main>
         <h1>CAPACITIES</h1>
-
-        <ValueCard title="Childcare Capacity"
-        currentValue={data.child_care.total_capacity} data={{}}
-            assignValueFn={(val) =>
-                updateGameValue(GameValue.ChildcareCapacity, Number(val))}
+        <ValueCard
+            title="Childcare Capacity"
+            :value="data.child_care.total_capacity"
+            @assignValueFn="($val: any) => updateGameValue(GameValue.ChildcareCapacity, Number($val))"
+            :hasAmendButton="true"
+            :detail="{}"
         />
 
         <ValueCard
             title="Adultcare Capacity"
-            currentValue={data.adult_care.total_capacity}
-            data={{}}
-        assignValueFn={(val) => updateGameValue(GameValue.AdultcareCapacity,
-        Number(val))} /> <ValueCard title="Eldercare Capacity"
-        currentValue={data.elder_care.total_capacity} data={{}}
-        assignValueFn={(val) => updateGameValue(GameValue.EldercareCapacity,
-        Number(val))} />
-        <!-- idk ill look tmr -->
+            :value="data.adult_care.total_capacity"
+            @assignValueFn="($val: any) => updateGameValue(GameValue.AdultcareCapacity, Number($val))"
+            :hasAmendButton="true"
+            :detail="{}"
+        />
+
+        <ValueCard
+            title="Eldercare Capacity"
+            :value="data.elder_care.total_capacity"
+            @assignValueFn="($val: any) => updateGameValue(GameValue.EldercareCapacity, Number($val))"
+            :hasAmendButton="true"
+            :detail="{}"
+        />
     </main>
 </template>
 
