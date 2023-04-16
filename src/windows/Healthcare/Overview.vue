@@ -13,7 +13,7 @@ const data = ref<HealthcareData>(graphStore.$state.data);
     </div>
 </template>
 
-<!-- This style is used many times and idk how to make it global -->
+<!-- This style is used many times across overview tabs and idk how to make it global -->
 <style scoped>
 h1 {
     font-size: 18px;

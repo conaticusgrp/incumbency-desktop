@@ -143,6 +143,29 @@ type HealthcareData = {
     hospital_usage_capacity_graph_data: DailyGraphData;
 };
 
+type WelfareData = {
+    average_welfare: number;
+    average_unemployed_welfare: number;
+    welfare_budget: number;
+    unemployed_count: number;
+    rules: {
+        cover_food: {
+            enabled: boolean;
+            budget_cost: number;
+            maximum_salary: number;
+            people_count: number;
+        };
+        cover_food_unemployed: {
+            enabled: boolean;
+            budget_cost: number;
+            people_count: number;
+        };
+    };
+    unemployed_count_graph_data: MonthlyGraphData;
+    average_welfare_graph_data: DailyGraphData;
+    average_unemployed_welfare_graph_data: DailyGraphData;
+};
+
 type Filter =
     | "one_week"
     | "one_month"

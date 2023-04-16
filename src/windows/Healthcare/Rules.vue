@@ -110,7 +110,7 @@ const onHealthRuleUpdated = async (updateData: any[]) => {
     </div>
 </template>
 
-<style>
+<style scoped>
 .container {
     overflow-y: scroll;
 }

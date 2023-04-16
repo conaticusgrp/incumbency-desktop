@@ -62,9 +62,11 @@ const onFundingUpdate = async (updateData: any[]) => {
                 endStr: ` or below`,
             },
         ]"
-        :data="{ `Budget Cost`: `$${fundBudgetCost}/$${data.value.business_budget}}` }"
+        :data="{
+            'Budget Cost': `$${data.rules.funding.budget_cost}/$${data.business_budget}`,
+        }"
         @onActivationToggle="onFundingEnabled"
         @updateRuleFn="onFundingUpdate"
-        :enabled="data.value.rules.funding.enabled"
+        :enabled="data.rules.funding.enabled"
     />
 </template>

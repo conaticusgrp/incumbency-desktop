@@ -117,15 +117,48 @@ export const useHealthcareStore = defineStore("graphs", {
             adult_care: defaultHealthcareCapacity,
             elder_care: defaultHealthcareCapacity,
             population_graph_data: initGraphData,
-            births_graph_data: initGraphData,
+            births_graph_data: initGraphData, // beepboop(conaticus): idk if we want this for both daily and monthly data
             deaths_graph_data: initGraphData,
             life_expectancy_graph_data: initGraphData,
             hospital_usage_capacity_graph_data: initGraphData,
         } as HealthcareData,
-        actions: {
-            setGraphData(data: HealthcareData) {
-                this.data = data; // BEEPBOOP COMPLAINING SADGE(conaticus): ahhhhhh
+    }),
+    actions: {
+        setGraphData(data: HealthcareData) {
+            this.data = data;
+        },
+    },
+});
+
+export const useWelfareStore = defineStore("graphs", {
+    state: () => ({
+        data: {
+            average_welfare: -1,
+            average_unemployed_welfare: -1,
+            welfare_budget: -1,
+            unemployed_count: -1,
+            rules: {
+                cover_food: {
+                    enabled: true,
+
+                    budget_cost: -1,
+                    maximum_salary: -1,
+                    people_count: -1,
+                },
+                cover_food_unemployed: {
+                    enabled: true,
+                    budget_cost: -1,
+                    people_count: -1,
+                },
             },
+            unemployed_count_graph_data: initGraphData,
+            average_welfare_graph_data: initGraphData,
+            average_unemployed_welfare_graph_data: initGraphData,
         },
     }),
+    actions: {
+        setGraphData(data: WelfareData) {
+            this.data = data;
+        },
+    },
 });
