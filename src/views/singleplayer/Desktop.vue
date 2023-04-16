@@ -9,16 +9,17 @@ import {
 } from "src/constants";
 import { computed, ref } from "vue";
 import { useAppStore, type AppState } from 'src/store/apps.js';
-import { useGameStore, GameState } from 'src/store/game';
 import { APPS } from 'src/windows/index';
 import Window from "src/components/Window.vue";
+import { useRouter } from "vue-router";
 
+
+const router = useRouter();
 const startMenu = ref<HTMLElement | null>(null);
 const startMenuExpanded = ref(false);
 const date = ref("undefined date");
 const wallpaperPath: string | null = "./src/assets/Wallpaper.png";
 const appStore = useAppStore();
-const gameStore = useGameStore();
 APPS.forEach(app => appStore.registerApp(app));
 
 const onWindowClose = (appName: string) => appStore.close(appName);
@@ -53,7 +54,7 @@ const updateApp = (appName: string, cb: (app: AppState) => void): void => {
 
 const getBadgeCount = (appName: string) => getApp(appName).badgeCount;
 const shutdown = () => shutdownTauri(0);
-const logOff = () => gameStore.goto(GameState.NewGameMenu);
+const logOff = () => router.push({ name: 'new-game-menu' })
 
 // Events
 listen<{ date: string }>("new_day", ({ payload }) => {

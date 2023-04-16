@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { appWindow } from "@tauri-apps/api/window";
-import { GameState, useGameStore } from "src/store/game";
 import { ref } from "vue";
+import { useRouter } from "vue-router";
 
-const gameStore = useGameStore();
+const router = useRouter()
+
 const volume = ref(0.5);
 const isFullscreen = ref(await appWindow.isFullscreen());
 
 const toggleFullscreen = async () => await appWindow.setFullscreen(!isFullscreen);
-const gotoMainMenu = () => gameStore.goto(GameState.MainMenu);
+const gotoMainMenu = () => router.push({ name: 'main-menu' })
 </script>
 
 <template>

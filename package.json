@@ -15,7 +15,8 @@
     "pinia": "^2.0.34",
     "vite-tsconfig-paths": "^4.2.0",
     "vue": "^3.2.45",
-    "vue-chartjs": "^5.2.0"
+    "vue-chartjs": "^5.2.0",
+    "vue-router": "^4.1.6"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^1.2.2",
