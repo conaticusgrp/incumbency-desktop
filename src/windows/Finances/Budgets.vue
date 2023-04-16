@@ -21,9 +21,7 @@ enum GameValue {
 const graphStore = useFinanceStore();
 const data = ref<FinanceData>(graphStore.$state.data);
 const app = "finance";
-const emits = defineEmits<{
-    (e: "windowSendNotification", v: NotificationData): void;
-}>();
+graphStore.$subscribe((_, d) => (data.value = d.data));
 
 // NOTE(dylhack): side effect
 const setData = (cb: (data: FinanceData) => void) => {
@@ -34,13 +32,12 @@ const setData = (cb: (data: FinanceData) => void) => {
 const updateGameValue = async (gameValue: GameValue, newValue: number) => {
     if (gameValue === GameValue.TaxRate) {
         const { value: taxRes, success } = await handleInvoke<number>(
-            emits,
             app,
             "update_tax_rate",
             { taxRate: newValue }
         );
 
-        if (success && typeof newValue === "number") {
+        if (success) {
             setData((data) => {
                 data.tax_rate = newValue;
                 data.expected_person_income = taxRes;
@@ -48,7 +45,6 @@ const updateGameValue = async (gameValue: GameValue, newValue: number) => {
         }
     } else if (gameValue === GameValue.BusinessTaxRate) {
         const { success } = await handleInvoke(
-            emits,
             app,
             "update_business_tax_rate",
             { taxRate: newValue }
@@ -59,7 +55,6 @@ const updateGameValue = async (gameValue: GameValue, newValue: number) => {
         }
     } else if (gameValue === GameValue.HealthcareBudget) {
         const { value: healthRes, success } = await handleInvoke<HealthRes>(
-            emits,
             app,
             "update_healthcare_budget",
             { newBudget: newValue }
@@ -75,7 +70,6 @@ const updateGameValue = async (gameValue: GameValue, newValue: number) => {
         }
     } else if (gameValue === GameValue.WelfareBudget) {
         const { success } = await handleInvoke(
-            emits,
             app,
             "update_welfare_budget",
             { newBudget: newValue }
@@ -86,7 +80,6 @@ const updateGameValue = async (gameValue: GameValue, newValue: number) => {
         }
     } else if (gameValue === GameValue.BusinessBudget) {
         const { success } = await handleInvoke(
-            emits,
             app,
             "update_business_budget",
             { newBudget: newValue }

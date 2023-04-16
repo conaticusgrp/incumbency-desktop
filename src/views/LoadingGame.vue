@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { AppState, useAppStore } from '../store/gamee';
+import { GameState, useGameStore } from 'src/store/game';
 
 const saves = ref<string[]>([]);
-const appStore = useAppStore();
+const appStore = useGameStore();
 
 const clickSave = () => {
-  appStore.goto(AppState.Singleplayer);
+  appStore.goto(GameState.Singleplayer);
 }
 
 const gotoMainMenu = () => {
-  appStore.goto(AppState.MainMenu);
+  appStore.goto(GameState.MainMenu);
 }
 
 </script>

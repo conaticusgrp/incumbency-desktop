@@ -8,6 +8,7 @@ import { ref } from "vue";
 
 const graphStore = useBusinessStore();
 const data = ref<BusinessData>(graphStore.$state.data);
+graphStore.$subscribe((_, d) => data.value = d.data);
 
 const onFundingEnabled = async (activated: boolean) => {
     if (activated) {

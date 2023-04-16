@@ -1,17 +1,17 @@
 <script setup lang="ts">
-  import { AppState, useAppStore } from "../store/gamee";
+  import { GameState, useGameStore } from "src/store/game";
   import Logo from "../assets/logo.svg";
 
-  const appStore = useAppStore();
+  const appStore = useGameStore();
 </script>
 
 <template>
   <main>
     <img :src=Logo alt="Game logo">
     <!-- TODO(dylhack): use routes instead -->
-    <button @click=appStore.goto(AppState.NewGameMenu)>New Game</button>
-    <button @click=appStore.goto(AppState.LoadGameMenu)>Load Game</button>
-    <button @click=appStore.goto(AppState.SettingsMenu)>Settings</button>
+    <button @click=appStore.goto(GameState.NewGameMenu)>New Game</button>
+    <button @click=appStore.goto(GameState.LoadGameMenu)>Load Game</button>
+    <button @click=appStore.goto(GameState.SettingsMenu)>Settings</button>
   </main>
 </template>
 

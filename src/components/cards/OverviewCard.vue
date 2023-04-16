@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { PropType } from "vue";
 
-const props = defineProps({
+defineProps({
     key: { type: String, required: true },
     value: { type: Object as PropType<string | number> },
 });

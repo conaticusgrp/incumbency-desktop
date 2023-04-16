@@ -1,6 +1,5 @@
 import { InvokeArgs, invoke } from "@tauri-apps/api/tauri";
-
-type EmitFn = (event: 'windowSendNotification', data: NotificationData) => void;
+import { Action, Severity, useNotificationsStore } from "src/store/notifications";
 
 export type AppString =
     | "finance"
@@ -9,7 +8,6 @@ export type AppString =
     | "business"
     | "healthcare";
 
-enum NotificationAction { OpenApp, Nothing };
 type If<T, Y, N> = T extends true ? Y : N;
 type TypedResult<T, K extends boolean> = { 
     value: If<K, T, null>,
@@ -18,7 +16,6 @@ type TypedResult<T, K extends boolean> = {
 type Result<T> = TypedResult<T, true> | TypedResult<T, false>;
 
 export const handleInvoke = async <T>(
-    dispatcher: EmitFn,
     app: AppString,
     cmd: string,
     args?: InvokeArgs,
@@ -29,7 +26,7 @@ export const handleInvoke = async <T>(
         return { value: result, success: true };
     } catch (err) {
         if (err instanceof Error) {
-            errorNotif(dispatcher, "An error occured", err.message, app);
+            errorNotif("An error occured", err.message, app);
         }
         return { value: null, success: false};
     }
@@ -37,16 +34,16 @@ export const handleInvoke = async <T>(
 
 // tell the parent component an error has occurred
 export const errorNotif = (
-    dispatcher: EmitFn,
     errorTitle: string,
     errorMessage: string,
     app: AppString,
 ) => {
-    dispatcher("windowSendNotification", {
+    const notis = useNotificationsStore();
+    notis.addNotification({
         app,
         header: errorTitle,
         content: errorMessage,
-        action: NotificationAction.Nothing,
-        severity: "error",
+        action: Action.Nothing,
+        severity: Severity.Error,
     });
 };

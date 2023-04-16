@@ -13,7 +13,7 @@ enum GameValue {
     EldercareCapacity,
 }
 
-const updateGameValue = async (gameValue: GameValue, newValue: any) => {
+const updateGameValue = async (gameValue: GameValue, newValue: number) => {
     if (!data) throw new Error("Data is undefined.");
 
     switch (gameValue) {
@@ -51,7 +51,7 @@ const updateGameValue = async (gameValue: GameValue, newValue: any) => {
         <ValueCard
             title="Childcare Capacity"
             :value="data.child_care.total_capacity"
-            @assignValueFn="($val: any) => updateGameValue(GameValue.ChildcareCapacity, Number($val))"
+            @amend="updateGameValue(GameValue.ChildcareCapacity, $event.valueOf())"
             :hasAmendButton="true"
             :detail="{}"
         />
@@ -59,7 +59,7 @@ const updateGameValue = async (gameValue: GameValue, newValue: any) => {
         <ValueCard
             title="Adultcare Capacity"
             :value="data.adult_care.total_capacity"
-            @assignValueFn="($val: any) => updateGameValue(GameValue.AdultcareCapacity, Number($val))"
+            @amend="updateGameValue(GameValue.AdultcareCapacity, $event.valueOf())"
             :hasAmendButton="true"
             :detail="{}"
         />
@@ -67,7 +67,7 @@ const updateGameValue = async (gameValue: GameValue, newValue: any) => {
         <ValueCard
             title="Eldercare Capacity"
             :value="data.elder_care.total_capacity"
-            @assignValueFn="($val: any) => updateGameValue(GameValue.EldercareCapacity, Number($val))"
+            @amend="updateGameValue(GameValue.EldercareCapacity, $event.valueOf())"
             :hasAmendButton="true"
             :detail="{}"
         />

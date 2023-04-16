@@ -15,7 +15,6 @@ import {
 import { PropType, computed, ref, nextTick, useSlots, Component } from "vue";
 import { Action, Severity, useNotificationsStore } from "src/store/notifications";
 import { useEmailsStore, useEmails } from "src/store/emails";
-import { type WindowEvents } from 'src/store/apps';
 
 enum Apps {
   Finance = 1,
@@ -43,7 +42,16 @@ const props = defineProps({
   tabs: { type: Array as PropType<Component[]>, default: () => [] },
 });
 const isTabbed = computed(() => props.tabs.length > 0);
-const emits = defineEmits<WindowEvents>();
+const emits = defineEmits<{
+  (e: 'appUpdate', data: UpdateAppPayloads): void;
+  (e: 'windowOpened', data: OpenEvents): void;
+  (e: 'windowResize'): void;
+  (e: 'windowAquireFocus'): void;
+  (e: 'windowMinimize', min: boolean): void;
+  (e: 'windowUnminimize', min: boolean): void;
+  (e: 'windowMaximize', max: boolean): void;
+  (e: 'windowClose'): void;
+}>();
 
 const defaultCriticalWindowData = () => ({ opened: false, focused: false, index: -1 });
 const notiStore = useNotificationsStore();

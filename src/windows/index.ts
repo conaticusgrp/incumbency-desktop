@@ -3,9 +3,16 @@ import Finances from './Finances.vue'
 import FinancesOverview from './Finances/Overview.vue'
 import FinancesBudgets from './Finances/Budgets.vue';
 import Business from "./Business.vue";
+import BusinessOverview from './Business/Overview.vue';
+import BusinessRules from './Business/Rules.vue';
 import Email from './Email.vue';
 import Healthcare from './Healthcare.vue'
+import HealthcareOverview from './Healthcare/Overview.vue';
+import HealthcareRules from './Healthcare/Rules.vue';
+import HealthcareCapacity from './Healthcare/Capacity.vue';
 import Welfare from './Welfare.vue'
+import WelfareOverview from './Welfare/Overview.vue';
+import WelfareRules from './Welfare/Rules.vue';
 
 // NOTE(dylhack): In the vast expanse of the digital cosmos, there 
 //     /\  /\     exists a singular point of convergence where life, 
@@ -31,8 +38,8 @@ const defaultPos = (): Pos => ({ x: 100, y: 50 });
 const defaultSize = (): Size => ({ width: 800, height: 600 });
 export const APPS: CreateApp[] = [
     { component: Finances, tabs: [FinancesOverview, FinancesBudgets], appName: "finance", window: { title: "Finance", pos: defaultPos(), size: defaultSize() } },
-    { component: Business, tabs: [], appName: "business", window: { title: "Business", pos: defaultPos(), size: defaultSize() } },
+    { component: Business, tabs: [BusinessOverview, BusinessRules], appName: "business", window: { title: "Business", pos: defaultPos(), size: defaultSize() } },
     { component: Email, tabs: [], appName: "email", window: { title: "Email", pos: defaultPos(), size: defaultSize() } },
-    { component: Healthcare, tabs: [], appName: "healthcare", window: { title: "Healthcare", pos: defaultPos(), size: defaultSize() } },
-    { component: Welfare, tabs: [], appName: "welfare", window: { title: "Welfare", pos: defaultPos(), size: defaultSize() } },
+    { component: Healthcare, tabs: [HealthcareOverview, HealthcareCapacity, HealthcareRules], appName: "healthcare", window: { title: "Healthcare", pos: defaultPos(), size: defaultSize() } },
+    { component: Welfare, tabs: [WelfareOverview, WelfareRules], appName: "welfare", window: { title: "Welfare", pos: defaultPos(), size: defaultSize() } },
 ];

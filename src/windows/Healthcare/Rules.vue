@@ -9,7 +9,6 @@ const data = ref<HealthcareData>(graphStore.$state.data);
 // beepboop(conaticus): error handling
 
 const onAgeRuleEnabled = async (activated: boolean) => {
-    let success: any;
     if (activated) {
         await invoke("enable_rule", {
             ruleId: Rules.DenyAge,
@@ -31,7 +30,7 @@ const onAgeRuleUpdated = async (updateData: any[]) => {
         maximum_age: Number(updateData[0]),
     };
 
-    const res = await invoke("update_rule", {
+     await invoke("update_rule", {
         ruleId: Rules.DenyAge,
         data: payload,
     });

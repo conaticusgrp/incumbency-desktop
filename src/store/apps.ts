@@ -18,17 +18,6 @@ export type AppState = {
   minimized: boolean;
 } & CreateApp;
 
-export type WindowEvents = {
-  (e: 'appUpdate', data: UpdateAppPayloads): void;
-  (e: 'windowOpened', data: OpenEvents): void;
-  (e: 'windowResize'): void;
-  (e: 'windowAquireFocus'): void;
-  (e: 'windowMinimize', min: boolean): void;
-  (e: 'windowUnminimize', min: boolean): void;
-  (e: 'windowMaximize', max: boolean): void;
-  (e: 'windowClose'): void;
-}
-
 // NOTE(dylhack): Steve Jobs not included
 export const useAppStore = defineStore('windows', () => {
   const focusedApp = ref<string | null>(null);

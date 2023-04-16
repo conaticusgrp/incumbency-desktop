@@ -9,8 +9,8 @@ import {
     PointElement,
     CategoryScale,
 } from "chart.js";
-import { ref, onMounted, DefineComponent, ComponentOptionsMixin, ExtractPropTypes } from "vue";
-import { GameState, useGameStore } from "./store/game";
+import { ref, onMounted, Component } from "vue";
+import { GameState, useGameStore } from "src/store/game";
 import LoadingGameVue from "./views/LoadingGame.vue";
 import MainMenu from "./views/MainMenu.vue";
 import SinglePlayer from "./views/SinglePlayer.vue";
@@ -27,10 +27,10 @@ ChartJS.register(
 );
 
 // TODO(dylhack): replace with "vue-router" (For some reason it doesn't during runtime.)
-type Component = DefineComponent<{}, {}, {}, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, {}, string, {}, Readonly<ExtractPropTypes<{}>>, {}>
+// type Component = DefineComponent<{}, {}, {}, {}, {}, ComponentOptionsMixin, ComponentOptionsMixin, {}, string, {}, Readonly<ExtractPropTypes<{}>>, {}>
 const appStore = useGameStore();
 const component = ref<Component | null>(null);
-const routes = new Map([
+const routes = new Map<GameState, Component>([
     [GameState.LoadGameMenu, LoadingGameVue],
     [GameState.MainMenu, MainMenu],
     [GameState.Singleplayer, SinglePlayer],
