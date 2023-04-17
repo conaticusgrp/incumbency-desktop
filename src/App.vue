@@ -46,7 +46,6 @@ onMounted(() => {
         const data = event.payload.data;
         const app_id = event.payload.app_id;
         if (app_id === App.Finance) {
-            console.log(data);
             financeStore.setGraphData((old) => ({ ...old, ...data }));
         } else if (app_id === App.Business) {
             businessStore.setGraphData((old) => ({ ...old, ...data }));

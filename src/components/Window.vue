@@ -74,9 +74,6 @@ const getAppNameFromId = (id: number): AppString => {
 
 listen<UpdateAppEventTypes>("update_app", ({ payload }) => {
     const app = getAppNameFromId(payload.app_id);
-    if (app === "Finance") {
-        console.log(payload.data);
-    }
 
     const { data, update_type } = payload;
 

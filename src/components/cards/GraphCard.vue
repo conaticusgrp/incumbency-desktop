@@ -24,6 +24,35 @@ watch(
         );
     }
 );
+
+const handleSelect = (value: Selected) => {
+    switch (value) {
+        case "1W":
+            filter.value = "one_week";
+            break;
+        case "1M":
+            filter.value = "one_month";
+            break;
+        case "3M":
+            filter.value = "three_months";
+            break;
+        case "6M":
+            filter.value = "six_months";
+            break;
+        case "1Y":
+            filter.value = "one_year";
+            break;
+        case "3Y":
+            filter.value = "three_years";
+            break;
+    }
+
+    data.value = conaticus(
+        filter.value,
+        props.history.actual,
+        props.history.predicted
+    );
+};
 </script>
 
 <template>
@@ -32,6 +61,7 @@ watch(
         <FilterSelect
             :type="type"
             :length="history.actual.three_years.length"
+            @selected="handleSelect"
         ></FilterSelect>
         <!-- <RateAnnotation data={result.actual.data} /> -->
         <PredictedGraph :data="data" />

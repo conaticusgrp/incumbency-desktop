@@ -171,6 +171,8 @@ type WelfareData = {
     average_unemployed_welfare_graph_data: DailyGraphData;
 };
 
+type Selected = "1W" | "1M" | "3M" | "6M" | "1Y" | "3Y";
+
 type Filter =
     | "one_week"
     | "one_month"
