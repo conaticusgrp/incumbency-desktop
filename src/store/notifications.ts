@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import { computed } from "vue";
+import { computed, ref } from "vue";
 
 export enum Severity { Normal, Warning, Error };
 export enum Action { OpenApp, Nothing };
@@ -30,24 +30,26 @@ export type NotificationId = NotificationData['id'];
 export const justDisplayed = (n: NotificationData) => n.createdAt.getTime() + JUST_DISPLAYED > Date.now();
 
 export const useNotificationsStore = defineStore("notifications", () => {
-  const state: NotificationData[] = []; 
+  const state = ref<NotificationData[]>([]); 
 
   const addNotification = (data: CreateNotification) => {
     const newNoti = { ...data, id: getId(), createdAt: new Date(), };
-    state.push(newNoti);
+    state.value.push(newNoti);
     return newNoti;
   };
 
   const dismiss = (id: NotificationId) => {
-    const i = state.findIndex((n) => n.id === id);
+    const i = state.value.findIndex((n) => n.id === id);
     if (i !== -1) {
-      state.splice(i, 1);
+      state.value.splice(i, 1);
     }
   };
 
   const latestNotification = computed<NotificationData | undefined>(() => {
-    return state[state.length - 1];
+    return state.value[state.value.length - 1];
   });
 
-  return { data: state, addNotification, dismiss, latestNotification };
+  const notifications = computed(() => state.value);
+
+  return { addNotification, dismiss, latestNotification, notifications };
 });

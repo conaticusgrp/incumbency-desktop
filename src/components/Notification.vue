@@ -5,7 +5,6 @@ import {
     NotificationData,
     Severity,
     justDisplayed,
-    useNotificationsStore,
 } from "src/store/notifications";
 
 const severityColors = new Map<Severity, string>()
@@ -29,6 +28,7 @@ const notiClass = ref(
         justDisplayed(props.data) && !dismissClass.value ? "new" : ""
     }}`
 );
+const actionTitle = computed(() => props.data.actionTitle ?? "Action");
 
 const onDismissed = () => {
     emits("dismissed");
@@ -65,12 +65,12 @@ const notiStyle = `
         </div>
 
         <div v-if="data.actionTitle" class="actions">
-            <button @click="onAction">{actionTitle}</button>
+            <button @click="onAction">{{ actionTitle }}</button>
         </div>
     </main>
 </template>
 
-<style>
+<style scoped>
 main {
     display: flex;
     flex-direction: column;

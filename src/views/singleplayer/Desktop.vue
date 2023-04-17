@@ -13,13 +13,21 @@ import Window from "src/components/Window.vue";
 import { useRouter } from "vue-router";
 import { invoke } from "@tauri-apps/api/tauri";
 import wallpaper from 'src/assets/Wallpaper.png';
+import Notifications from "/src/components/Notifications.vue";
+import { Action, Severity, useNotificationsStore } from "/src/store/notifications";
 
 const router = useRouter();
 const startMenu = ref<HTMLElement | null>(null);
 const startMenuExpanded = ref(false);
 const date = ref("00/00/0000");
 const appStore = useAppStore();
-const windowTransition = ref('');
+const notiStore = useNotificationsStore();
+
+notiStore.$subscribe(() => {
+    notiStore.notifications.forEach((noti) => {
+        appStore.setAppState(noti.app, (app) => (app.badgeCount += 1));
+    });
+});
 
 const onWindowClose = (appName: string) => appStore.close(appName);
 const onWindowAquireFocus = (appName: string) => appStore.acquireFocus(appName);
@@ -161,7 +169,6 @@ onMounted(async () => {
                         <component class="window-content" :is="app.component" />
                     </Window>
                 </div>
-                <Notifications />
             </div>
 
             <div class="toolbar" :style="toolbarStyle">
@@ -172,6 +179,7 @@ onMounted(async () => {
                 </div>
             </div>
         </div>
+        <Notifications class="notifications-section" @open-app="onWindowOpen($event.valueOf())"/>
     </div>
 </template>
 
@@ -377,5 +385,26 @@ onMounted(async () => {
 .modal-label>.actions>button:last-of-type {
     border-left: 1px solid var(--color-accent);
     color: grey;
+}
+
+.notifications-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  background-color: var(--color-bg);
+  border-left: 1px solid var(--color-accent);
+  z-index: 20000;
+}
+
+.notification-section-toggle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: 100%;
+  border-left: 1px solid var(--color-accent);
 }
 </style>
