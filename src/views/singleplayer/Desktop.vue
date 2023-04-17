@@ -88,11 +88,7 @@ const getAppShortcutStyle = (appName: string): string => {
 const contentStyle = `width: calc(100% - ${APP_LIST_WIDTH});`;
 const topPanelStyle = `height: ${TOP_PANEL_HEIGHT};`;
 const toolbarStyle = `height: ${TOOLBAR_HEIGHT};`;
-const windowsStyle = computed(() => {
-    // const style = `height: calc(100% - ${TOP_PANEL_HEIGHT} - ${TOOLBAR_HEIGHT}); background: 'black';`;
-    // return style;
-    return '';
-});
+const windowsStyle = computed(() => `height: calc(100% - ${TOP_PANEL_HEIGHT} - ${TOOLBAR_HEIGHT}); background: 'black';`);
 const mainStyle = computed(() => `
     background-image: url('${wallpaper}'); 
     background-repeat: no-repeat;
@@ -111,7 +107,7 @@ const getWindowStyle = (appName: string) => {
         width: ${size.width}px;
         height: ${size.height}px;
         z-index: ${focused ? 10_000 : 9999};
-    `;
+    ` + windowsStyle.value;
 }
 
 onMounted(async () => {
@@ -155,10 +151,10 @@ onMounted(async () => {
             </div>
 
             <div>
-                <div v-for="app in appStore.apps" :style="getWindowStyle(app.appName)">
-                    <Window :style=windowsStyle class="windows" v-if="app.appName === appStore.focusedApp" :index="app.index" :app-name="app.appName"
-                        :tabs="app.tabs" :title="app.window.title" @window-close="onWindowClose(app.appName)"
-                        @window-maximize="onWindowPlace(app.appName, $event)"
+                <div v-for="app in appStore.apps">
+                    <Window v-if="app.appName === appStore.focusedApp" :style="getWindowStyle(app.appName)" class="windows"
+                        :index="app.index" :app-name="app.appName" :tabs="app.tabs" :title="app.window.title"
+                        @window-close="onWindowClose(app.appName)" @window-maximize="onWindowPlace(app.appName, $event)"
                         @window-resize="onWindowResize(app.appName, $event)"
                         @window-aquire-focus="onWindowAquireFocus(app.appName)" @window-opened="onWindowOpen(app.appName)"
                         @window-minimize="onWindowMinimize(app.appName)">
@@ -286,11 +282,6 @@ onMounted(async () => {
     isolation: isolate;
     background-repeat: no-repeat;
     background-position: center;
-}
-
-.window-content {
-    width: 100%;
-    height: 100%;
 }
 
 .toolbar {
