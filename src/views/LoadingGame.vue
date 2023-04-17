@@ -1,14 +1,15 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useGameStore } from 'src/store/game';
+import { GameState, useGameStore } from 'src/store/game';
 import { useRouter } from 'vue-router';
 
-const router =  useRouter();
-
+const router = useRouter();
 const saves = ref<string[]>([]);
+const game = useGameStore();
 
 const clickSave = () => {
   router.push({ name: 'singleplayer'});
+  game.goto(GameState.Singleplayer);
 }
 </script>
 
@@ -18,7 +19,7 @@ const clickSave = () => {
       <h2>Load Game</h2>
       <ul class="horizontal_scroll">
         <!-- change this to open game view -->
-        <div v-for="save, i in saves" :key="i" class="save_card" @mousedown="clickSave">
+        <div v-for="save, i in saves" :key="i" class="save_card" @mousedown="clickSave()">
           {{ save }}
         </div>
       </ul>

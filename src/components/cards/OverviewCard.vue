@@ -2,7 +2,7 @@
 import { PropType } from "vue";
 
 const props = defineProps({
-    key: { type: String, required: true },
+    keyName: { type: String, required: true },
     value: { type: Object as PropType<string | number>, required: true },
 });
 </script>
@@ -10,7 +10,7 @@ const props = defineProps({
 <template>
     <div class="container">
         <div style="display: flex">
-            <h1>{{ key.replace("_", " ").toUpperCase() }}</h1>
+            <h1>{{ keyName.replace("_", " ").toUpperCase() }}</h1>
         </div>
         <h3>{{ value }}</h3>
     </div>

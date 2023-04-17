@@ -2,26 +2,27 @@
 import { listen } from "@tauri-apps/api/event";
 import { invoke } from "@tauri-apps/api/tauri";
 import { onMounted, ref } from "vue";
-import LoadingGame from "./LoadingGame.vue";
 import Desktop from "./singleplayer/Desktop.vue";
 import Loading from "./singleplayer/Loading.vue";
 
 const gameGenerated = ref(false);
+
 // The invoke call is in onMount because the backend could potentially instantly create the game,
 // which will lead to other frontend events ignored
 onMounted(async () => {
   const unlisten = await listen("game_generated", () => {
-    gameGenerated.value = true;
+    setTimeout(() => gameGenerated.value = true, 1_000);
     unlisten();
   });
 
   await invoke('create_game')
+  unlisten();
 });
 </script>
 
 <template>
   <main>
-    <LoadingGame v-if="!gameGenerated" />
+    <Loading v-if="!gameGenerated" />
     <Desktop />
   </main>
 </template>

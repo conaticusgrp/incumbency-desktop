@@ -190,6 +190,11 @@ type Size = {
     maximized?: boolean;
 };
 
+type Placement = {
+    size: Size;
+    pos: Pos;
+};
+
 type CriticalWindowData = {
     opened: boolean;
     focused: boolean;

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { listen } from "@tauri-apps/api/event";
-import { exit as shutdownTauri } from "@tauri-apps/api/process";
+import { exit as shutdownTauri, relaunch as restartTauri } from "@tauri-apps/api/process";
 import {
     APP_LIST_MIN_WIDTH,
     APP_LIST_WIDTH,
@@ -12,33 +12,34 @@ import { useAppStore, type AppState } from "src/store/apps.js";
 import Window from "src/components/Window.vue";
 import { useRouter } from "vue-router";
 import { invoke } from "@tauri-apps/api/tauri";
+import wallpaper from 'src/assets/Wallpaper.png';
 
 const router = useRouter();
 const startMenu = ref<HTMLElement | null>(null);
 const startMenuExpanded = ref(false);
-const date = ref("undefined date");
-const wallpaperPath = "./src/assets/Wallpaper.png";
+const date = ref("00/00/0000");
 const appStore = useAppStore();
 
 const onWindowClose = (appName: string) => appStore.close(appName);
 const onWindowAquireFocus = (appName: string) => appStore.acquireFocus(appName);
 const onWindowOpen = (appName: string) => appStore.openApp(appName);
 const onWindowMinimize = (appName: string) => appStore.hide(appName);
-const onWindowUnminimize = (appName: string) => appStore.show(appName);
+const onWindowResize = (appName: string, size: Size) => appStore.resize(appName, size);
+const onWindowPlace = (appName: string, placement: Placement) => appStore.place(appName, placement);
 
-const openStartMenu = (): void => {
-    startMenuExpanded.value = true;
-    document.addEventListener("click", closeStartMenuIfClickedAway);
+const openStartMenu = () => startMenuExpanded.value = true;
+
+const closeStartMenu = () => startMenuExpanded.value = false;
+
+const toggleStartMenu = (): void => {
+    if (startMenuExpanded.value) {
+        closeStartMenu();
+    } else {
+        openStartMenu();
+    }
 };
 
-const closeStartMenuIfClickedAway = (e: MouseEvent): void => {
-    if (startMenu.value == null) return;
-
-    if (e.target == null || startMenu.value.contains(e.target as HTMLElement))
-        return;
-
-    startMenuExpanded.value = false;
-};
+const toggleNotificationsSection = () => { };
 
 const getApp = (appName: string) => {
     const app = appStore.apps[appName];
@@ -56,7 +57,8 @@ const updateApp = (appName: string, cb: (app: AppState) => void): void => {
 
 const getBadgeCount = (appName: string) => getApp(appName).badgeCount;
 const shutdown = () => shutdownTauri(0);
-const logOff = () => router.push({ name: "new-game-menu" });
+const logoff = () => router.push({ name: "new-game" });
+const restart = () => restartTauri();
 
 // Events
 listen<{ date: string }>("new_day", ({ payload }) => {
@@ -86,11 +88,14 @@ const contentStyle = `width: calc(100% - ${APP_LIST_WIDTH});`;
 const topPanelStyle = `height: ${TOP_PANEL_HEIGHT};`;
 const toolbarStyle = `height: ${TOOLBAR_HEIGHT};`;
 const windowsStyle = computed(() => {
-    const background =
-        wallpaperPath !== null ? `url(${wallpaperPath})` : "none";
-    const style = `height: calc(100% - ${TOP_PANEL_HEIGHT} - ${TOOLBAR_HEIGHT}); background-image: ${background};`;
+    const style = `height: calc(100% - ${TOP_PANEL_HEIGHT} - ${TOOLBAR_HEIGHT}); background: 'black';`;
     return style;
 });
+const mainStyle = computed(() => `
+    background-image: url('${wallpaper}'); 
+    background-repeat: no-repeat;
+    background-position: center center;
+`);
 
 onMounted(async () => {
     await invoke("create_game", {
@@ -100,70 +105,47 @@ onMounted(async () => {
 </script>
 
 <template>
-    <main>
+    <div class="desktop" :style="mainStyle">
         <div class="app-list-section" :style="appListSectionStyle">
             <h2>Installed Software</h2>
 
             <div class="app-list">
-                <div
-                    v-for="app in appStore.apps"
-                    :style="getAppShortcutStyle(app.appName)"
-                    @click="onWindowOpen(app.appName)"
-                >
+                <div v-for="app in appStore.apps" :style="getAppShortcutStyle(app.appName)"
+                    @click="onWindowOpen(app.appName)">
                     {{ app.appName }}
-                    <span v-if="getBadgeCount(app.appName) > 0"
-                        >({{ getBadgeCount(app.appName) }})</span
-                    >
+                    <span v-if="getBadgeCount(app.appName) > 0">({{ getBadgeCount(app.appName) }})</span>
                 </div>
             </div>
         </div>
 
         <div class="content" :style="contentStyle">
-            <div
-                class="top-panel"
-                :style="topPanelStyle"
-                @click="openStartMenu()"
-            >
-                <div
-                    class="start-menu"
-                    :aria-expanded="startMenuExpanded"
-                    bind:this="{startMenu}"
-                >
-                    <span v-if="!startMenuExpanded">
+            <div class="top-panel" :style="topPanelStyle" @click="toggleStartMenu()">
+                <div class="start-menu" :aria-expanded="startMenuExpanded" v-bind="startMenu">
+                    <div v-if="startMenuExpanded">
+                        <button>Close</button>
+                        <button @click="shutdown()">Shut down</button>
+                        <button @click="logoff()">Logoff</button>
+                        <button @click="restart()">Restart</button>
+                    </div>
+                    <span v-else>
                         {{ date }}
                     </span>
-                    <div v-else>
-                        <button>{{ date }}</button>
-                        <button @click="shutdown()">Shut down</button>
-                        <button @click="logOff()">Logoff</button>
-                    </div>
                 </div>
 
-                <button
-                    class="notification-section-toggle"
-                    on:click="{toggleNotificationsSection}"
-                >
+                <button class="notification-section-toggle" @click="toggleNotificationsSection()">
                     Notifications
                 </button>
             </div>
 
             <div class="windows" :style="windowsStyle">
                 <div v-for="app in appStore.apps">
-                    <Window
-                        v-if="app.appName === appStore.focusedApp"
-                        :index="app.index"
-                        :app-name="app.appName"
-                        :tabs="app.tabs"
-                        :title="app.window.title"
-                        @window-close="onWindowClose(app.appName)"
-                        @window-maximize="onWindowAquireFocus(app.appName)"
-                        @window-resize="onWindowAquireFocus(app.appName)"
-                        @window-aquire-focus="onWindowAquireFocus(app.appName)"
-                        @window-opened="onWindowOpen(app.appName)"
-                        @window-minimize="onWindowMinimize(app.appName)"
-                        @window-unminimize="onWindowUnminimize(app.appName)"
-                    >
-                        <component :is="app.component" />
+                    <Window v-if="app.appName === appStore.focusedApp" :index="app.index" :app-name="app.appName"
+                        :tabs="app.tabs" :title="app.window.title" @window-close="onWindowClose(app.appName)"
+                        @window-maximize="onWindowPlace(app.appName, $event)"
+                        @window-resize="onWindowResize(app.appName, $event)"
+                        @window-aquire-focus="onWindowAquireFocus(app.appName)" @window-opened="onWindowOpen(app.appName)"
+                        @window-minimize="onWindowMinimize(app.appName)">
+                        <component class="window-content" :is="app.component" />
                     </Window>
                 </div>
                 <Notifications />
@@ -171,20 +153,17 @@ onMounted(async () => {
 
             <div class="toolbar" :style="toolbarStyle">
                 <div v-for="state in appStore.apps">
-                    <span
-                        v-if="state.opened"
-                        @click="onWindowAquireFocus(state.appName)"
-                    >
+                    <span v-if="state.opened" @click="onWindowAquireFocus(state.appName)">
                         {{ state.appName }}
                     </span>
                 </div>
             </div>
         </div>
-    </main>
+    </div>
 </template>
 
 <style scoped>
-main {
+.desktop {
     display: flex;
     flex-direction: row;
     position: relative;
@@ -203,7 +182,7 @@ main {
     border-right: 1px solid var(--color-accent);
 }
 
-.app-list-section > h2 {
+.app-list-section>h2 {
     margin: 2em;
     font-size: 14px;
     font-weight: bolder;
@@ -218,14 +197,14 @@ main {
     font-size: 14px;
 }
 
-.app-list > div {
+.app-list>div {
     width: 100%;
     margin: 0.5em 0 0.5em 0;
     text-align: left;
     cursor: pointer;
 }
 
-.app-list > div > span {
+.app-list>div>span {
     color: var(--color-critical);
     font-weight: bold;
 }
@@ -266,22 +245,15 @@ main {
     border-top: none;
 }
 
-.start-menu[aria-expanded="true"] > button {
+.start-menu[aria-expanded="true"]>button {
     width: 100%;
 }
 
-.start-menu[aria-expanded="true"] > button:hover {
+.start-menu[aria-expanded="true"]>button:hover {
     background-color: var(--color-accent);
     color: var(--color-bg);
     font-weight: bold;
 }
-
-/* 
-    .single-notification-container {
-        position: absolute;
-        top: 0;
-        z-index: 20000;
-    } */
 
 .notification-section-toggle {
     position: absolute;
@@ -299,6 +271,11 @@ main {
     background-position: center;
 }
 
+.window-content {
+    width: 100%;
+    height: 100%;
+}
+
 .toolbar {
     /* width: 100%; */
     display: flex;
@@ -307,7 +284,7 @@ main {
     border-top: 1px solid var(--color-accent);
 }
 
-.toolbar > span {
+.toolbar>span {
     position: relative;
     display: flex;
     justify-content: center;
@@ -320,7 +297,7 @@ main {
     font-weight: bold;
 }
 
-.toolbar > span[data-minimized="true"] {
+.toolbar>span[data-minimized="true"] {
     background-color: unset;
     color: unset;
     font-weight: unset;
@@ -362,7 +339,7 @@ main {
     border-radius: 1rem;
 }
 
-.modal-label > .content {
+.modal-label>.content {
     height: 100%;
     border-radius: 0.5em;
     background-color: var(--color-accent);
@@ -370,7 +347,7 @@ main {
     font-weight: bold;
 }
 
-.modal-label > .content > h1 {
+.modal-label>.content>h1 {
     padding: 1em 0 0.5em 0;
     letter-spacing: 0.25em;
     text-align: center;
@@ -381,15 +358,15 @@ main {
     font-size: 20px;
 }
 
-.modal-label > .actions {
+.modal-label>.actions {
     display: flex;
 }
 
-.modal-label > .actions > button {
+.modal-label>.actions>button {
     width: 100%;
 }
 
-.modal-label > .actions > button:last-of-type {
+.modal-label>.actions>button:last-of-type {
     border-left: 1px solid var(--color-accent);
     color: grey;
 }

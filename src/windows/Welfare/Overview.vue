@@ -10,7 +10,7 @@ graphStore.$subscribe((_, d) => (data.value = d.data));
 
 <template>
     <div v-for="(value, key) in data">
-        <OverviewCard :key="key" :value="value" />
+        <OverviewCard :key-name="key" :value="value" />
     </div>
 </template>
 

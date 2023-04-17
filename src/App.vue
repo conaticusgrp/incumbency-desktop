@@ -10,7 +10,6 @@ import {
     CategoryScale,
 } from "chart.js";
 import { onMounted } from "vue";
-import Desktop from "./views/singleplayer/Desktop.vue";
 import { APPS } from "src/windows/index";
 import { useAppStore } from "./store/apps";
 import { listen } from "@tauri-apps/api/event";
@@ -43,39 +42,30 @@ const appStore = useAppStore();
 onMounted(() => {
     document.addEventListener("contextmenu", (event) => event.preventDefault());
     APPS.forEach((app) => appStore.registerApp(app));
+    listen<UpdateAppEventTypes>("update_app", (event) => {
+        const data = event.payload.data;
+        const app_id = event.payload.app_id;
+        if (app_id === App.Finance) {
+            financeStore.setGraphData((old) => ({ ...old, ...data }));
+        } else if (app_id === App.Business) {
+            businessStore.setGraphData((old) => ({ ...old, ...data }));
+        } else if (app_id === App.Welfare) {
+            welfareStore.setGraphData((old) => ({ ...old, ...data }));
+        } else if (app_id === App.Healthcare) {
+            healthcareStore.setGraphData((old) => ({ ...old, ...data }));
+        } else {
+            console.error(`Unhandled app_id: ${app_id}`);
+        }
+    });
 });
 
-listen<UpdateAppEventTypes>("update_app", (event) => {
-    const data = event.payload.data;
-    const app_id = event.payload.app_id;
-    console.log({ event, data, app_id });
-    if (app_id === App.Finance) {
-        financeStore.setGraphData((old) => ({ ...old, ...data }));
-    } else if (app_id === App.Business) {
-        businessStore.setGraphData((old) => ({ ...old, ...data }));
-    } else if (app_id === App.Welfare) {
-        welfareStore.setGraphData((old) => ({ ...old, ...data }));
-    } else if (app_id === App.Healthcare) {
-        healthcareStore.setGraphData((old) => ({ ...old, ...data }));
-    } else {
-        console.error(`Unhandled app_id: ${app_id}`);
-    }
-});
 </script>
 
 <template>
-    <!-- <div>
-            <RouterView></RouterView>
-        </div> -->
-    <Desktop />
+    <RouterView></RouterView>
 </template>
 
 <style>
-main {
-    width: 100%;
-    height: 100%;
-}
-
 @font-face {
     font-family: "Fira Code";
     src: url("./assets/Fira Code.ttf");

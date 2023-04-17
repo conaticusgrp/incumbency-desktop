@@ -14,11 +14,10 @@ import {
 } from "../constants";
 import { PropType, computed, ref } from "vue";
 import {
-    Action,
     Severity,
-    useNotificationsStore,
 } from "src/store/notifications";
 import { useEmailsStore, useEmails } from "src/store/emails";
+import TabButton from "./buttons/TabButton.vue";
 
 enum Apps {
     Finance = 1,
@@ -53,26 +52,16 @@ const isTabbed = computed(() => props.tabs.length > 0);
 const emits = defineEmits<{
     (e: "appUpdate", data: UpdateAppPayloads): void;
     (e: "windowOpened", data: OpenEvents): void;
-    (e: "windowResize"): void;
+    (e: "windowResize", size: Size): void;
     (e: "windowAquireFocus"): void;
-    (e: "windowMinimize", min: boolean): void;
-    (e: "windowUnminimize", min: boolean): void;
-    (e: "windowMaximize", max: boolean): void;
+    (e: "windowMaximize", placement: Placement): void;
     (e: "windowClose"): void;
 }>();
 
-const defaultCriticalWindowData = (index: number) => ({
-    opened: false,
-    focused: false,
-    index,
-});
 const emailStore = useEmailsStore();
 const emails = useEmails(USERNAME);
 const pos = ref<Pos>(props.pos);
 const size = ref<Size>(props.size);
-const windowData = ref<CriticalWindowData>(
-    defaultCriticalWindowData(props.index)
-);
 const thisObj = ref<HTMLElement | null>(null);
 const dragOffset = ref({ dx: 0, dy: 0 });
 const resizeType = ref<{
@@ -167,7 +156,7 @@ const maximize = (): void => {
         height: thisObj.value?.parentElement?.clientHeight ?? 0,
         maximized: true,
     };
-    emits("windowMaximize", true);
+    emits("windowMaximize", { size: size.value, pos: pos.value });
 };
 
 const unmaximize = (): void => {
@@ -181,12 +170,13 @@ const unmaximize = (): void => {
         height: boundsBeforeMaximizing.value.height,
         maximized: false,
     };
-    emits("windowMaximize", false);
+    emits("windowMaximize", { size: size.value, pos: pos.value });
 };
 
 const handleClose = (): void => {
-    windowData.value.focused = true;
-    invoke("app_close", { appId: windowData.value.index });
+    if (props.index > -1) {
+        invoke("app_close", { appId: props.index });
+    }
     emits("windowClose");
 };
 
@@ -196,10 +186,6 @@ const handleMaximize = (): void => {
     } else {
         maximize();
     }
-};
-
-const handleMinimize = (): void => {
-    invoke("app_close", { appId: windowData.value.index });
 };
 
 const handleDragStart = (e: MouseEvent): void => {
@@ -307,7 +293,7 @@ const handleResize = (e: MouseEvent): void => {
         pos.value.y = newY;
     }
 
-    emits("windowResize");
+    emits("windowResize", size.value);
 };
 
 const handleResizeEnd = (e: MouseEvent): void => {
@@ -372,14 +358,6 @@ const resizeBarCornerStyle = `
 `;
 const resizeBarBottomStyle = resizeBarTopStyle;
 const resizeBarRightStyle = resizeBarLeftStyle;
-const parentStyle = `
-    display: ${windowData.value.opened ? "initial" : "none"};
-    left: ${pos.value.x}px;
-    top: ${pos.value.y}px;
-    width: ${size.value.width}px;
-    height: ${size.value.height}px;
-    z-index: ${windowData.value.focused ? 10_000 : 9999};
-`;
 const viewPortStyle = `
   width: 100%;
   height: calc(100% - ${WINDOW_HEADER_HEIGHT});
@@ -401,24 +379,12 @@ const tabbedWindow = `
 </script>
 
 <template v-model="thisObj">
-    <div class="header" :style="parentHeaderStyle" @mousedown="handleDragStart">
+    <div class="header" :style="parentHeaderStyle" @mousedown="handleDragStart($event)">
         <button class="close-button" title="Close" @click="handleClose">
             Close
         </button>
 
-        <button
-            class="minimize-button"
-            title="Minimize"
-            @click="handleMinimize"
-        >
-            Minimize
-        </button>
-
-        <button
-            class="maximize-button"
-            title="Maximize"
-            @click="handleMaximize"
-        >
+        <button class="maximize-button" title="Maximize" @click="handleMaximize">
             Maximize
         </button>
 
@@ -431,57 +397,26 @@ const tabbedWindow = `
     <div v-if="!isTabbed" class="window regular-window" :style="viewPortStyle">
         <slot />
 
-        <div
-            class="resize-bar-left"
-            :style="resizeBarLeftStyle"
-            @mousedown="handleResizeStart"
-        ></div>
-        <div
-            class="resize-bar-right"
-            :style="resizeBarRightStyle"
-            @mousedown="handleResizeStart"
-        ></div>
-        <div
-            class="resize-bar-top"
-            :style="resizeBarTopStyle"
-            @mousedown="handleResizeStart"
-        ></div>
-        <div
-            class="resize-bar-bottom"
-            :style="resizeBarBottomStyle"
-            @mousedown="handleResizeStart"
-        ></div>
+        <div class="resize-bar-left" :style="resizeBarLeftStyle" @mousedown="handleResizeStart($event)"></div>
+        <div class="resize-bar-right" :style="resizeBarRightStyle" @mousedown="handleResizeStart($event)"></div>
+        <div class="resize-bar-top" :style="resizeBarTopStyle" @mousedown="handleResizeStart($event)"></div>
+        <div class="resize-bar-bottom" :style="resizeBarBottomStyle" @mousedown="handleResizeStart($event)"></div>
 
-        <div
-            class="resize-bar-top resize-bar-left"
-            :style="resizeBarCornerStyle"
-            @mousedown="handleResizeStart"
-        ></div>
-        <div
-            class="resize-bar-bottom resize-bar-right"
-            :style="resizeBarCornerStyle"
-            @mousedown="handleResizeStart"
-        ></div>
-        <div
-            class="resize-bar-bottom resize-bar-left"
-            :style="resizeBarCornerStyle"
-            @mousedown="handleResizeStart"
-        ></div>
-        <div
-            class="resize-bar-top resize-bar-right"
-            :style="resizeBarCornerStyle"
-            @mousedown="handleResizeStart"
-        ></div>
+        <div class="resize-bar-top resize-bar-left" :style="resizeBarCornerStyle" @mousedown="handleResizeStart($event)">
+        </div>
+        <div class="resize-bar-bottom resize-bar-right" :style="resizeBarCornerStyle"
+            @mousedown="handleResizeStart($event)"></div>
+        <div class="resize-bar-bottom resize-bar-left" :style="resizeBarCornerStyle" @mousedown="handleResizeStart($event)">
+        </div>
+        <div class="resize-bar-top resize-bar-right" :style="resizeBarCornerStyle" @mousedown="handleResizeStart($event)">
+        </div>
     </div>
     <!-- Tabbed Window -->
     <div v-else :style="tabbedWindow" class="window tabbed-window">
         <section>
             <div class="tab-list">
                 <div v-for="(tab, i) in tabs">
-                    <TabButton
-                        :selected="i === currentTabI"
-                        @select-tab="onTabSelect(i)"
-                    >
+                    <TabButton :selected="i === currentTabI" @select-tab="onTabSelect(i)">
                         {{ tab.name }}
                     </TabButton>
                 </div>
@@ -495,29 +430,13 @@ const tabbedWindow = `
 
         <section>
             <div v-for="(tab, i) in tabs">
-                <component :is="tab.component"></component>
+                <component v-if="i === currentTabI" :is="tab.component"></component>
             </div>
         </section>
     </div>
 </template>
 
 <style scoped>
-main {
-    position: absolute;
-    border: 1px solid var(--color-accent);
-    border-top: none;
-    pointer-events: all;
-    background-color: var(--color-bg);
-}
-
-main {
-    animation-name: popup;
-    animation-delay: 0s;
-    animation-duration: 0.2s;
-    animation-fill-mode: forwards;
-    animation-timing-function: ease;
-}
-
 @keyframes popup {
     from {
         scale: 0;
@@ -528,6 +447,22 @@ main {
     }
 }
 
+.window {
+    position: absolute;
+    border: 1px solid var(--color-accent);
+    border-top: none;
+    pointer-events: all;
+    background-color: var(--color-bg);
+}
+
+.window {
+    animation-name: popup;
+    animation-delay: 0s;
+    animation-duration: 0.2s;
+    animation-fill-mode: forwards;
+    animation-timing-function: ease;
+}
+
 .header {
     display: flex;
     flex-direction: row;
@@ -536,18 +471,18 @@ main {
     border-bottom: 1px solid var(--color-accent);
 }
 
-.header > button {
+.header>button {
     padding: 0 1em 0 1em;
     border-right: 1px solid var(--color-accent);
 }
 
-.header > button:hover {
+.header>button:hover {
     color: var(--color-bg);
     background-color: var(--color-accent);
     font-weight: bold;
 }
 
-.header > div {
+.header>div {
     margin: auto;
 }
 
@@ -558,7 +493,6 @@ main {
 }
 
 /* Resize bars */
-
 .resize-bar-right {
     cursor: ew-resize;
     position: absolute;
@@ -567,7 +501,7 @@ main {
     bottom: initial;
     left: initial;
     z-index: 9999;
-    /* background-color: white; */
+    background-color: white;
 }
 
 .resize-bar-left {
@@ -645,5 +579,47 @@ main {
     left: 0;
     z-index: 9999;
     /* background-color: white; */
+}
+
+/* Tabbed Window */
+.window {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    height: 100%;
+}
+
+.window>section:first-of-type {
+    width: var(--tab-list-width);
+    min-width: var(--tab-list-min-width);
+    height: 100%;
+    border-right: 1px solid var(--color-accent);
+}
+
+.tab-list {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: calc(100% - var(--username-height));
+    overflow-y: scroll;
+}
+
+.tab-list::-webkit-scrollbar {
+    display: none;
+}
+
+.username {
+    width: 100%;
+    height: var(--username-height);
+    border-top: 1px solid var(--color-accent);
+    color: var(--color-accent);
+}
+
+.username div {
+    font-weight: bold;
+}
+
+.window>section:last-of-type {
+    width: calc(100% - max(var(--tab-list-width), var(--tab-list-min-width)));
 }
 </style>

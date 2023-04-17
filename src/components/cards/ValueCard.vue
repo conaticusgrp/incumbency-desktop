@@ -38,8 +38,8 @@ const emitValue = (value?: Value) => {
 
     <div class="container">
       <div class="left">
-        <h4>{title}</h4>
-        <h2>{appendValueStart}{currentValue}{appendValueEnd}</h2>
+        <h4>{{ title }}</h4>
+        <h2>{{ value }}</h2>
         <Button v-if="hasAmendButton" @onClick="setShowAmendModal(true)" width="200px">
           Amend
         </Button>

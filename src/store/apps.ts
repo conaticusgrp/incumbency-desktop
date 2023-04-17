@@ -46,6 +46,14 @@ export const useAppStore = defineStore("windows", () => {
         }
     }
 
+    function resize(appName: string, size: Size) {
+        setAppState(appName, (app) => (app.window.size = size));
+    }
+
+    function move(appName: string, pos: Pos) {
+        setAppState(appName, (app) => (app.window.pos = pos));
+    }
+
     function openApp(appName: string) {
         setAppState(appName, (app) => {
             focusedApp.value = appName;
@@ -57,6 +65,13 @@ export const useAppStore = defineStore("windows", () => {
 
     function acquireFocus(appName: string | null) {
         focusedApp.value = appName;
+    }
+
+    function place(appName: string, placement: Placement) {
+        setAppState(appName, (app) => {
+            app.window.pos = placement.pos;
+            app.window.size = placement.size;
+        });
     }
 
     // NOTE(dylhack): minimize
@@ -86,5 +101,8 @@ export const useAppStore = defineStore("windows", () => {
         focusedApp,
         close,
         show,
+        resize,
+        move,
+        place,
     };
 });

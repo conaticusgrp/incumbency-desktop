@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { watch } from "fs";
 import GraphCard from "../../components/cards/GraphCard.vue";
 import { useFinanceStore } from "../../store/graphs";
 import { computed, ref } from "vue";
@@ -6,28 +7,49 @@ import { computed, ref } from "vue";
 const graphStore = useFinanceStore();
 const data = graphStore.graphData;
 
-const governmentBalance = computed<CardGraphData<number>>(() => ({
+const governmentBalance = ref<CardGraphData<number>>({
     type: data.government_balance_graph_data.type_id,
     title: "Government Balance",
     historical: {
         actual: data.government_balance_graph_data,
         predicted: data.government_balance_prediction_graph_data,
     },
-}));
-const unemploymentRate = computed<CardGraphData<number>>(() => ({
+});
+const unemploymentRate = ref<CardGraphData<number>>({
     type: data.average_monthly_income_graph_data.type_id,
     title: "Average Monthly Income",
     historical: {
         actual: data.average_monthly_income_graph_data,
     },
-}));
-const governmentLosses = computed<CardGraphData<number>>(() => ({
+});
+const governmentLosses = ref<CardGraphData<number>>({
     type: data.government_losses_graph_data.type_id,
     title: "Government Losses",
     historical: {
         actual: data.government_losses_graph_data,
     },
-}));
+});
+graphStore.$subscribe((_, state) => {
+    governmentLosses.value = {
+        ...governmentLosses.value,
+        historical: {
+            actual: state.data.government_losses_graph_data,
+        },
+    }
+    governmentBalance.value = {
+        ...governmentBalance.value,
+        historical: {
+            actual: state.data.government_balance_graph_data,
+            predicted: state.data.government_balance_prediction_graph_data,
+        },
+    }
+    unemploymentRate.value = {
+        ...unemploymentRate.value,
+        historical: {
+            actual: state.data.average_monthly_income_graph_data,
+        },
+    }
+});
 </script>
 
 <template>

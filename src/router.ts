@@ -9,7 +9,7 @@ import NewGame from "./views/NewGame.vue";
 
 
 const routes = [
-    { path: '/', redirect: 'loading' },
+    { path: '/', redirect: 'singleplayer' },
     { path: '/loading', component: LoadingGameVue, name: 'loading' },
     { path: '/newgame', component: NewGame, name: 'new-game' },
     // TODO(altf02): create loadgame component

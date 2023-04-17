@@ -12,6 +12,12 @@
     "tauri": {
         "allowlist": {
             "all": false,
+            "process": {
+                "all": false,
+                "exit": true,
+                "relaunch": true,
+                "relaunchDangerousAllowSymlinkMacos": false
+            },
             "window": {
                 "all": true
             },
