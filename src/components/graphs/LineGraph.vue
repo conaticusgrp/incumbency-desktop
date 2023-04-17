@@ -33,84 +33,89 @@
   }}"></LineGraph>
  
 */
-import type { ChartData, ChartOptions, Point } from 'chart.js';
-import { PropType, ref, watch } from 'vue';
-import { Line } from 'vue-chartjs';
+import type { ChartData, ChartOptions, Point } from "chart.js";
+import { PropType, ref, watch } from "vue";
+import { Line } from "vue-chartjs";
 
 const props = defineProps({
-  data: {
-    type: Object as PropType<ChartData<'line', (number | Point | null)[], unknown>>,
-    required: true,
-  },
-  title: {
-    type: String,
-    required: true,
-  },
-  titleX: {
-    type: String,
-    default: '',
-  },
-  titleY: {
-    type: String,
-    default: '',
-  },
+    data: {
+        type: Object as PropType<
+            ChartData<"line", (number | Point | null)[], unknown>
+        >,
+        required: true,
+    },
+    title: {
+        type: String,
+        required: true,
+    },
+    titleX: {
+        type: String,
+        default: "",
+    },
+    titleY: {
+        type: String,
+        default: "",
+    },
 });
 const data = ref(props.data);
 const keyI = ref(0);
 const font = {
-  size: 20,
-  weight: 'bold',
-  family: 'Fira Code'
-}
+    size: 20,
+    weight: "bold",
+    family: "Fira Code",
+};
 const axisFont = {
-  ...font,
-  size: font.size - 5,
-}
-const config: ChartOptions<'line'> = {
-  scales: {
-    x: {
-      title: {
-        text: props.titleX,
-        display: props.titleX.length > 0,
-        font: axisFont,
-      },
+    ...font,
+    size: font.size - 5,
+};
+const config: ChartOptions<"line"> = {
+    scales: {
+        x: {
+            title: {
+                text: props.titleX,
+                display: props.titleX.length > 0,
+                font: axisFont,
+            },
+        },
+        y: {
+            title: {
+                text: props.titleY,
+                display: props.titleY.length > 0,
+                font: axisFont,
+            },
+        },
     },
-    y: {
-      title: {
-        text: props.titleY,
-        display: props.titleY.length > 0,
-        font: axisFont
-      }
+    interaction: {
+        mode: "index",
+        intersect: false,
     },
-  },
-  interaction: {
-    mode: 'index',
-    intersect: false
-  },
-  plugins: {
-    legend: {
-      display: false,
+    plugins: {
+        legend: {
+            display: false,
+        },
+        title: {
+            align: "center",
+            text: props.title,
+            display: true,
+            color: "white",
+            font: {
+                ...font,
+            },
+        },
     },
-    title: {
-      align: 'center',
-      text: props.title,
-      display: true,
-      color: 'white',
-      font: {
-        ...font,
-      },
-    }
-  }
 };
 
-const watchData = () => props.data.datasets.length
-watch(watchData, () => {
-  console.log(data.value);
-  data.value = props.data;
-  keyI.value += 1;
-}, { immediate: true });
+const watchData = () => props.data.datasets.length;
+watch(
+    watchData,
+    () => {
+        data.value = props.data;
+        keyI.value += 1;
+    },
+    { immediate: true }
+);
 </script>
 
 <template>
-  <Line :key="keyI" :data=data :options=config></Line>
+    <Line :key="keyI" :data="data" :options="config"></Line>
 </template>

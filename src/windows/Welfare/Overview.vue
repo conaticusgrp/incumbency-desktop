@@ -2,16 +2,77 @@
 import OverviewCard from "src/components/cards/OverviewCard.vue";
 import { useWelfareStore } from "src/store/graphs";
 import { ref } from "vue";
+import GraphCard from "/src/components/cards/GraphCard.vue";
 
 const graphStore = useWelfareStore();
-const data = ref<WelfareData>(graphStore.$state.data);
-graphStore.$subscribe((_, d) => (data.value = d.data));
+const data = graphStore.graphData;
+
+const unemployedCount = ref<CardGraphData<number>>({
+    type: data.unemployed_count_graph_data.type_id,
+    title: "Unemployed People Count",
+    historical: {
+        actual: data.unemployed_count_graph_data,
+    },
+});
+
+const averageWelfare = ref<CardGraphData<number>>({
+    type: data.average_welfare_graph_data.type_id,
+    title: "Average People Welfare",
+    historical: {
+        actual: data.average_welfare_graph_data,
+    },
+});
+
+const averageUnemployedWelfare = ref<CardGraphData<number>>({
+    type: data.average_unemployed_welfare_graph_data.type_id,
+    title: "Average Unemployed People Welfare",
+    historical: {
+        actual: data.average_unemployed_welfare_graph_data,
+    },
+});
+
+graphStore.$subscribe((_, state) => {
+    unemployedCount.value = {
+        ...unemployedCount.value,
+        historical: {
+            actual: state.data.unemployed_count_graph_data,
+        },
+    };
+
+    averageWelfare.value = {
+        ...averageWelfare.value,
+        historical: {
+            actual: state.data.average_welfare_graph_data,
+        },
+    };
+
+    averageUnemployedWelfare.value = {
+        ...averageUnemployedWelfare.value,
+        historical: {
+            actual: state.data.average_unemployed_welfare_graph_data,
+        },
+    };
+});
 </script>
 
 <template>
-    <div v-for="(value, key) in data">
-        <OverviewCard :key-name="key" :value="value" />
-    </div>
+    <GraphCard
+        :type="unemployedCount.type"
+        :title="unemployedCount.title"
+        :history="unemployedCount.historical"
+    />
+
+    <GraphCard
+        :type="averageWelfare.type"
+        :title="averageWelfare.title"
+        :history="averageWelfare.historical"
+    />
+
+    <GraphCard
+        :type="averageUnemployedWelfare.type"
+        :title="averageUnemployedWelfare.title"
+        :history="averageUnemployedWelfare.historical"
+    />
 </template>
 
 <style scoped>

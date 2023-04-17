@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import { watch } from "fs";
 import GraphCard from "../../components/cards/GraphCard.vue";
 import { useFinanceStore } from "../../store/graphs";
-import { computed, ref } from "vue";
+import { ref } from "vue";
 
 const graphStore = useFinanceStore();
 const data = graphStore.graphData;
@@ -35,20 +34,21 @@ graphStore.$subscribe((_, state) => {
         historical: {
             actual: state.data.government_losses_graph_data,
         },
-    }
+    };
+
     governmentBalance.value = {
         ...governmentBalance.value,
         historical: {
             actual: state.data.government_balance_graph_data,
             predicted: state.data.government_balance_prediction_graph_data,
         },
-    }
+    };
     unemploymentRate.value = {
         ...unemploymentRate.value,
         historical: {
             actual: state.data.average_monthly_income_graph_data,
         },
-    }
+    };
 });
 </script>
 

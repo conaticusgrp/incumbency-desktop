@@ -13,7 +13,7 @@ import { onMounted } from "vue";
 import { APPS } from "src/windows/index";
 import { useAppStore } from "./store/apps";
 import { listen } from "@tauri-apps/api/event";
-import * as graphs from 'src/store/graphs';
+import * as graphs from "src/store/graphs";
 
 const financeStore = graphs.useFinanceStore();
 const businessStore = graphs.useBusinessStore();
@@ -46,6 +46,7 @@ onMounted(() => {
         const data = event.payload.data;
         const app_id = event.payload.app_id;
         if (app_id === App.Finance) {
+            console.log(data);
             financeStore.setGraphData((old) => ({ ...old, ...data }));
         } else if (app_id === App.Business) {
             businessStore.setGraphData((old) => ({ ...old, ...data }));
@@ -58,7 +59,6 @@ onMounted(() => {
         }
     });
 });
-
 </script>
 
 <template>

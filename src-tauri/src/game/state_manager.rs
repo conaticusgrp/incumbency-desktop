@@ -280,6 +280,12 @@ impl GameState {
         self.average_unemployed_welfare_graph_data.push(self.average_welfare_unemployed as i64);
         self.government_balance_graph_data.push(self.government_balance);
         self.government_balance_prediction_graph_data.push(self.expected_balance);
+        self.average_monthly_income_graph_data.push(self.finance_data.average_monthly_income as i64);
+        self.government_losses_graph_data.push(0);
+        self.business_count_graph_data.push(self.businesses.len() as i64);
+        self.average_employees_graph_data.push(self.business_data.average_employees as i64);
+        self.business_average_monthly_income_graph_data.push(self.business_data.average_monthly_income);
+        self.unemployed_count_graph_data.push(self.unemployed_count as i64);
 
         self.spare_budget = self.get_spare_budget();
         self.emit_daily_events(app_handle);
@@ -610,13 +616,14 @@ impl GameState {
         self.government_balance -= losses;
 
         // Update graph data
+
         self.average_monthly_income_graph_data.push(self.finance_data.average_monthly_income as i64);
         self.government_losses_graph_data.push(losses);
         self.business_count_graph_data.push(self.businesses.len() as i64);
         self.average_employees_graph_data.push(self.business_data.average_employees as i64);
         self.business_average_monthly_income_graph_data.push(self.business_data.average_monthly_income);
         self.unemployed_count_graph_data.push(self.unemployed_count as i64);
-            
+        
         update_app(
             App::Finance,
             json!({

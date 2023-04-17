@@ -13,9 +13,7 @@ import {
     WINDOW_HEADER_HEIGHT,
 } from "../constants";
 import { PropType, computed, ref } from "vue";
-import {
-    Severity,
-} from "src/store/notifications";
+import { Severity } from "src/store/notifications";
 import { useEmailsStore, useEmails } from "src/store/emails";
 import TabButton from "./buttons/TabButton.vue";
 
@@ -71,11 +69,15 @@ const resizeType = ref<{
 const boundsBeforeMaximizing = ref({ x: 0, y: 0, width: 0, height: 0 });
 const transition = ref("");
 const getAppNameFromId = (id: number): AppString => {
-    return Apps[id].toLowerCase() as any;
+    return Apps[id] as any;
 };
 
 listen<UpdateAppEventTypes>("update_app", ({ payload }) => {
     const app = getAppNameFromId(payload.app_id);
+    if (app === "Finance") {
+        console.log(payload.data);
+    }
+
     const { data, update_type } = payload;
 
     if (update_type !== "month") return;
@@ -379,12 +381,20 @@ const tabbedWindow = `
 </script>
 
 <template v-model="thisObj">
-    <div class="header" :style="parentHeaderStyle" @mousedown="handleDragStart($event)">
+    <div
+        class="header"
+        :style="parentHeaderStyle"
+        @mousedown="handleDragStart($event)"
+    >
         <button class="close-button" title="Close" @click="handleClose">
             Close
         </button>
 
-        <button class="maximize-button" title="Maximize" @click="handleMaximize">
+        <button
+            class="maximize-button"
+            title="Maximize"
+            @click="handleMaximize"
+        >
             Maximize
         </button>
 
@@ -397,26 +407,57 @@ const tabbedWindow = `
     <div v-if="!isTabbed" class="window regular-window" :style="viewPortStyle">
         <slot />
 
-        <div class="resize-bar-left" :style="resizeBarLeftStyle" @mousedown="handleResizeStart($event)"></div>
-        <div class="resize-bar-right" :style="resizeBarRightStyle" @mousedown="handleResizeStart($event)"></div>
-        <div class="resize-bar-top" :style="resizeBarTopStyle" @mousedown="handleResizeStart($event)"></div>
-        <div class="resize-bar-bottom" :style="resizeBarBottomStyle" @mousedown="handleResizeStart($event)"></div>
+        <div
+            class="resize-bar-left"
+            :style="resizeBarLeftStyle"
+            @mousedown="handleResizeStart($event)"
+        ></div>
+        <div
+            class="resize-bar-right"
+            :style="resizeBarRightStyle"
+            @mousedown="handleResizeStart($event)"
+        ></div>
+        <div
+            class="resize-bar-top"
+            :style="resizeBarTopStyle"
+            @mousedown="handleResizeStart($event)"
+        ></div>
+        <div
+            class="resize-bar-bottom"
+            :style="resizeBarBottomStyle"
+            @mousedown="handleResizeStart($event)"
+        ></div>
 
-        <div class="resize-bar-top resize-bar-left" :style="resizeBarCornerStyle" @mousedown="handleResizeStart($event)">
-        </div>
-        <div class="resize-bar-bottom resize-bar-right" :style="resizeBarCornerStyle"
-            @mousedown="handleResizeStart($event)"></div>
-        <div class="resize-bar-bottom resize-bar-left" :style="resizeBarCornerStyle" @mousedown="handleResizeStart($event)">
-        </div>
-        <div class="resize-bar-top resize-bar-right" :style="resizeBarCornerStyle" @mousedown="handleResizeStart($event)">
-        </div>
+        <div
+            class="resize-bar-top resize-bar-left"
+            :style="resizeBarCornerStyle"
+            @mousedown="handleResizeStart($event)"
+        ></div>
+        <div
+            class="resize-bar-bottom resize-bar-right"
+            :style="resizeBarCornerStyle"
+            @mousedown="handleResizeStart($event)"
+        ></div>
+        <div
+            class="resize-bar-bottom resize-bar-left"
+            :style="resizeBarCornerStyle"
+            @mousedown="handleResizeStart($event)"
+        ></div>
+        <div
+            class="resize-bar-top resize-bar-right"
+            :style="resizeBarCornerStyle"
+            @mousedown="handleResizeStart($event)"
+        ></div>
     </div>
     <!-- Tabbed Window -->
     <div v-else :style="tabbedWindow" class="window tabbed-window">
         <section>
             <div class="tab-list">
                 <div v-for="(tab, i) in tabs">
-                    <TabButton :selected="i === currentTabI" @select-tab="onTabSelect(i)">
+                    <TabButton
+                        :selected="i === currentTabI"
+                        @select-tab="onTabSelect(i)"
+                    >
                         {{ tab.name }}
                     </TabButton>
                 </div>
@@ -430,7 +471,10 @@ const tabbedWindow = `
 
         <section>
             <div v-for="(tab, i) in tabs">
-                <component v-if="i === currentTabI" :is="tab.component"></component>
+                <component
+                    v-if="i === currentTabI"
+                    :is="tab.component"
+                ></component>
             </div>
         </section>
     </div>
@@ -471,18 +515,18 @@ const tabbedWindow = `
     border-bottom: 1px solid var(--color-accent);
 }
 
-.header>button {
+.header > button {
     padding: 0 1em 0 1em;
     border-right: 1px solid var(--color-accent);
 }
 
-.header>button:hover {
+.header > button:hover {
     color: var(--color-bg);
     background-color: var(--color-accent);
     font-weight: bold;
 }
 
-.header>div {
+.header > div {
     margin: auto;
 }
 
@@ -589,7 +633,7 @@ const tabbedWindow = `
     height: 100%;
 }
 
-.tabbed-window>section:first-of-type {
+.tabbed-window > section:first-of-type {
     width: var(--tab-list-width);
     min-width: var(--tab-list-min-width);
     height: 100%;
@@ -619,7 +663,7 @@ const tabbedWindow = `
     font-weight: bold;
 }
 
-.tabbed-window>section:last-of-type {
+.tabbed-window > section:last-of-type {
     width: calc(100% - max(var(--tab-list-width), var(--tab-list-min-width)));
 }
 </style>
