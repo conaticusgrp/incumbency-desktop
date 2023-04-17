@@ -19,6 +19,7 @@ const startMenu = ref<HTMLElement | null>(null);
 const startMenuExpanded = ref(false);
 const date = ref("00/00/0000");
 const appStore = useAppStore();
+const windowTransition = ref('');
 
 const onWindowClose = (appName: string) => appStore.close(appName);
 const onWindowAquireFocus = (appName: string) => appStore.acquireFocus(appName);
@@ -88,14 +89,30 @@ const contentStyle = `width: calc(100% - ${APP_LIST_WIDTH});`;
 const topPanelStyle = `height: ${TOP_PANEL_HEIGHT};`;
 const toolbarStyle = `height: ${TOOLBAR_HEIGHT};`;
 const windowsStyle = computed(() => {
-    const style = `height: calc(100% - ${TOP_PANEL_HEIGHT} - ${TOOLBAR_HEIGHT}); background: 'black';`;
-    return style;
+    // const style = `height: calc(100% - ${TOP_PANEL_HEIGHT} - ${TOOLBAR_HEIGHT}); background: 'black';`;
+    // return style;
+    return '';
 });
 const mainStyle = computed(() => `
     background-image: url('${wallpaper}'); 
     background-repeat: no-repeat;
     background-position: center center;
 `);
+const getWindowStyle = (appName: string) => {
+    const app = getApp(appName);
+    const { pos, size } = app.window;
+    const { opened } = app;
+    const focused = appStore.focusedApp === appName;
+
+    return `
+        display: ${opened ? 'initial' : 'none'};
+        left: ${pos.x}px;
+        top: ${pos.y}px;
+        width: ${size.width}px;
+        height: ${size.height}px;
+        z-index: ${focused ? 10_000 : 9999};
+    `;
+}
 
 onMounted(async () => {
     await invoke("create_game", {
@@ -137,9 +154,9 @@ onMounted(async () => {
                 </button>
             </div>
 
-            <div class="windows" :style="windowsStyle">
-                <div v-for="app in appStore.apps">
-                    <Window v-if="app.appName === appStore.focusedApp" :index="app.index" :app-name="app.appName"
+            <div>
+                <div v-for="app in appStore.apps" :style="getWindowStyle(app.appName)">
+                    <Window :style=windowsStyle class="windows" v-if="app.appName === appStore.focusedApp" :index="app.index" :app-name="app.appName"
                         :tabs="app.tabs" :title="app.window.title" @window-close="onWindowClose(app.appName)"
                         @window-maximize="onWindowPlace(app.appName, $event)"
                         @window-resize="onWindowResize(app.appName, $event)"
@@ -265,7 +282,7 @@ onMounted(async () => {
 
 .windows {
     position: relative;
-    /* z-index: 100; */
+    z-index: 100;
     isolation: isolate;
     background-repeat: no-repeat;
     background-position: center;

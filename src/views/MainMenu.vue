@@ -13,7 +13,7 @@ import Logo from "../assets/logo.svg";
 
 <style scoped>
   main {
-    /* position: relative; */
+    position: relative;
     width: 100%;
     height: 100%;
   }

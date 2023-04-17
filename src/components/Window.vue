@@ -534,7 +534,7 @@ const tabbedWindow = `
     bottom: initial;
     /* left: 0; */
     z-index: 9999;
-    /* background-color: white; */
+    background-color: white;
 }
 
 .resize-bar-bottom.resize-bar-right {
@@ -582,14 +582,14 @@ const tabbedWindow = `
 }
 
 /* Tabbed Window */
-.window {
+.tabbed-window {
     display: flex;
     flex-direction: row;
     width: 100%;
     height: 100%;
 }
 
-.window>section:first-of-type {
+.tabbed-window>section:first-of-type {
     width: var(--tab-list-width);
     min-width: var(--tab-list-min-width);
     height: 100%;
@@ -619,7 +619,7 @@ const tabbedWindow = `
     font-weight: bold;
 }
 
-.window>section:last-of-type {
+.tabbed-window>section:last-of-type {
     width: calc(100% - max(var(--tab-list-width), var(--tab-list-min-width)));
 }
 </style>
