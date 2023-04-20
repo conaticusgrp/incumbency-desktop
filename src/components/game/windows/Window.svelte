@@ -398,7 +398,7 @@ Tarun.
                 data: {
                     title: "The Start of Your Incumbency",
                     content: `
-Hello, ${USERNAME}. You are now in leading position for the country's economy. Gary set the bar high during his incumbency, however, his sex scandal led him to step down from office. My name is Ned, I will be here to advise you about your user interface and and updates it may receive.
+Hello, ${USERNAME}. You are now in leading position for the country's economy. Gary set the bar high during his incumbency, however, his sex scandal led him to step down from office. My name is Ned, I will be here to advise you about your user interface and updates it may receive.
 
 What you are currently looking at is the desktop environment that you will use to manage the economy. From here you will control everything - taxes, laws & regulations, healthcare and more. Take a look at your left panel and you will see all the available desktop apps that are at your disposal. You can open them and take a look around. Just.. try not to break everything, okay?
 
